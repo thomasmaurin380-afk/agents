@@ -1,184 +1,212 @@
 /**
- * Classification des écritures du fichier par rapport à l'actif, dans le périmètre déclaré.
- *
- * Unité de comparaison : l'écriture entière (A8). Pas d'appariement ligne à ligne :
- * on compare des multiensembles triés d'empreintes (fond ; fond+desc ; fond+desc+let).
+ * Classification des écritures du fichier par rapport à l'actif, dans le périmètre déclaré (contrat §4.6).
+ * Unité de comparaison : l'écriture entière (A8), par multiensembles triés d'empreintes.
  */
-var Comparaison = (function (Modele, Identite) {
+var Comparaison = (function (C, E, Identite) {
   'use strict';
 
-  var S = Modele.STATUTS;
-  var T = Modele.SOUS_TYPES;
+  var S = C.STATUTS;
+
+  /** Vrai si un import publié et non annulé du client porte ce file_sha256. */
+  function detecterReimport(fileSha256, imports) {
+    return (imports || []).some(function (i) { return i.file_sha256 === fileSha256 && i.statut === 'PUBLIE'; });
+  }
 
   /**
-   * @param {{actif: object[], lignes: object[], perimetre: object, profil: object,
-   *          hasher: {sha256Hex: function(string): string}}} entree
-   *   `actif` : lignes actives publiées (statut ACTIVE ou SUPPRIMEE_SOURCE) ;
-   *   `lignes` : lignes canoniques valides issues de la lecture.
-   * @returns {{ecritures: object[], compteurs: Object<string, number>, lignesConservees: object[],
-   *            lignesDoublonsIgnorees: number}}
+   * @param {{base: object[], lignes: object[], perimetre: object, profil: object, client_id: string, hasher: object}} e
+   * @returns {{ecritures: object[], lignesRetenues: object[], lignesIgnorees: object[], compteurs: object}}
    */
-  function classer(entree) {
-    var hasher = entree.hasher;
-    var perimetre = entree.perimetre;
-    var contigu = entree.profil.contiguite_ecritures !== false;
+  function classer(e) {
+    var hasher = e.hasher;
+    var p = e.perimetre;
+    (e.base || []).concat(e.lignes).forEach(function (l) {
+      if (l.client_id !== e.client_id) throw C.erreurContrat('CLIENT_INCOHERENT', 'client_id');
+    });
+    e.lignes.forEach(function (l) { if (l.exercice_id !== p.exercice_id) throw C.erreurContrat('PERIMETRE_INVALIDE', 'exercice_id'); });
 
-    var fichier = regrouperFichier(entree.lignes, hasher);
-    var base = regrouperBase(entree.actif, hasher);
-
+    var fichier = regrouperFichier(e.lignes, hasher);
+    var base = regrouperBase(e.base, p.exercice_id, hasher);
+    var contigu = e.profil.contiguite_ecritures !== false;
     var ecritures = [];
-    var lignesConservees = [];
-    var lignesDoublonsIgnorees = 0;
-    var compteurs = {};
-    Object.keys(S).forEach(function (k) { compteurs[k] = 0; });
+    var retenues = [];
+    var ignorees = [];
+    var parStatut = {};
+    Object.keys(S).forEach(function (k) { parStatut[k] = 0; });
+    var parSousType = { M_FOND: 0, M_DATE: 0, M_DESC: 0, M_LET: 0 };
 
-    Object.keys(fichier).sort().forEach(function (cle) {
+    Object.keys(fichier).sort(E.comparerTexte).forEach(function (cle) {
       var blocs = fichier[cle];
       var toutes = [].concat.apply([], blocs);
-      var e = enTete(cle, toutes[0]);
-
+      var ec = enTete(cle, toutes[0]);
       var dates = distinctes(toutes.map(function (l) { return l.ecriture_date; }));
-      if (dates.length > 1) return collision(e, toutes, 'DATES_MULTIPLES');
+      var precedente = base[cle] || [];
 
-      var retenues = toutes;
-      if (contigu && blocs.length > 1) {
-        var signature0 = signature(blocs[0]);
-        var identiques = blocs.every(function (b) { return signature(b) === signature0; });
-        if (!identiques) return collision(e, toutes, 'BLOCS_DIFFERENTS');
-        retenues = blocs[0];
-        e.doublons_ignores = blocs.length - 1;
-        compteurs.DOUBLON_INTRA += blocs.length - 1;
-        for (var b = 1; b < blocs.length; b++) lignesDoublonsIgnorees += blocs[b].length;
+      var retenu = toutes;
+      var motif = dates.length > 1 ? 'DATES_MULTIPLES' : '';
+      if (!motif && contigu && blocs.length > 1) {
+        var sig0 = signature(blocs[0]);
+        if (blocs.every(function (b) { return signature(b) === sig0; })) {
+          retenu = blocs[0];
+          for (var k = 1; k < blocs.length; k++) {
+            ignorees.push.apply(ignorees, blocs[k].map(function (l) { return marquer(l, false, S.DOUBLON_INTRA); }));
+            ecritures.push(blocIgnore(cle, blocs[k], k + 1));
+            parStatut.DOUBLON_INTRA++;
+          }
+        } else {
+          motif = 'BLOCS_DIFFERENTS';
+        }
       }
-      e.lignes = retenues;
-      Array.prototype.push.apply(lignesConservees, retenues);
+      if (motif) {
+        ec.statut = S.COLLISION;
+        ec.motif = motif;
+        ec.lignes = toutes.map(function (l) { return marquer(l, true, S.COLLISION); });
+        ec.rangs = toutes.map(function (l) { return l.source_rang; });
+        // Lignes en collision : en staging (comptées comme importées), import bloqué par IDN_COLLISION.
+        retenues.push.apply(retenues, ec.lignes);
+        parStatut.COLLISION++;
+        ecritures.push(ec);
+        return;
+      }
 
-      var precedente = base[cle];
-      var actives = precedente ? precedente.filter(estActive) : [];
+      var actives = precedente.filter(function (l) { return l.statut === 'ACTIVE'; });
+      ec.version_base = precedente.reduce(function (v, l) { return Math.max(v, l.version || 0); }, 0);
+      ec.ligne_uids_base = precedente.map(function (l) { return l.ligne_uid; }).sort(E.comparerTexte);
+      ec.validee_fichier = retenu.some(function (l) { return l.valid_date !== ''; });
       if (!actives.length) {
-        e.statut = S.NOUVELLE;
-        e.reapparition = !!(precedente && precedente.length);
+        ec.statut = S.NOUVELLE;
+        ec.reactivation = precedente.length > 0;
       } else {
-        e.lignes_base = actives;
-        e.base_validee = actives.some(function (l) { return l.valid_date !== ''; });
-        e.devalidee = e.base_validee && retenues.every(function (l) { return l.valid_date === ''; });
-        e.sous_types = sousTypes(actives, retenues);
-        e.statut = e.sous_types.length ? S.MODIFIEE : S.INCHANGEE;
+        ec.lignes_base = actives;
+        ec.ecriture_date_base = actives[0].ecriture_date;
+        ec.validee_base = actives.some(function (l) { return l.valid_date !== ''; });
+        ec.h_ecr_base = Identite.hEcriture(actives, hasher);
+        ec.sous_types = sousTypes(actives, retenu);
+        ec.statut = ec.sous_types.length ? S.MODIFIEE : S.INCHANGEE;
+        ec.sous_types.forEach(function (s) { parSousType[s]++; });
       }
-      compteurs[e.statut]++;
-      ecritures.push(e);
+      ec.lignes = Identite.attribuerLigneUid(retenu).map(function (l) { return marquer(l, true, ec.statut); });
+      ec.rangs = retenu.map(function (l) { return l.source_rang; });
+      ec.h_ecr = Identite.hEcriture(ec.lignes, hasher);
+      retenues.push.apply(retenues, ec.lignes);
+      parStatut[ec.statut]++;
+      ecritures.push(ec);
     });
 
-    Object.keys(base).sort().forEach(function (cle) {
+    var enPerimetre = 0;
+    Object.keys(base).sort(E.comparerTexte).forEach(function (cle) {
+      var actives = base[cle].filter(function (l) { return l.statut === 'ACTIVE'; });
+      if (!actives.length || !dansPerimetre(actives[0], p)) return;
+      enPerimetre++;
       if (fichier[cle]) return;
-      var actives = base[cle].filter(estActive);
-      if (!actives.length || !dansPerimetre(actives[0], perimetre)) return;
-      var e = enTete(cle, actives[0]);
-      e.statut = S.ABSENTE;
-      e.lignes_base = actives;
-      e.base_validee = actives.some(function (l) { return l.valid_date !== ''; });
-      compteurs.ABSENTE++;
-      ecritures.push(e);
+      var ec = enTete(cle, actives[0]);
+      ec.statut = S.ABSENTE;
+      ec.bloc = 0;
+      ec.lignes_base = actives;
+      ec.ecriture_date_base = actives[0].ecriture_date;
+      ec.version_base = actives.reduce(function (v, l) { return Math.max(v, l.version || 0); }, 0);
+      ec.ligne_uids_base = actives.map(function (l) { return l.ligne_uid; }).sort(E.comparerTexte);
+      ec.validee_base = actives.some(function (l) { return l.valid_date !== ''; });
+      ec.h_ecr_base = Identite.hEcriture(actives, hasher);
+      ec.aide = ec.validee_base ? '' : 'PROBABLEMENT_VALIDEE_SOUS_NOUVEAU_NUMERO';
+      parStatut.ABSENTE++;
+      ecritures.push(ec);
     });
 
-    ecritures.sort(function (a, b) { return a.cle < b.cle ? -1 : a.cle > b.cle ? 1 : 0; });
+    ecritures.sort(function (a, b) { return a.cle !== b.cle ? E.comparerTexte(a.cle, b.cle) : a.bloc - b.bloc; });
     return {
       ecritures: ecritures,
-      compteurs: compteurs,
-      lignesConservees: lignesConservees,
-      lignesDoublonsIgnorees: lignesDoublonsIgnorees
+      lignesRetenues: retenues,
+      lignesIgnorees: ignorees,
+      compteurs: {
+        par_statut: parStatut,
+        par_sous_type: parSousType,
+        ecritures_fichier: Object.keys(fichier).length,
+        lignes_retenues: retenues.length,
+        lignes_doublons_ignorees: ignorees.length,
+        ecritures_base_perimetre: enPerimetre
+      }
     };
-
-    function collision(e, toutes, motif) {
-      e.statut = S.COLLISION;
-      e.motif = motif;
-      e.lignes = toutes;
-      // Les lignes en collision restent en staging (import bloqué par IDN_COLLISION) : elles comptent comme importées.
-      Array.prototype.push.apply(lignesConservees, toutes);
-      compteurs.COLLISION++;
-      ecritures.push(e);
-    }
   }
 
-  function enTete(cle, ligne) {
+  function enTete(cle, l) {
     return {
-      cle: cle,
-      journal_code: ligne.journal_code,
-      ecriture_num: ligne.ecriture_num,
-      ecriture_date: ligne.ecriture_date,
-      exercice_id: ligne.exercice_id,
-      statut: '',
-      sous_types: [],
-      doublons_ignores: 0,
-      lignes: [],
-      lignes_base: [],
-      base_validee: false,
-      devalidee: false,
-      reapparition: false,
-      motif: ''
+      cle: cle, exercice_id: l.exercice_id, journal_code: l.journal_code, ecriture_num: l.ecriture_num,
+      statut: '', sous_types: [], bloc: 1, rangs: [], ligne_uids_base: [],
+      ecriture_date: l.ecriture_date, ecriture_date_base: '', version_base: 0,
+      validee_base: false, validee_fichier: false, reactivation: false, h_ecr: '', h_ecr_base: '', aide: '', motif: '',
+      lignes: [], lignes_base: []
     };
   }
 
-  /** Regroupe les lignes du fichier par clé, en blocs de lignes contiguës (ordre du fichier). */
+  function blocIgnore(cle, lignes, numero) {
+    var ec = enTete(cle, lignes[0]);
+    ec.statut = S.DOUBLON_INTRA;
+    ec.bloc = numero;
+    ec.rangs = lignes.map(function (l) { return l.source_rang; });
+    return ec;
+  }
+
+  function marquer(l, retenue, statut) {
+    var c = {};
+    Object.keys(l).forEach(function (k) { c[k] = l[k]; });
+    c.retenue = retenue;
+    c.statut_staging = statut;
+    if (c.ligne_uid === undefined) c.ligne_uid = '';
+    return c;
+  }
+
+  /** Regroupe les lignes du fichier par clé, en blocs de lignes consécutives (ordre des rangs). */
   function regrouperFichier(lignes, hasher) {
     var parCle = {};
     var precedente = null;
     lignes.slice().sort(function (a, b) { return a.source_rang - b.source_rang; }).forEach(function (l) {
-      var avecEmpreintes = completer(l, hasher);
+      var c = completer(l, hasher);
       var blocs = parCle[l.cle_ecriture] || (parCle[l.cle_ecriture] = []);
       if (precedente !== l.cle_ecriture || !blocs.length) blocs.push([]);
-      blocs[blocs.length - 1].push(avecEmpreintes);
+      blocs[blocs.length - 1].push(c);
       precedente = l.cle_ecriture;
     });
     return parCle;
   }
 
-  function regrouperBase(actif, hasher) {
+  function regrouperBase(actif, exerciceId, hasher) {
     var parCle = {};
     (actif || []).forEach(function (l) {
+      if (l.exercice_id !== exerciceId) return;
       (parCle[l.cle_ecriture] || (parCle[l.cle_ecriture] = [])).push(completer(l, hasher));
     });
     return parCle;
   }
 
-  /** Recalcule les empreintes à partir des champs (ne fait jamais confiance aux empreintes stockées). */
-  function completer(ligne, hasher) {
-    var copie = {};
-    Object.keys(ligne).forEach(function (k) { copie[k] = ligne[k]; });
-    var h = Identite.empreintes(ligne, hasher);
-    copie.h_fond = h.h_fond;
-    copie.h_desc = h.h_desc;
-    copie.h_let = h.h_let;
-    return copie;
+  /** Recalcule les empreintes depuis les champs : on ne fait jamais confiance aux empreintes stockées. */
+  function completer(l, hasher) {
+    var c = {};
+    Object.keys(l).forEach(function (k) { c[k] = l[k]; });
+    var h = Identite.empreintes(l, hasher);
+    c.h_fond = h.h_fond; c.h_desc = h.h_desc; c.h_let = h.h_let;
+    return c;
   }
 
-  function estActive(l) { return l.statut === undefined || l.statut === 'ACTIVE'; }
-
-  function dansPerimetre(ligne, p) {
-    return ligne.exercice_id === p.exercice_id && ligne.ecriture_date >= p.du && ligne.ecriture_date <= p.au;
+  function dansPerimetre(l, p) {
+    return l.exercice_id === p.exercice_id && l.ecriture_date >= p.du && l.ecriture_date <= p.au;
   }
 
-  function multiensemble(lignes, f) {
-    return lignes.map(f).sort().join('\n');
-  }
+  function multi(lignes, f) { return lignes.map(f).sort(E.comparerTexte).join('\n'); }
   function tf(l) { return l.h_fond; }
   function tfd(l) { return l.h_fond + '|' + l.h_desc; }
   function tfdl(l) { return l.h_fond + '|' + l.h_desc + '|' + l.h_let; }
-
-  function signature(lignes) {
-    return lignes[0].ecriture_date + '\n' + multiensemble(lignes, tfdl);
-  }
+  function signature(lignes) { return lignes[0].ecriture_date + '\n' + multi(lignes, tfdl); }
 
   function sousTypes(base, fichier) {
     var types = [];
     var memeDate = base[0].ecriture_date === fichier[0].ecriture_date;
-    if (memeDate && multiensemble(base, tfdl) === multiensemble(fichier, tfdl)) return types;
-    var fondDiffere = multiensemble(base, tf) !== multiensemble(fichier, tf);
-    if (fondDiffere) types.push(T.M_FOND);
-    if (!memeDate) types.push(T.M_DATE);
+    if (memeDate && multi(base, tfdl) === multi(fichier, tfdl)) return types;
+    var fondDiffere = multi(base, tf) !== multi(fichier, tf);
+    if (fondDiffere) types.push('M_FOND');
+    if (!memeDate) types.push('M_DATE');
     if (!fondDiffere) {
-      if (multiensemble(base, tfd) !== multiensemble(fichier, tfd)) types.push(T.M_DESC);
-      else if (multiensemble(base, tfdl) !== multiensemble(fichier, tfdl)) types.push(T.M_LET);
+      if (multi(base, tfd) !== multi(fichier, tfd)) types.push('M_DESC');
+      else if (multi(base, tfdl) !== multi(fichier, tfdl)) types.push('M_LET');
     }
     return types;
   }
@@ -189,11 +217,13 @@ var Comparaison = (function (Modele, Identite) {
   }
 
   return {
+    detecterReimport: detecterReimport,
     classer: classer,
     dansPerimetre: dansPerimetre
   };
 })(
-  typeof Modele !== 'undefined' ? Modele : require('./modele'),
+  typeof Constantes !== 'undefined' ? Constantes : require('./constantes'),
+  typeof Empreinte !== 'undefined' ? Empreinte : require('./empreinte'),
   typeof Identite !== 'undefined' ? Identite : require('./identite')
 );
 

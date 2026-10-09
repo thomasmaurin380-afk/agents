@@ -7,7 +7,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const P = require('../src/app/pipeline');
 const Publication = require('../src/core/publication');
-const { hasher, CLIENT, PROFIL_FEC, PERIMETRE_T1, NOM_FEC, prng, fec, ecrituresAleatoires, melanger, cloner, choixComplets } = require('./aides');
+const { hasher, CLIENT, PROFIL_FEC, PERIMETRE_T1, NOM_FEC, prng, fec, ecrituresAleatoires, melanger, cloner, identite, publierTout, gelerProfond } = require('./aides');
 
 const ITERATIONS = 60;
 const TAILLE = 30;
@@ -18,18 +18,13 @@ function analyser(etat, ecritures, options) {
   return P.analyserImport({
     etat, fichier: { texte: fec(ecritures, options), nomFichier: NOM_FEC, sha256: 'sha-' + compteurSha },
     profil: PROFIL_FEC, client: (options && options.client) || CLIENT, perimetre: PERIMETRE_T1,
-    import_id: 'I-' + compteurSha, hasher
+    identite: identite((options && options.client) || CLIENT), import_id: 'I-' + compteurSha, hasher
   });
 }
 
-function publier(etat, analyse, id) {
-  const v = P.valider(etat, analyse, choixComplets(analyse), hasher);
-  const r = P.publier(etat, analyse, v, id, hasher);
-  assert.equal(r.ok, true, r.code + ' ' + JSON.stringify(r.refus));
-  return r.etat;
-}
+function publier(etat, analyse, id) { return publierTout(P, etat, analyse, id); }
 
-function checksum(etat) { return Publication.checksumActif(etat.actif, hasher).checksum; }
+function checksum(etat) { return Publication.checksumActif(etat.actif, hasher); }
 
 function etatPublie(alea) {
   const base = ecrituresAleatoires(alea, TAILLE);
@@ -77,10 +72,11 @@ function muter(alea, base) {
 }
 
 function statutsObtenus(analyse) {
-  return Object.fromEntries(analyse.comparaison.ecritures.map((e) => [e.journal_code + '|' + e.ecriture_num, [e.statut, ...e.sous_types].join(' ')]));
+  return Object.fromEntries(analyse.comparaison.ecritures.filter((e) => e.bloc <= 1)
+    .map((e) => [e.journal_code + '|' + e.ecriture_num, [e.statut, ...e.sous_types].join(' ')]));
 }
 
-function sommeVariations(v) { return Object.values(v).reduce((s, x) => s + x, 0); }
+function sommeVariations(v) { return v.reduce((s, x) => s + x.delta_cts, 0); }
 
 test(`Comparaison : statuts obtenus = statuts construits (${ITERATIONS} jeux aléatoires)`, () => {
   for (let i = 0; i < ITERATIONS; i++) {
@@ -97,10 +93,10 @@ test(`Idempotence : réimport du même contenu (ordre et fins de ligne changés)
     const alea = prng(2000 + i);
     const { base, etat } = etatPublie(alea);
     const a = analyser(etat, melanger(alea, base), { crlf: true });
-    assert.equal(a.comparaison.compteurs.INCHANGEE, TAILLE);
+    assert.equal(a.comparaison.compteurs.par_statut.INCHANGEE, TAILLE);
     assert.equal(a.comparaison.ecritures.length, TAILLE);
     assert.deepEqual(a.anomalies, []);
-    assert.deepEqual(a.variationsSoldes, {});
+    assert.deepEqual(a.variations, []);
     const apres = publier(etat, a, 'PUB-2');
     assert.equal(checksum(apres), checksum(etat));
     assert.equal(apres.mouvements.length, etat.mouvements.length);
@@ -126,7 +122,7 @@ test(`Intégrité : conservation des soldes, miroir, actif publié = actif simul
     const { base, etat } = etatPublie(alea);
     const { fichier } = muter(alea, base);
     const a = analyser(etat, fichier);
-    assert.equal(sommeVariations(a.variationsSoldes), 0, 'Σ des variations de soldes = 0');
+    assert.equal(sommeVariations(a.variations), 0, 'Σ des variations de soldes = 0');
     const codes = a.anomalies.map((x) => x.code);
     for (const interdit of ['REC_MIROIR', 'REC_LIGNES', 'REC_TOTAUX', 'EQU_GLOBAL', 'EQU_ECRITURE']) {
       assert.ok(!codes.includes(interdit), interdit + ' inattendu, graine ' + (4000 + i));
@@ -148,8 +144,8 @@ test(`Retour arrière : annuler(publier(B, Δ)) = B au checksum près (${ITERATI
     const { fichier } = muter(alea, base);
     const a = analyser(etat, fichier);
     const etat2 = publier(etat, a, 'PUB-2');
-    const u = P.annulerDernierePublication(etat2, 'ANN-1', hasher);
-    assert.equal(u.ok, true, u.code);
+    const u = P.annulerDernierePublication(etat2, { publication_id: 'ANN-1', tampon_inactif: etat.actif }, hasher);
+    assert.equal(u.ok, true, JSON.stringify(u.refus));
     assert.equal(checksum(u.etat), checksum(etat), 'graine ' + (5000 + i));
     assert.deepEqual(cloner(u.etat.actif), cloner(etat.actif));
   }
@@ -158,7 +154,7 @@ test(`Retour arrière : annuler(publier(B, Δ)) = B au checksum près (${ITERATI
 test('Retour arrière : le premier import annulé ramène à un actif vide', () => {
   const alea = prng(42);
   const { etat } = etatPublie(alea);
-  const u = P.annulerDernierePublication(etat, 'ANN-1', hasher);
+  const u = P.annulerDernierePublication(etat, { publication_id: 'ANN-1' }, hasher);
   assert.equal(u.ok, true);
   assert.deepEqual(u.etat.actif, []);
 });
@@ -170,18 +166,18 @@ test(`Déterminisme : mêmes entrées = mêmes sorties ; ordre des écritures sa
     const { fichier } = muter(alea, base);
     const texte = fec(fichier);
     const args = (id) => ({ etat, fichier: { texte, nomFichier: NOM_FEC, sha256: 'sha-det' }, profil: PROFIL_FEC,
-      client: CLIENT, perimetre: PERIMETRE_T1, import_id: id, hasher });
+      client: CLIENT, perimetre: PERIMETRE_T1, identite: identite(), import_id: id, hasher });
     const a1 = P.analyserImport(args('I-X'));
     const a2 = P.analyserImport(args('I-X'));
     assert.deepEqual(a1, a2);
     const a3 = analyser(etat, melanger(alea, fichier));
     assert.deepEqual(statutsObtenus(a3), statutsObtenus(a1));
-    assert.deepEqual(a3.variationsSoldes, a1.variationsSoldes);
+    assert.deepEqual(a3.variations, a1.variations);
     // Publications à partir des deux ordres : même actif (checksum identique).
     const e1 = publier(etat, a1, 'PUB-2');
     const e3 = publier(etat, a3, 'PUB-2');
-    const sansSource = (e) => e.actif.map((l) => Object.assign({}, l, { source_rang: 0, source_import_id: '' }));
-    assert.equal(Publication.checksumActif(sansSource(e1), hasher).checksum, Publication.checksumActif(sansSource(e3), hasher).checksum);
+    const sansSource = (e) => e.actif.map((l) => Object.assign({}, l, { source_rang: 0, source_import_id: '', first_import_id: '' }));
+    assert.equal(Publication.checksumActif(sansSource(e1), hasher), Publication.checksumActif(sansSource(e3), hasher));
   }
 });
 
@@ -194,4 +190,21 @@ test('Isolation : le même fichier chez deux clients produit des clés disjointe
   const clesA = new Set(a.comparaison.ecritures.map((e) => e.cle));
   assert.ok(b.comparaison.ecritures.every((e) => !clesA.has(e.cle)));
   assert.equal(a.comparaison.ecritures.length, b.comparaison.ecritures.length);
+});
+
+test(`Non-mutation : aucune entrée n'est modifiée, entrées gelées en profondeur (${ITERATIONS} cycles complets)`, () => {
+  for (let i = 0; i < ITERATIONS; i++) {
+    const alea = prng(8000 + i);
+    const { base, etat } = etatPublie(alea);
+    const { fichier } = muter(alea, base);
+    const etatGele = gelerProfond(cloner(etat));
+    const entree = gelerProfond({ etat: etatGele, fichier: { texte: fec(fichier), nomFichier: NOM_FEC, sha256: 'sha-gel-' + i },
+      profil: cloner(PROFIL_FEC), client: cloner(CLIENT), perimetre: cloner(PERIMETRE_T1), identite: identite(), import_id: 'I-GEL', hasher });
+    const a = gelerProfond(P.analyserImport(entree));
+    const r = P.publier(etatGele, a, gelerProfond(P.valider(etatGele, a, require('./aides').choixComplets(a), hasher)), gelerProfond({ publication_id: 'PUB-G' }), hasher);
+    assert.equal(r.ok, true, JSON.stringify(r.refus));
+    const u = P.annulerDernierePublication(gelerProfond(r.etat), { publication_id: 'ANN-G' }, hasher);
+    assert.equal(u.ok, true);
+    assert.deepEqual(cloner(etatGele), cloner(etat), 'état d\'entrée intact');
+  }
 });

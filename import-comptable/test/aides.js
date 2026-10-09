@@ -109,23 +109,62 @@ function cloner(v) { return JSON.parse(JSON.stringify(v)); }
 
 const CHECKLIST_OK = Object.freeze({ fichier_plus_recent: true, variations_expliquees: true, decisions_revues: true });
 const MOTIF_TEST = 'Dérogation de test motivée par le scénario';
+const HORO = { soumis: '2026-10-09T10:00:00Z', valide: '2026-10-09T11:00:00Z' };
+
+/** Identité confirmée par le dossier de dépôt (ce que l'adaptateur Drive fournira). */
+function identite(client) { return { dossier_client_id: (client || CLIENT).client_id }; }
 
 /**
- * Choix de validation « tout traité » : dérogation motivée pour chaque B, acquittement de chaque A,
- * check-list complète, décisions fournies (par défaut ACCEPTER pour chaque ABSENTE).
+ * Choix de validation « tout traité » (décisions typées) : dérogation motivée pour chaque B (hors IDN_ABSENTE),
+ * acquittement de chaque A (par code), décision pour chaque ABSENTE (par défaut ACCEPTER, motivée), check-list complète.
+ * @param {Object<string, string>} [absentes] cle → ACCEPTER | REPORTER
  */
-function choixComplets(analyse, decisions) {
-  const d = Object.assign({}, decisions);
-  if (!decisions) analyse.comparaison.ecritures.forEach((e) => { if (e.statut === 'ABSENTE') d[e.cle] = 'ACCEPTER'; });
-  return {
-    decisions: d,
-    derogations: analyse.anomalies.filter((a) => a.gravite === 'B').map((a) => ({ anomalie_id: a.anomalie_id, motif: MOTIF_TEST, par: 'TEST' })),
-    acquittements: analyse.anomalies.filter((a) => a.gravite === 'A').map((a) => a.anomalie_id),
-    checklist: CHECKLIST_OK
-  };
+function choixComplets(analyse, absentes, options) {
+  const o = options || {};
+  const decisions = [];
+  (analyse.comparaison ? analyse.comparaison.ecritures : []).forEach((e) => {
+    if (e.statut !== 'ABSENTE') return;
+    decisions.push({ decision_id: 'ABS:' + e.cle, type: 'ABSENTE', import_id: analyse.import_id, cle: e.cle,
+      choix: (absentes && absentes[e.cle]) || 'ACCEPTER', motif: o.motifAbsente === undefined ? MOTIF_TEST : o.motifAbsente, par: 'TEST', le: HORO.valide });
+  });
+  analyse.anomalies.filter((a) => a.gravite === 'B' && a.code !== 'IDN_ABSENTE').forEach((a) => {
+    decisions.push({ decision_id: 'DER:' + a.anomalie_id, type: 'DEROGATION', import_id: analyse.import_id, anomalie_id: a.anomalie_id,
+      empreinte_derogation: a.empreinte_derogation, motif: MOTIF_TEST, reference: '', par: 'TEST', le: HORO.valide,
+      origine: 'MANUELLE', source_decision_id: '' });
+  });
+  const parCode = {};
+  analyse.anomalies.filter((a) => a.gravite === 'A' && a.code !== 'IDN_ABSENTE').forEach((a) => { (parCode[a.code] = parCode[a.code] || []).push(a.anomalie_id); });
+  Object.keys(parCode).sort().forEach((code) => {
+    decisions.push({ decision_id: 'ACQ:' + code, type: 'ACQUITTEMENT', import_id: analyse.import_id, code, anomalie_ids: parCode[code],
+      commentaire: 'Revu en test', par: 'TEST', le: HORO.valide });
+  });
+  return { decisions, checklist: CHECKLIST_OK, validation_id: 'VAL-' + analyse.import_id,
+    soumis_par: 'TEST', soumis_le: HORO.soumis, valide_par: 'TEST', valide_le: HORO.valide };
+}
+
+/** Valide « tout traité » puis publie ; échoue le test si la publication est refusée. */
+function publierTout(P, etat, analyse, publicationId, absentes) {
+  const validee = P.valider(etat, analyse, choixComplets(analyse, absentes), hasher);
+  const r = P.publier(etat, analyse, validee, { publication_id: publicationId, horodatage: HORO.valide }, hasher);
+  if (!r.ok) throw new Error('publication refusée : ' + r.refus.join(', ') + ' ' + JSON.stringify(r.details));
+  return r.etat;
+}
+
+/** Variations [{compte, delta_cts}] → {compte: delta}. */
+function variationsEnTable(v) { return Object.fromEntries(v.map((x) => [x.compte, x.delta_cts]).sort()); }
+
+/** Gèle un objet en profondeur (test de non-mutation des entrées). */
+function gelerProfond(o, vus = new Set()) {
+  if (o && typeof o === 'object' && !vus.has(o)) {
+    vus.add(o);
+    Object.values(o).forEach((v) => gelerProfond(v, vus));
+    Object.freeze(o);
+  }
+  return o;
 }
 
 module.exports = {
-  hasher, CLIENT, PROFIL_FEC, PERIMETRE_T1, NOM_FEC, ENTETE_FEC,
-  prng, fec, ecrituresAleatoires, melanger, cloner, montantTexte, choixComplets, CHECKLIST_OK, MOTIF_TEST
+  hasher, CLIENT, PROFIL_FEC, PERIMETRE_T1, NOM_FEC, ENTETE_FEC, HORO,
+  prng, fec, ecrituresAleatoires, melanger, cloner, montantTexte, identite, choixComplets, publierTout,
+  variationsEnTable, gelerProfond, CHECKLIST_OK, MOTIF_TEST
 };

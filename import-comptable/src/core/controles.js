@@ -1,213 +1,251 @@
 /**
- * Contrôles essentiels du MVP (§17) : produisent des anomalies, ne modifient rien.
+ * Contrôles essentiels du MVP (§17, contrat §6) : produisent des anomalies et des résultats de contrôle,
+ * ne modifient rien. Les contrôles indépendants (A6) n'utilisent ni parseMontant ni parseDate.
  */
-var Controles = (function (Anomalies, Comparaison) {
+var Controles = (function (C, E, Anomalies, Comparaison) {
   'use strict';
 
   var A = Anomalies.creer;
 
   /**
-   * Contrôles préalables, avant toute lecture du contenu et avant la détection de réimport :
-   * fichier du bon client (CLI_MISMATCH) et source cohérente avec l'exercice (PRF_CHANGEMENT, A4).
-   * @param {{client: object, profil: object, nomFichier: string, perimetre: object, typeProfilExercice?: string}} c
+   * Contrôles préalables, avant toute lecture du contenu et avant la détection de réimport.
+   *
+   * P6 — identité de la société : un FEC n'est jamais rejeté sur le seul nom du fichier.
+   * Sources examinées : dossier de dépôt (adaptateur), SIREN déclaré par l'opérateur, SIREN du nom FEC.
+   * - une source fiable qui désigne un autre client → CLI_MISMATCH (BND) ;
+   * - aucune confirmation par le dossier ou la déclaration → CLI_IDENTITE_NON_CONFIRMEE (B, motivée) ;
+   * - FEC dont le nom ne suit pas SIRENFECAAAAMMJJ → CLI_NOM_FEC_NON_CONFORME (A).
+   * A4 — un exercice déjà alimenté par une autre source → PRF_CHANGEMENT (BND) ; type dérivé de l'actif.
+   *
+   * @param {{client: object, profil: object, nomFichier: string, perimetre: object, actif: object[],
+   *          identite?: {dossier_client_id?: string, siren_declare?: string}}} c
    */
   function controlesPrealables(c) {
     var anomalies = [];
-    if (c.profil.type === 'FEC') {
-      var m = /^(\d{9})FEC(\d{8})/i.exec(c.nomFichier || '');
-      if (!m) {
-        anomalies.push(A('CLI_MISMATCH', { message: 'nom de fichier FEC non conforme (SIRENFECAAAAMMJJ)', obtenu: c.nomFichier }));
-      } else if (m[1] !== c.client.siren) {
-        anomalies.push(A('CLI_MISMATCH', { message: 'SIREN du fichier différent du client', attendu: c.client.siren, obtenu: m[1] }));
-      }
+    var id = c.identite || {};
+    var contradictions = [];
+    var confirmations = 0;
+    if (id.dossier_client_id) {
+      if (id.dossier_client_id !== c.client.client_id) contradictions.push('DOSSIER');
+      else confirmations++;
     }
-    if (c.typeProfilExercice && c.typeProfilExercice !== c.profil.type) {
-      anomalies.push(A('PRF_CHANGEMENT', {
-        objet_type: 'EXERCICE', objet_cle: c.perimetre.exercice_id,
-        attendu: c.typeProfilExercice, obtenu: c.profil.type,
-        message: 'mélange de sources interdit : passer par une migration contrôlée (A4)'
-      }));
+    if (id.siren_declare) {
+      if (id.siren_declare !== c.client.siren) contradictions.push('SIREN_DECLARE');
+      else confirmations++;
+    }
+    var m = /^(\d{9})FEC(\d{8})/i.exec(c.nomFichier || '');
+    if (m && m[1] !== c.client.siren) contradictions.push('SIREN_NOM_FICHIER');
+    if (contradictions.length) {
+      anomalies.push(A('CLI_MISMATCH', { objet_cle: contradictions.join(','), attendu: c.client.siren, obtenu: m ? m[1] : '',
+        message: 'source(s) désignant un autre client : ' + contradictions.join(', ') }));
+    } else if (!confirmations) {
+      anomalies.push(A('CLI_IDENTITE_NON_CONFIRMEE', { message: 'ni le dossier de dépôt ni une déclaration ne confirment le client' }));
+    }
+    if (c.profil.type === 'FEC' && !m) {
+      anomalies.push(A('CLI_NOM_FEC_NON_CONFORME', { message: 'nom de fichier FEC non conforme (SIRENFECAAAAMMJJ)' }));
+    }
+    var types = {};
+    (c.actif || []).forEach(function (l) { if (l.exercice_id === c.perimetre.exercice_id) types[l.source_type] = true; });
+    var autres = Object.keys(types).filter(function (t) { return t !== c.profil.type; });
+    if (autres.length) {
+      anomalies.push(A('PRF_CHANGEMENT', { objet_type: 'EXERCICE', objet_cle: c.perimetre.exercice_id, attendu: autres.join(','),
+        obtenu: c.profil.type, message: 'mélange de sources interdit : passer par une migration contrôlée (A4)' }));
     }
     return anomalies;
   }
 
   /**
-   * Contrôles de structure, applicables même quand le fichier n'est pas interprétable.
-   * @param {{lecture: object}} c
+   * @param {{client: object, profil: object, perimetre: object, lecture: object, comparaison: object|null,
+   *          base: object[], actif_simule: object[]|null, total_saisi?: object}} ctx
+   * @returns {{controles: object[], anomalies: object[], variations: object[]}}
    */
-  function controlesStructure(c) {
+  function executerControles(ctx) {
+    var controles = [];
     var anomalies = [];
+    var lecture = ctx.lecture;
+    function controle(id, attendu, obtenu, ok) {
+      controles.push({ control_id: id, control_version: C.VERSION_REGLES, attendu: String(attendu), obtenu: String(obtenu),
+        ecart: ok ? '' : 'ECART', ok: ok });
+      return ok;
+    }
+
+    // --- Structure : encodage, en-tête, rejets (A2 : une seule anomalie REJ_LIGNES, détaillée par motif)
     var vus = {};
-    c.lecture.anomaliesStructure.forEach(function (s) {
-      var cle = s.code + '|' + s.message;
+    lecture.anomaliesStructure.forEach(function (s) {
+      var cle = s.code + '|' + s.motif + '|' + s.colonne;
       if (vus[cle]) return;
       vus[cle] = true;
-      anomalies.push(A(s.code, { message: s.message }));
+      anomalies.push(A(s.code, { objet_cle: s.motif + (s.colonne ? '|' + s.colonne : ''), message: s.colonne }));
     });
-
-    // Une seule anomalie REJ_LIGNES par import (A2 : toute ligne rejetée bloque), détaillée par motif.
-    if (c.lecture.structureValide && c.lecture.rejets.length) {
+    if (lecture.structure_ok && lecture.rejets.length) {
       var parMotif = {};
-      c.lecture.rejets.forEach(function (r) {
-        r.codes.forEach(function (code) {
-          var motif = code.split(':')[0];
-          var t = parMotif[motif] || (parMotif[motif] = []);
-          if (t.indexOf(r.rang) === -1) t.push(r.rang);
-        });
+      lecture.rejets.forEach(function (r) {
+        var t = parMotif[r.motif] || (parMotif[r.motif] = []);
+        if (t.indexOf(r.rang) === -1) t.push(r.rang);
       });
-      var motifs = Object.keys(parMotif).sort();
-      anomalies.push(A('REJ_LIGNES', {
-        obtenu: c.lecture.rejets.length,
-        message: c.lecture.rejets.length + ' ligne(s) rejetée(s) : ' + motifs.join(', '),
-        details: { rangs: c.lecture.rejets.map(function (r) { return r.rang; }), par_motif: parMotif }
-      }));
+      var motifs = Object.keys(parMotif).sort(E.comparerTexte);
+      anomalies.push(A('REJ_LIGNES', { nb: lecture.lignesRejetees.length, rangs: lecture.lignesRejetees, obtenu: lecture.lignesRejetees.length,
+        message: motifs.map(function (k) { return k + ' : ' + parMotif[k].join(','); }).join(' ; ') }));
     }
-    return anomalies;
-  }
+    if (!lecture.structure_ok || !ctx.comparaison) return { controles: controles, anomalies: trier(anomalies), variations: [] };
 
-  /**
-   * Contrôles après classification.
-   * @param {{client: object, profil: object, perimetre: object, lecture: object, comparaison: object,
-   *          actif: object[], actifSimule: object[], totalSaisi?: {debit_cts: number, credit_cts: number}}} c
-   */
-  function controlesContenu(c) {
-    var anomalies = [];
-    var lecture = c.lecture;
-    var comp = c.comparaison;
-    var exercice = c.client.exercices.filter(function (e) { return e.id === c.perimetre.exercice_id; })[0];
+    var comp = ctx.comparaison;
+    var cpt = lecture.compteurs;
+    var exercice = ctx.client.exercices.filter(function (x) { return x.id === ctx.perimetre.exercice_id; })[0];
     var cloture = exercice.statut === 'CLOTURE';
 
-    // --- Réconciliations
-    var cpt = lecture.compteurs;
-    var importees = comp.lignesConservees.length;
-    if (cpt.lignes_physiques !== cpt.lignes_couvertes
-        || cpt.lues !== cpt.valides + cpt.rejetees + cpt.vides
-        || cpt.valides !== importees + comp.lignesDoublonsIgnorees) {
-      anomalies.push(A('REC_LIGNES', {
-        attendu: 'lues = importées + rejetées + vides + doublons ignorés',
-        obtenu: JSON.stringify({ physiques: cpt.lignes_physiques, couvertes: cpt.lignes_couvertes, lues: cpt.lues,
-          valides: cpt.valides, rejetees: cpt.rejetees, vides: cpt.vides, importees: importees,
-          doublons: comp.lignesDoublonsIgnorees })
-      }));
-    }
-    // REC_TOTAUX : totaux recalculés sur les chaînes brutes par un parseur minimal distinct de parseMontant (A6),
-    // et sur les lignes normalisées ; les trois doivent concorder.
-    var bruts = totauxBruts(lecture.montantsBruts, c.profil);
+    // --- C4 / REC_LIGNES : lignes physiques recomptées indépendamment, aucune ligne perdue
+    var okLignes = controle('REC_LIGNES', 'lues = retenues + rejetées + vides + doublons ignorés',
+      JSON.stringify({ physiques: cpt.lignes_physiques, couvertes: cpt.lignes_couvertes, lues: cpt.lues, retenues: comp.compteurs.lignes_retenues,
+        rejetees: cpt.rejetees, vides: cpt.vides, doublons: comp.compteurs.lignes_doublons_ignorees }),
+      cpt.lignes_physiques === cpt.lignes_couvertes && cpt.lues === cpt.normalisees + cpt.rejetees + cpt.vides
+        && cpt.normalisees === comp.compteurs.lignes_retenues + comp.compteurs.lignes_doublons_ignorees);
+    if (!okLignes) anomalies.push(A('REC_LIGNES', { obtenu: controles[controles.length - 1].obtenu }));
+
+    // --- C5 / REC_TOTAUX : totaux recalculés sur les chaînes brutes par un parseur minimal distinct
+    var bruts = totauxBruts(lecture.montants_bruts, ctx.profil);
     var recalc = somme(lecture.lignes);
-    if (bruts.debit_cts !== lecture.totauxLecture.debit_cts || bruts.credit_cts !== lecture.totauxLecture.credit_cts
-        || recalc.debit_cts !== lecture.totauxLecture.debit_cts || recalc.credit_cts !== lecture.totauxLecture.credit_cts) {
-      anomalies.push(A('REC_TOTAUX', { attendu: JSON.stringify(bruts), obtenu: JSON.stringify(lecture.totauxLecture) }));
-    }
-    if (c.actifSimule) {
-      var miroir = verifierMiroir(c.actifSimule, comp, c.perimetre);
-      if (miroir) anomalies.push(A('REC_MIROIR', miroir));
+    var okTotaux = controle('REC_TOTAUX', JSON.stringify(bruts), JSON.stringify(lecture.totaux),
+      bruts.debit_cts === lecture.totaux.debit_cts && bruts.credit_cts === lecture.totaux.credit_cts
+        && recalc.debit_cts === lecture.totaux.debit_cts && recalc.credit_cts === lecture.totaux.credit_cts);
+    if (!okTotaux) anomalies.push(A('REC_TOTAUX', { attendu: JSON.stringify(bruts), obtenu: JSON.stringify(lecture.totaux) }));
+
+    // --- C7 / REC_MIROIR : actif simulé (ABSENTES acceptées) restreint au périmètre = lignes retenues du fichier
+    if (ctx.actif_simule) {
+      var miroir = verifierMiroir(ctx.actif_simule, comp, ctx.perimetre);
+      if (!controle('REC_MIROIR', miroir.attendu, miroir.obtenu, miroir.ok)) {
+        anomalies.push(A('REC_MIROIR', { attendu: miroir.attendu, obtenu: miroir.obtenu, cles: miroir.comptes }));
+      }
     }
 
-    // --- Équilibre
-    var total = lecture.totauxLecture;
-    if (total.debit_cts !== total.credit_cts) {
-      anomalies.push(A('EQU_GLOBAL', {
-        gravite: c.profil.type === 'GL' ? 'B' : 'BND',
-        attendu: total.debit_cts, obtenu: total.credit_cts, message: 'écart ' + (total.debit_cts - total.credit_cts) + ' cts'
-      }));
+    // --- C6 / équilibre
+    var total = lecture.totaux;
+    var okGlobal = controle('EQU_GLOBAL', total.debit_cts, total.credit_cts, total.debit_cts === total.credit_cts);
+    if (!okGlobal) {
+      anomalies.push(A('EQU_GLOBAL', { gravite: ctx.profil.type === 'GL' ? 'B' : 'BND', attendu: total.debit_cts,
+        obtenu: total.credit_cts, ecart: total.debit_cts - total.credit_cts }));
     }
-    comp.ecritures.forEach(function (e) {
-      if (!e.lignes.length || e.statut === 'COLLISION') return;
-      var s = somme(e.lignes);
+    comp.ecritures.forEach(function (ec) {
+      if (ec.statut === 'COLLISION' || ec.statut === 'DOUBLON_INTRA' || ec.statut === 'ABSENTE') return;
+      var s = somme(ec.lignes);
       if (s.debit_cts !== s.credit_cts) {
-        anomalies.push(A('EQU_ECRITURE', { objet_type: 'ECRITURE', objet_cle: e.cle, attendu: s.debit_cts, obtenu: s.credit_cts }));
+        anomalies.push(A('EQU_ECRITURE', { objet_type: 'ECRITURE', objet_cle: ec.cle, attendu: s.debit_cts, obtenu: s.credit_cts,
+          ecart: s.debit_cts - s.credit_cts }));
       }
     });
 
-    // --- Total logiciel (A6) : accepté temporairement, ne remplace pas les contrôles indépendants ci-dessus.
-    // Le total logiciel n'est rapproché que si toutes les lignes ont été interprétées
-    // (sinon REJ_LIGNES bloque déjà et l'écart serait mécanique).
-    var ts = c.totalSaisi;
-    if (lecture.rejets.length) {
-      // rien
-    } else if (ts) {
-      var confirme = ts.debit_cts_confirmation === undefined
-        || (ts.debit_cts_confirmation === ts.debit_cts && ts.credit_cts_confirmation === ts.credit_cts);
-      if (!confirme) {
-        anomalies.push(A('REC_TOTAL_SAISI', { objet_cle: 'SAISIE_NON_CONFIRMEE', message: 'double saisie du total discordante' }));
+    // --- A6 / P2 : total logiciel obligatoire pour un grand livre (C1 double saisie, C2 écart, C3 absence).
+    // Non rapproché s'il existe des lignes rejetées (REJ_LIGNES bloque déjà ; l'écart serait mécanique).
+    var ts = ctx.total_saisi;
+    if (!lecture.rejets.length) {
+      if (ts) {
+        var confirme = ts.debit_cts_confirmation === undefined
+          || (ts.debit_cts_confirmation === ts.debit_cts && ts.credit_cts_confirmation === ts.credit_cts);
+        if (!controle('REC_TOTAL_SAISI_CONFIRMATION', 'double saisie identique', confirme ? 'identique' : 'différente', confirme)) {
+          anomalies.push(A('REC_TOTAL_SAISI', { objet_cle: 'SAISIE_NON_CONFIRMEE' }));
+        }
+        var attenduTs = JSON.stringify({ debit_cts: ts.debit_cts, credit_cts: ts.credit_cts });
+        if (!controle('REC_TOTAL_SAISI', attenduTs, JSON.stringify(total), ts.debit_cts === total.debit_cts && ts.credit_cts === total.credit_cts)) {
+          anomalies.push(A('REC_TOTAL_SAISI', { objet_cle: 'ECART', attendu: attenduTs, obtenu: JSON.stringify(total),
+            ecart: (total.debit_cts - ts.debit_cts) + '/' + (total.credit_cts - ts.credit_cts) }));
+        }
+        if (typeof ts.nb_lignes === 'number' && !controle('REC_TOTAL_SAISI_LIGNES', ts.nb_lignes, cpt.normalisees, ts.nb_lignes === cpt.normalisees)) {
+          anomalies.push(A('REC_TOTAL_SAISI', { objet_cle: 'NB_LIGNES', attendu: ts.nb_lignes, obtenu: cpt.normalisees }));
+        }
+      } else if (ctx.profil.type === 'GL') {
+        controle('REC_TOTAL_SAISI', 'total saisi', 'absent', false);
+        anomalies.push(A('REC_TOTAL_SAISI', { objet_cle: 'TOTAL_ABSENT', message: 'total du logiciel obligatoire pour un grand livre (P2)' }));
       }
-      if (ts.debit_cts !== total.debit_cts || ts.credit_cts !== total.credit_cts) {
-        anomalies.push(A('REC_TOTAL_SAISI', { objet_cle: 'ECART', attendu: JSON.stringify({ debit_cts: ts.debit_cts, credit_cts: ts.credit_cts }), obtenu: JSON.stringify(total) }));
-      }
-      if (typeof ts.nb_lignes === 'number' && ts.nb_lignes !== cpt.valides) {
-        anomalies.push(A('REC_TOTAL_SAISI', { objet_cle: 'NB_LIGNES', attendu: ts.nb_lignes, obtenu: cpt.valides }));
-      }
-    } else if (c.profil.type === 'GL') {
-      anomalies.push(A('REC_TOTAL_SAISI', { objet_cle: 'TOTAL_ABSENT', message: 'total du logiciel non saisi pour un grand livre' }));
     }
 
     // --- Périmètre et comptes
     if (lecture.horsPerimetre.length) {
-      anomalies.push(A('PER_HORS_PERIMETRE', {
-        objet_type: 'LIGNES', obtenu: lecture.horsPerimetre.length,
-        attendu: c.perimetre.du + ' → ' + c.perimetre.au, details: { rangs: lecture.horsPerimetre }
-      }));
+      anomalies.push(A('PER_HORS_PERIMETRE', { nb: lecture.horsPerimetre.length, rangs: lecture.horsPerimetre,
+        attendu: ctx.perimetre.du + '/' + ctx.perimetre.au }));
     }
     var sourcesBase = {};
-    (c.actif || []).forEach(function (l) {
-      if (l.statut !== 'ACTIVE' || !l.compte_num_source) return;
+    (ctx.base || []).forEach(function (l) {
+      if (l.statut !== 'ACTIVE') return;
+      var compact = String(l.compte_num_source || '').replace(/[ .\-]/g, '').toUpperCase();
       var t = sourcesBase[l.compte_num] || (sourcesBase[l.compte_num] = []);
-      if (t.indexOf(l.compte_num_source) === -1) t.push(l.compte_num_source);
+      if (compact && t.indexOf(compact) === -1) t.push(compact);
     });
-    Object.keys(lecture.comptesSources).sort().forEach(function (compte) {
-      var sources = lecture.comptesSources[compte].concat((sourcesBase[compte] || []).filter(function (s) {
-        return lecture.comptesSources[compte].indexOf(s) === -1;
-      }));
+    Object.keys(lecture.comptesSources).sort(E.comparerTexte).forEach(function (compte) {
+      var sources = lecture.comptesSources[compte].slice();
+      (sourcesBase[compte] || []).forEach(function (s) { if (sources.indexOf(s) === -1) sources.push(s); });
       if (sources.length > 1) {
-        anomalies.push(A('CPT_COLLISION_PADDING', { objet_type: 'COMPTE', objet_cle: compte, obtenu: sources.slice().sort().join(', ') }));
+        anomalies.push(A('CPT_COLLISION_PADDING', { objet_type: 'COMPTE', objet_cle: compte, obtenu: sources.sort(E.comparerTexte).join(',') }));
       }
       if (!/^[1-8]/.test(compte)) anomalies.push(A('CPT_CLASSE', { objet_type: 'COMPTE', objet_cle: compte }));
     });
 
     // --- Identification
     var absentes = 0;
-    comp.ecritures.forEach(function (e) {
-      var o = { objet_type: 'ECRITURE', objet_cle: e.cle };
-      if (e.statut === 'COLLISION') anomalies.push(A('IDN_COLLISION', ext(o, { message: e.motif })));
-      if (e.doublons_ignores) anomalies.push(A('IDN_DOUBLON_INTRA', ext(o, { obtenu: e.doublons_ignores })));
-      if (e.statut === 'ABSENTE') {
+    var parCleDoublons = {};
+    comp.ecritures.forEach(function (ec) { if (ec.statut === 'DOUBLON_INTRA') parCleDoublons[ec.cle] = (parCleDoublons[ec.cle] || 0) + 1; });
+    var modDesc = [], modLet = [], reapp = [];
+    comp.ecritures.forEach(function (ec) {
+      var o = { objet_type: 'ECRITURE', objet_cle: ec.cle };
+      if (ec.statut === 'COLLISION') anomalies.push(A('IDN_COLLISION', ext(o, { message: ec.motif, rangs: ec.rangs })));
+      if (ec.statut === 'ABSENTE') {
         absentes++;
-        anomalies.push(A('IDN_ABSENTE', ext(o, {
-          message: e.base_validee ? '' : 'écriture en brouillard : peut-être validée sous un nouveau numéro (voir les NOUVELLES de même journal et date)'
-        })));
+        // P5 : sur exercice clôturé, une seule anomalie B, levée par une décision ABSENTE motivée (validation renforcée).
+        anomalies.push(A('IDN_ABSENTE', ext(o, { gravite: cloture ? 'B' : 'A', mention: cloture ? 'EXERCICE_CLOTURE' : '', message: ec.aide })));
+        return;
       }
-      if (e.statut === 'MODIFIEE') {
-        if (e.sous_types.indexOf('M_FOND') !== -1 || e.sous_types.indexOf('M_DATE') !== -1) {
-          anomalies.push(A('IDN_MOD_FOND', ext(o, { message: e.base_validee ? 'écriture validée modifiée' : '', obtenu: e.sous_types.join(',') })));
-        } else if (e.sous_types.indexOf('M_DESC') !== -1) {
-          anomalies.push(A('IDN_MOD_DESC', o));
-        } else if (e.sous_types.indexOf('M_LET') !== -1) {
-          anomalies.push(A('IDN_MOD_LET', o));
-        }
-        if (e.devalidee) anomalies.push(A('IDN_DEVALIDEE', o));
+      if (ec.statut === 'DOUBLON_INTRA') return;
+      if (parCleDoublons[ec.cle] && ec.bloc === 1) anomalies.push(A('IDN_DOUBLON_INTRA', ext(o, { nb: parCleDoublons[ec.cle] })));
+      if (ec.statut === 'MODIFIEE') {
+        if (ec.sous_types.indexOf('M_FOND') !== -1 || ec.sous_types.indexOf('M_DATE') !== -1) {
+          anomalies.push(A('IDN_MOD_FOND', ext(o, { mention: ec.validee_base ? 'VALIDEE' : '', obtenu: ec.sous_types.join(',') })));
+        } else if (ec.sous_types.indexOf('M_DESC') !== -1) modDesc.push(ec.cle);
+        else if (ec.sous_types.indexOf('M_LET') !== -1) modLet.push(ec.cle);
+        if (ec.validee_base && !ec.validee_fichier) anomalies.push(A('IDN_DEVALIDEE', o));
       }
-      if (e.statut === 'NOUVELLE' && e.reapparition) anomalies.push(A('IDN_REAPPARITION', o));
-      var mouvementSurCloture = e.statut === 'NOUVELLE' || e.statut === 'ABSENTE'
-        || (e.statut === 'MODIFIEE' && !(e.sous_types.length === 1 && e.sous_types[0] === 'M_LET'));
-      if (cloture && mouvementSurCloture) anomalies.push(A('PER_CLOTURE', ext(o, { obtenu: e.statut })));
+      if (ec.statut === 'NOUVELLE' && ec.reactivation) reapp.push(ec.cle);
+      var surCloture = ec.statut === 'NOUVELLE' || (ec.statut === 'MODIFIEE' && !(ec.sous_types.length === 1 && ec.sous_types[0] === 'M_LET'));
+      if (cloture && surCloture) anomalies.push(A('PER_CLOTURE', ext(o, { obtenu: ec.statut })));
     });
-    var enPerimetre = ecrituresBaseEnPerimetre(c.actif, c.perimetre);
-    var seuils = c.client.seuils || {};
-    if (absentes && enPerimetre && (absentes * 100 > (seuils.suppr_masse_pct || 5) * enPerimetre || absentes > (seuils.suppr_masse_nb || 50))) {
-      anomalies.push(A('VOL_SUPPR_MASSE', { attendu: '≤ ' + (seuils.suppr_masse_pct || 5) + ' % et ≤ ' + (seuils.suppr_masse_nb || 50), obtenu: absentes + ' / ' + enPerimetre }));
-    }
+    var seuils = ctx.client.seuils || {};
+    var pct = seuils.suppr_masse_pct === undefined ? 5 : seuils.suppr_masse_pct;
+    var nbMax = seuils.suppr_masse_nb === undefined ? 50 : seuils.suppr_masse_nb;
+    var base = comp.compteurs.ecritures_base_perimetre;
+    var massif = absentes > 0 && (absentes * 100 > pct * base || absentes > nbMax);
+    controle('VOL_SUPPR_MASSE', '<= ' + pct + ' % et <= ' + nbMax, absentes + '/' + base, !massif);
+    if (massif) anomalies.push(A('VOL_SUPPR_MASSE', { attendu: '<= ' + pct + ' % et <= ' + nbMax, obtenu: absentes + '/' + base, nb: absentes }));
 
-    // --- Informations
-    if (lecture.infos.montants_nuls) anomalies.push(A('MNT_NUL', { obtenu: lecture.infos.montants_nuls }));
-    if (lecture.infos.montants_negatifs) anomalies.push(A('MNT_NEG', { obtenu: lecture.infos.montants_negatifs }));
-    if (lecture.infos.a_neutraliser) anomalies.push(A('SEC_NEUTRALISE', { obtenu: lecture.infos.a_neutraliser }));
+    // --- Informations (agrégées)
+    if (modDesc.length) anomalies.push(A('IDN_MOD_DESC', { nb: modDesc.length, cles: modDesc }));
+    if (modLet.length) anomalies.push(A('IDN_MOD_LET', { nb: modLet.length, cles: modLet }));
+    if (reapp.length) anomalies.push(A('IDN_REAPPARITION', { nb: reapp.length, cles: reapp }));
+    var infos = lecture.infos;
+    if (infos.montants_nuls.length) anomalies.push(A('MNT_NUL', { nb: infos.montants_nuls.length, rangs: infos.montants_nuls }));
+    if (infos.montants_negatifs.length) anomalies.push(A('MNT_NEG', { nb: infos.montants_negatifs.length, rangs: infos.montants_negatifs }));
+    if (infos.decimales_nulles.length) anomalies.push(A('MNT_DECIMALES_NULLES', { nb: infos.decimales_nulles.length, rangs: infos.decimales_nulles }));
+    if (infos.a_neutraliser.length) anomalies.push(A('SEC_NEUTRALISE', { nb: infos.a_neutraliser.length, rangs: infos.a_neutraliser }));
 
-    return anomalies;
+    return {
+      controles: controles,
+      anomalies: trier(anomalies),
+      variations: ctx.actif_simule ? variationsSoldes(ctx.base, ctx.actif_simule) : []
+    };
+  }
+
+  function trier(anomalies) {
+    return anomalies.slice().sort(function (a, b) { return E.comparerTexte(a.anomalie_id, b.anomalie_id); });
+  }
+
+  function ext(base, plus) {
+    var o = {};
+    Object.keys(base).forEach(function (k) { o[k] = base[k]; });
+    Object.keys(plus).forEach(function (k) { o[k] = plus[k]; });
+    return o;
   }
 
   /**
-   * Totaux recalculés depuis les chaînes brutes, sans passer par Normalisation.parseMontant (contrôle indépendant A6).
-   * Règle minimale : on garde chiffres et séparateur décimal ; négatif si « - » ou « ( » ; deux décimales.
+   * Totaux recalculés depuis les chaînes brutes, sans Normalisation.parseMontant (contrôle indépendant A6).
+   * Règle minimale : chiffres et séparateur décimal conservés ; négatif si « - » ou « ( » ; deux décimales.
+   * P3 : chaque montant reste dans sa colonne, signe compris.
    */
   function totauxBruts(montantsBruts, profil) {
     var dec = profil.decimal;
@@ -227,23 +265,12 @@ var Controles = (function (Anomalies, Comparaison) {
     }
     var debit = 0, credit = 0;
     (montantsBruts || []).forEach(function (m) {
-      var signe;
-      if (profil.mode_sens === 'DEBIT_CREDIT') signe = cts(m.debit) - cts(m.credit);
-      else {
-        var sens = String(m.sens || '').trim().toUpperCase();
-        var estD = profil.valeurs_sens.D.some(function (v) { return String(v).toUpperCase() === sens; });
-        signe = estD ? cts(m.montant) : -cts(m.montant);
-      }
-      if (signe > 0) debit += signe; else credit -= signe;
+      if (profil.mode_sens === 'DEBIT_CREDIT') { debit += cts(m.debit); credit += cts(m.credit); return; }
+      var sens = String(m.sens || '').trim().toUpperCase();
+      var estD = profil.valeurs_sens.D.some(function (v) { return String(v).toUpperCase() === sens; });
+      if (estD) debit += cts(m.montant); else credit += cts(m.montant);
     });
     return { debit_cts: debit, credit_cts: credit };
-  }
-
-  function ext(base, plus) {
-    var o = {};
-    Object.keys(base).forEach(function (k) { o[k] = base[k]; });
-    Object.keys(plus).forEach(function (k) { o[k] = plus[k]; });
-    return o;
   }
 
   function somme(lignes) {
@@ -258,56 +285,47 @@ var Controles = (function (Anomalies, Comparaison) {
     return s;
   }
 
-  function ecrituresBaseEnPerimetre(actif, perimetre) {
-    var cles = {};
-    (actif || []).forEach(function (l) {
-      if (l.statut === 'ACTIVE' && Comparaison.dansPerimetre(l, perimetre)) cles[l.cle_ecriture] = true;
-    });
-    return Object.keys(cles).length;
-  }
-
-  /**
-   * REC_MIROIR : après fusion simulée (ABSENTES supposées acceptées), l'actif restreint au périmètre
-   * doit refléter exactement les lignes retenues du fichier situées dans le périmètre.
-   */
   function verifierMiroir(actifSimule, comp, perimetre) {
     var actives = actifSimule.filter(function (l) { return l.statut === 'ACTIVE' && Comparaison.dansPerimetre(l, perimetre); });
-    var fichier = comp.lignesConservees.filter(function (l) { return Comparaison.dansPerimetre(l, perimetre); });
+    var fichier = comp.lignesRetenues.filter(function (l) { return Comparaison.dansPerimetre(l, perimetre); });
     var sa = somme(actives), sf = somme(fichier);
     var ca = soldesParCompte(actives), cf = soldesParCompte(fichier);
     var comptes = Object.keys(ca).concat(Object.keys(cf)).filter(function (v, i, t) { return t.indexOf(v) === i; });
-    var ecarts = comptes.filter(function (k) { return (ca[k] || 0) !== (cf[k] || 0); });
-    if (actives.length === fichier.length && sa.debit_cts === sf.debit_cts && sa.credit_cts === sf.credit_cts && !ecarts.length) return null;
+    var ecarts = comptes.filter(function (k) { return (ca[k] || 0) !== (cf[k] || 0); }).sort(E.comparerTexte);
     return {
+      ok: actives.length === fichier.length && sa.debit_cts === sf.debit_cts && sa.credit_cts === sf.credit_cts && !ecarts.length,
       attendu: JSON.stringify({ lignes: fichier.length, debit: sf.debit_cts, credit: sf.credit_cts }),
       obtenu: JSON.stringify({ lignes: actives.length, debit: sa.debit_cts, credit: sa.credit_cts }),
-      details: { comptes_en_ecart: ecarts.sort() }
+      comptes: ecarts
     };
   }
 
-  /** Variation de solde par compte (actif simulé − actif courant), comptes en écart seulement. */
-  function variationsSoldes(actif, actifSimule) {
-    var avant = soldesParCompte((actif || []).filter(function (l) { return l.statut === 'ACTIVE'; }));
+  /**
+   * Variations de solde par compte sur l'exercice : [{compte, avant_cts, apres_cts, delta_cts}],
+   * deltas non nuls, triés par |delta| décroissant puis par compte.
+   */
+  function variationsSoldes(base, actifSimule) {
+    var avant = soldesParCompte((base || []).filter(function (l) { return l.statut === 'ACTIVE'; }));
     var apres = soldesParCompte((actifSimule || []).filter(function (l) { return l.statut === 'ACTIVE'; }));
-    var v = {};
-    Object.keys(avant).concat(Object.keys(apres)).forEach(function (k) {
-      var d = (apres[k] || 0) - (avant[k] || 0);
-      if (d !== 0) v[k] = d;
+    var comptes = Object.keys(avant).concat(Object.keys(apres)).filter(function (v, i, t) { return t.indexOf(v) === i; });
+    return comptes.map(function (k) {
+      return { compte: k, avant_cts: avant[k] || 0, apres_cts: apres[k] || 0, delta_cts: (apres[k] || 0) - (avant[k] || 0) };
+    }).filter(function (v) { return v.delta_cts !== 0; }).sort(function (a, b) {
+      var d = Math.abs(b.delta_cts) - Math.abs(a.delta_cts);
+      return d !== 0 ? d : E.comparerTexte(a.compte, b.compte);
     });
-    var trie = {};
-    Object.keys(v).sort().forEach(function (k) { trie[k] = v[k]; });
-    return trie;
   }
 
   return {
     controlesPrealables: controlesPrealables,
-    controlesStructure: controlesStructure,
-    controlesContenu: controlesContenu,
-    variationsSoldes: variationsSoldes,
+    executerControles: executerControles,
     totauxBruts: totauxBruts,
-    soldesParCompte: soldesParCompte
+    soldesParCompte: soldesParCompte,
+    variationsSoldes: variationsSoldes
   };
 })(
+  typeof Constantes !== 'undefined' ? Constantes : require('./constantes'),
+  typeof Empreinte !== 'undefined' ? Empreinte : require('./empreinte'),
   typeof Anomalies !== 'undefined' ? Anomalies : require('./anomalies'),
   typeof Comparaison !== 'undefined' ? Comparaison : require('./comparaison')
 );

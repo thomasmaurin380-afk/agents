@@ -4,10 +4,10 @@
  * aux résultats attendus, établis indépendamment du code (test/fixtures/attendus/*.json).
  *
  * Conventions de rapprochement (voir docs/import-comptable/resultats-tests.md) :
- * - rang des attendus = n° d'enregistrement de données (1 = première ligne après l'en-tête) ;
- *   rang du moteur = n° de ligne physique (en-tête = 1). Conversion : physique − 1 (aucun champ multiligne ici).
- * - montant devise absent : null dans les attendus, 0 dans le moteur.
- * - infos « M_DESC » / « M_LET » des attendus = codes IDN_MOD_DESC / IDN_MOD_LET du moteur.
+ * - rang = n° de ligne physique (en-tête = ligne 1), dans le moteur comme dans les attendus (E18) ;
+ * - montant devise absent = null (E7) ;
+ * - infos « M_DESC » / « M_LET » des attendus = codes IDN_MOD_DESC / IDN_MOD_LET du moteur ;
+ * - identité du client confirmée par le dossier de dépôt (ce que fournira l'adaptateur Drive, P6).
  */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -16,7 +16,7 @@ const P = require('../src/app/pipeline');
 const Publication = require('../src/core/publication');
 const Controles = require('../src/core/controles');
 const { lireFichier } = require('../src/adapters/node/fichiers');
-const { hasher, choixComplets } = require('./aides');
+const { hasher, choixComplets, variationsEnTable } = require('./aides');
 
 const FIX = path.join(__dirname, 'fixtures');
 const lire = (rel) => JSON.parse(fs.readFileSync(path.join(FIX, rel), 'utf8'));
@@ -29,7 +29,7 @@ function analyser(etat, spec, clientRel, importId) {
     client,
     analyse: P.analyserImport({
       etat, fichier: { texte: f.texte, nomFichier: f.nomFichier, sha256: f.sha256 }, profil, client,
-      perimetre: spec.perimetre, totalSaisi: spec.total_saisi, import_id: importId, hasher
+      perimetre: spec.perimetre, totalSaisi: spec.total_saisi, identite: { dossier_client_id: client.client_id }, import_id: importId, hasher
     })
   };
 }
@@ -40,8 +40,8 @@ function executer(scenario) {
   scenario.base.forEach((b, i) => {
     const { analyse } = analyser(etat, b, b.client || scenario.client, 'BASE-' + (i + 1));
     assert.equal(analyse.rejete, false, `base ${b.fichier} rejetée : ${analyse.anomalies.map((a) => a.code)}`);
-    const v = P.valider(etat, analyse, choixComplets(analyse), hasher);
-    const r = P.publier(etat, analyse, v, 'PUB-BASE-' + (i + 1), hasher);
+    const validee = P.valider(etat, analyse, choixComplets(analyse), hasher);
+    const r = P.publier(etat, analyse, validee, { publication_id: 'PUB-BASE-' + (i + 1) }, hasher);
     assert.equal(r.ok, true, JSON.stringify(r.refus));
     etat = r.etat;
   });
@@ -73,41 +73,41 @@ function comparer(scenario, res) {
 
   if (att.compteurs_lignes) {
     const c = a.lecture.compteurs;
-    const comp = a.comparaison || { lignesConservees: [], lignesDoublonsIgnorees: 0 };
+    const comp = a.comparaison ? a.comparaison.compteurs : { lignes_retenues: 0, lignes_doublons_ignorees: 0 };
     verifier('compteurs_lignes', {
-      lues: c.lues, importees: comp.lignesConservees.length, rejetees: c.rejetees, vides: c.vides,
-      doublons_ignores: comp.lignesDoublonsIgnorees
+      lues: c.lues, importees: comp.lignes_retenues, rejetees: c.rejetees, vides: c.vides,
+      doublons_ignores: comp.lignes_doublons_ignorees
     }, att.compteurs_lignes);
   } else {
     // Import arrêté avant l'interprétation des lignes : aucune ligne normalisée, aucune comparaison.
     verifier('aucune ligne interprétée', a.lecture ? a.lecture.lignes.length : 0, 0);
     verifier('aucune comparaison', a.comparaison, null);
   }
-  if (att.totaux) verifier('totaux (lignes importées)', somme(a.comparaison ? a.comparaison.lignesConservees : a.lecture.lignes), att.totaux);
-  if (att.totaux_fichier) verifier('totaux_fichier', a.lecture.totauxLecture, att.totaux_fichier);
+  if (att.totaux) verifier('totaux (lignes importées)', somme(a.comparaison ? a.comparaison.lignesRetenues : a.lecture.lignes), att.totaux);
+  if (att.totaux_fichier) verifier('totaux_fichier', a.lecture.totaux, att.totaux_fichier);
 
   if (att.statuts && Object.keys(att.statuts).length) {
     const obtenus = {};
     Object.keys(att.statuts).forEach((k) => {
-      obtenus[k] = k === 'REIMPORT_FICHIER' ? (a.statut === 'REIMPORT_FICHIER' ? 1 : 0) : a.comparaison.compteurs[k];
+      obtenus[k] = k === 'REIMPORT_FICHIER' ? (a.statut === 'REIMPORT_FICHIER' ? 1 : 0) : a.comparaison.compteurs.par_statut[k];
     });
     verifier('statuts', obtenus, att.statuts);
   }
   if (att.sous_types) {
-    const st = { M_FOND: 0, M_DATE: 0, M_DESC: 0, M_LET: 0 };
-    a.comparaison.ecritures.forEach((e) => e.sous_types.forEach((s) => { st[s]++; }));
-    verifier('sous_types', st, att.sous_types);
+    verifier('sous_types', a.comparaison.compteurs.par_sous_type, att.sous_types);
   }
   Object.entries(att.ecritures || {}).forEach(([cle, e]) => {
-    const ob = a.comparaison && a.comparaison.ecritures.find((x) => court(x.cle) === cle);
+    const ob = a.comparaison && a.comparaison.ecritures.find((x) => court(x.cle) === cle && x.bloc <= 1);
     if (e.statut === null) { if (ob) ecarts.push(`écriture ${cle} présente alors qu'elle doit être absente`); return; }
     if (!ob) { ecarts.push(`écriture ${cle} absente du résultat`); return; }
     verifier(`${cle}.statut`, ob.statut, e.statut);
     if (e.sous_types) verifier(`${cle}.sous_types`, ob.sous_types, e.sous_types);
     if (e.nb_lignes !== undefined) verifier(`${cle}.nb_lignes`, ob.lignes.length, e.nb_lignes);
     if (e.doublon_intra) {
-      verifier(`${cle}.blocs_ignores`, ob.doublons_ignores, e.doublon_intra.blocs_ignores);
-      verifier(`${cle}.rangs_conserves`, ob.lignes.map((l) => l.source_rang - 1), e.doublon_intra.rangs_conserves);
+      const ignores = a.comparaison.ecritures.filter((x) => x.cle === ob.cle && x.statut === 'DOUBLON_INTRA');
+      verifier(`${cle}.blocs_ignores`, ignores.length, e.doublon_intra.blocs_ignores);
+      verifier(`${cle}.rangs_conserves`, ob.rangs, e.doublon_intra.rangs_conserves);
+      verifier(`${cle}.rangs_ignores`, [].concat(...ignores.map((x) => x.rangs)), e.doublon_intra.rangs_ignores);
     }
     if (e.brouillard) verifier(`${cle}.brouillard`, (ob.lignes.length ? ob.lignes : ob.lignes_base).every((l) => l.valid_date === ''), true);
   });
@@ -130,9 +130,11 @@ function comparer(scenario, res) {
     if (x.code === 'REIMPORT_FICHIER') { verifier('info REIMPORT_FICHIER', a.statut, 'REIMPORT_FICHIER'); return; }
     const code = alias[x.code] || x.code;
     const objet = objetComparable(x.objet);
-    const trouve = infos.filter((i) => i.code === code && (!objet || court(i.objet_cle) === objet.cle));
+    // Les informations sont agrégées par code : l'écriture visée doit figurer dans la liste des clés.
+    const trouve = infos.filter((i) => i.code === code && (!objet || i.cles.map(court).includes(objet.cle)));
     if (!trouve.length) { ecarts.push(`info ${x.code} ${x.objet || ''} non trouvée`); return; }
-    if (x.nb_lignes !== undefined) verifier(`info ${x.code}.nb_lignes`, Number(trouve[0].obtenu), x.nb_lignes);
+    if (x.nb_lignes !== undefined) verifier(`info ${x.code}.nb_lignes`, trouve[0].nb, x.nb_lignes);
+    if (x.rangs !== undefined) verifier(`info ${x.code}.rangs`, trouve[0].rangs, x.rangs);
   });
 
   // Variations de soldes, selon les hypothèses définies dans les attendus :
@@ -140,16 +142,13 @@ function comparer(scenario, res) {
   // - variations_soldes_si_absentes_acceptees : après acceptation des ABSENTES (= restitution du moteur) ;
   // - variations_soldes_modifiees : contribution des seules écritures MODIFIEE.
   const tri = (o) => Object.fromEntries(Object.entries(o).sort());
-  if (att.variations_soldes && !a.comparaison) verifier('variations de soldes (import arrêté)', a.variationsSoldes, tri(att.variations_soldes));
+  if (att.variations_soldes && !a.comparaison) verifier('variations de soldes (import arrêté)', variationsEnTable(a.variations), tri(att.variations_soldes));
   if (att.variations_soldes && a.comparaison) {
-    const maintenir = {};
-    a.comparaison.ecritures.forEach((e) => { if (e.statut === 'ABSENTE') maintenir[e.cle] = 'REPORTER'; });
-    const simule = Publication.construireActif({ actif: res.etat.actif, comparaison: a.comparaison, decisions: maintenir,
-      import_id: 'X', publication_id: 'SIMULATION', hasher }).actif;
-    verifier('variations de soldes (ABSENTES maintenues)', Controles.variationsSoldes(res.etat.actif, simule), tri(att.variations_soldes));
+    const simule = Publication.simulerActif({ base: res.etat.actif, comparaison: a.comparaison, hypothese: 'ABSENTES_MAINTENUES', hasher });
+    verifier('variations de soldes (ABSENTES maintenues)', variationsEnTable(Controles.variationsSoldes(res.etat.actif, simule)), tri(att.variations_soldes));
   }
   if (att.variations_soldes_si_absentes_acceptees && a.comparaison) {
-    verifier('variations de soldes (ABSENTES acceptées)', a.variationsSoldes, tri(att.variations_soldes_si_absentes_acceptees));
+    verifier('variations de soldes (ABSENTES acceptées)', variationsEnTable(a.variations), tri(att.variations_soldes_si_absentes_acceptees));
   }
   if (att.variations_soldes_modifiees) {
     const v = {};
@@ -168,18 +167,18 @@ function comparer(scenario, res) {
     ref.forEach((r, i) => {
       const l = lignes[i];
       if (!l) return;
-      Object.keys(r).filter((k) => !['rang', 'cle', 'description'].includes(k)).forEach((k) => {
-        if (k === 'client_id' || k === 'exercice_id') return;
-        const attendu = k === 'montant_devise_cts' && r[k] === null ? 0 : r[k];
-        if (l[k] !== attendu) ecarts.push(`ligne ${r.rang}.${k} : obtenu ${JSON.stringify(l[k])}, attendu ${JSON.stringify(attendu)}`);
+      verifier(`ligne ${r.rang}.rang`, l.source_rang, r.rang);
+      Object.keys(r).filter((k) => !['rang', 'cle', 'description', 'client_id', 'exercice_id'].includes(k)).forEach((k) => {
+        if (l[k] !== r[k]) ecarts.push(`ligne ${r.rang}.${k} : obtenu ${JSON.stringify(l[k])}, attendu ${JSON.stringify(r[k])}`);
       });
     });
   }
   if (att.comparaison_S01) {
     const ref = lire(att.comparaison_S01.reference).lignes;
-    const signature = (l) => [court(l.cle_ecriture || ''), l.compte_num, l.debit_cts, l.credit_cts].join('|');
-    const sigRef = ref.map((r) => [r.cle, r.compte_num, r.debit_cts, r.credit_cts].join('|')).sort();
-    verifier('fond identique à S01 (clé, compte, débit, crédit)', a.lecture.lignes.map(signature).sort(), sigRef);
+    // P3 : un montant négatif reste dans sa colonne ; le fond comptable se compare sur le montant signé (débit − crédit).
+    const signature = (l) => [court(l.cle_ecriture || ''), l.compte_num, l.debit_cts - l.credit_cts].join('|');
+    const sigRef = ref.map((r) => [r.cle, r.compte_num, r.debit_cts - r.credit_cts].join('|')).sort();
+    verifier('fond identique à S01 (clé, compte, montant signé)', a.lecture.lignes.map(signature).sort(), sigRef);
   }
   return ecarts;
 }

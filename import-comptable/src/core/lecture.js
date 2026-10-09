@@ -1,128 +1,117 @@
 /**
- * Lecture et normalisation d'un fichier : texte décodé → lignes canoniques + rejets + compteurs.
- * Aucune décision de classification ici : seulement la mise au format commun.
+ * Lecture et normalisation d'un fichier : texte décodé → lignes canoniques, rejets, compteurs.
+ * Aucune classification ici. P3 : un montant négatif reste dans sa colonne, sans reclassement.
  */
-var Lecture = (function (Csv, Normalisation, Profil, Identite) {
+var Lecture = (function (C, Normalisation, Csv, Profil, Identite) {
   'use strict';
 
   /**
-   * @param {{texte: string, nomFichier: string, profil: object, client: object,
-   *          perimetre: {exercice_id: string, du: string, au: string}}} entree
-   * @returns {{
-   *   structureValide: boolean,
-   *   anomaliesStructure: {code: string, message: string}[],
-   *   bom: boolean,
-   *   lignes: object[],
-   *   rejets: {rang: number, codes: string[]}[],
-   *   horsPerimetre: number[],
-   *   compteurs: {lues: number, vides: number, rejetees: number, valides: number,
-   *               lignes_physiques: number, lignes_couvertes: number},
-   *   totauxLecture: {debit_cts: number, credit_cts: number},
-   *   infos: {montants_negatifs: number, montants_nuls: number, a_neutraliser: number},
-   *   comptesSources: Object<string, string[]>
-   * }}
+   * @param {{texte: string, nomFichier: string, profil: object, client: object, perimetre: object,
+   *          import_id: string, file_sha256: string}} e
    */
-  function normaliserFichier(entree) {
-    var profil = entree.profil;
-    var client = entree.client;
-    var perimetre = entree.perimetre;
-    Profil.validerProfil(profil);
-    verifierPerimetre(client, perimetre);
+  function normaliserFichier(e) {
+    if (!e || typeof e.texte !== 'string') throw C.erreurContrat('ARGUMENT_MANQUANT', 'texte');
+    var profil = e.profil;
+    var v = Profil.validerProfil(profil);
+    if (!v.ok) throw C.erreurContrat('PROFIL_INVALIDE', v.erreurs[0].champ);
+    Profil.validerClient(e.client);
+    Profil.validerPerimetre(e.perimetre, e.client);
 
-    var resultat = {
-      structureValide: true,
+    var r = {
+      structure_ok: true,
       anomaliesStructure: [],
       bom: false,
+      entete: [],
       lignes: [],
       rejets: [],
+      lignesRejetees: [],
       horsPerimetre: [],
-      compteurs: { lues: 0, vides: 0, rejetees: 0, valides: 0, lignes_physiques: 0, lignes_couvertes: 0 },
-      totauxLecture: { debit_cts: 0, credit_cts: 0 },
-      infos: { montants_negatifs: 0, montants_nuls: 0, a_neutraliser: 0 },
-      comptesSources: {},
-      montantsBruts: []
+      montants_bruts: [],
+      compteurs: { lignes_physiques: 0, lignes_couvertes: 0, lues: 0, normalisees: 0, rejetees: 0, vides: 0 },
+      totaux: { debit_cts: 0, credit_cts: 0 },
+      infos: { montants_negatifs: [], montants_nuls: [], decimales_nulles: [], a_neutraliser: [] },
+      comptesSources: {}
     };
 
-    Normalisation.verifierEncodage(entree.texte).forEach(function (code) {
-      resultat.anomaliesStructure.push({ code: 'STR_ENCODAGE', message: code });
+    Normalisation.verifierEncodage(e.texte).forEach(function (motif) {
+      r.anomaliesStructure.push({ code: 'STR_ENCODAGE', motif: motif, colonne: '' });
     });
 
-    var csv = Csv.parseCsv(entree.texte, { separateur: profil.separateur });
-    resultat.bom = csv.bom;
-    resultat.compteurs.lignes_physiques = csv.lignesPhysiques;
-    resultat.compteurs.lignes_couvertes = csv.entete.length || csv.enregistrements.length ? 1 : 0;
-    csv.erreurs.forEach(function (e) {
-      resultat.anomaliesStructure.push({ code: 'STR_ENTETE', message: 'guillemet non fermé (ligne ' + e.rang + ')' });
-    });
+    var csv = Csv.parseCsv(e.texte, { separateur: profil.separateur });
+    r.bom = csv.bom;
+    r.entete = csv.entete.map(Normalisation.normTexte);
+    r.compteurs.lignes_physiques = csv.lignesPhysiques;
+    r.compteurs.lignes_couvertes = csv.entete.length || csv.enregistrements.length ? 1 : 0;
+    csv.erreurs.forEach(function (x) { r.anomaliesStructure.push({ code: 'STR_ENTETE', motif: 'GUILLEMET', colonne: 'ligne ' + x.rang }); });
 
     var mapping = Profil.mapperEntete(csv.entete, profil);
-    mapping.anomalies.forEach(function (a) { resultat.anomaliesStructure.push(a); });
-    resultat.structureValide = resultat.anomaliesStructure.length === 0;
-    var interpreter = resultat.structureValide; // encodage ou en-tête défaillant : aucune ligne n'est interprétée
+    mapping.erreurs.forEach(function (x) {
+      var msg = x.colonne;
+      if (x.motif === 'COLONNE_MANQUANTE' && profil.colonnes[x.colonne] === 'ecriture_num') msg += ' — numéro d\'écriture requis (A1) : exporter le FEC';
+      r.anomaliesStructure.push({ code: 'STR_ENTETE', motif: x.motif, colonne: msg });
+    });
+    r.structure_ok = r.anomaliesStructure.length === 0;
 
     csv.enregistrements.forEach(function (enr) {
-      resultat.compteurs.lues++;
-      resultat.compteurs.lignes_couvertes += enr.ligneFin - enr.rang + 1;
-      if (enr.vide) { resultat.compteurs.vides++; return; }
-      if (!interpreter) return;
-      var r = normaliserEnregistrement(enr, csv.entete.length, mapping.index, profil, client, perimetre);
-      if (r.codes.length) {
-        resultat.rejets.push({ rang: enr.rang, codes: r.codes });
-        resultat.compteurs.rejetees++;
+      r.compteurs.lues++;
+      r.compteurs.lignes_couvertes += enr.ligneFin - enr.rang + 1;
+      if (enr.vide) { r.compteurs.vides++; return; }
+      if (!r.structure_ok) return; // encodage ou en-tête défaillant : aucune ligne n'est interprétée
+      var n = normaliserEnregistrement(enr, csv.entete.length, mapping.index, profil, e);
+      if (n.rejets.length) {
+        Array.prototype.push.apply(r.rejets, n.rejets);
+        r.lignesRejetees.push(enr.rang);
+        r.compteurs.rejetees++;
         return;
       }
-      var ligne = r.ligne;
-      resultat.compteurs.valides++;
-      resultat.totauxLecture.debit_cts += ligne.debit_cts;
-      resultat.totauxLecture.credit_cts += ligne.credit_cts;
-      if (r.negatif) resultat.infos.montants_negatifs++;
-      if (ligne.debit_cts === 0 && ligne.credit_cts === 0) resultat.infos.montants_nuls++;
-      if (r.aNeutraliser) resultat.infos.a_neutraliser++;
-      if (ligne.ecriture_date < perimetre.du || ligne.ecriture_date > perimetre.au) resultat.horsPerimetre.push(enr.rang);
-      var sources = resultat.comptesSources[ligne.compte_num] || (resultat.comptesSources[ligne.compte_num] = []);
-      if (sources.indexOf(ligne.compte_num_source) === -1) sources.push(ligne.compte_num_source);
-      resultat.montantsBruts.push(r.montantsBruts);
-      resultat.lignes.push(ligne);
+      var l = n.ligne;
+      r.compteurs.normalisees++;
+      r.totaux.debit_cts += l.debit_cts;
+      r.totaux.credit_cts += l.credit_cts;
+      if (l.debit_cts < 0 || l.credit_cts < 0) r.infos.montants_negatifs.push(enr.rang);
+      if (l.debit_cts === 0 && l.credit_cts === 0) r.infos.montants_nuls.push(enr.rang);
+      if (n.decimalesNulles) r.infos.decimales_nulles.push(enr.rang);
+      if (n.aNeutraliser) r.infos.a_neutraliser.push(enr.rang);
+      if (l.ecriture_date < e.perimetre.du || l.ecriture_date > e.perimetre.au) r.horsPerimetre.push(enr.rang);
+      var sources = r.comptesSources[l.compte_num] || (r.comptesSources[l.compte_num] = []);
+      if (sources.indexOf(n.compact) === -1) sources.push(n.compact);
+      r.montants_bruts.push(n.bruts);
+      r.lignes.push(l);
     });
-    if (!interpreter) resultat.compteurs.rejetees = resultat.compteurs.lues - resultat.compteurs.vides;
-
-    return resultat;
+    if (!r.structure_ok) r.compteurs.rejetees = r.compteurs.lues - r.compteurs.vides;
+    return r;
   }
 
-  function verifierPerimetre(client, perimetre) {
-    if (!client || !client.client_id) throw new Error('Client absent');
-    if (!(client.longueur_compte > 0)) throw new Error('longueur_compte du client invalide');
-    if (!perimetre || !perimetre.exercice_id || !perimetre.du || !perimetre.au) throw new Error('Périmètre obligatoire (exercice_id, du, au)');
-    var ex = (client.exercices || []).filter(function (e) { return e.id === perimetre.exercice_id; })[0];
-    if (!ex) throw new Error('Exercice inconnu : ' + perimetre.exercice_id);
-    if (perimetre.du > perimetre.au || perimetre.du < ex.debut || perimetre.au > ex.fin) {
-      throw new Error('Périmètre hors de l\'exercice ' + ex.id);
-    }
-  }
-
-  function normaliserEnregistrement(enr, nbColonnes, index, profil, client, perimetre) {
-    var codes = [];
-    if (enr.champs.length !== nbColonnes) return { codes: ['STR_COLONNES'] };
+  function normaliserEnregistrement(enr, nbColonnes, index, profil, e) {
+    var rejets = [];
+    function rejet(motif, champ) { rejets.push({ rang: enr.rang, motif: motif, champ: champ || '' }); }
+    if (enr.champs.length !== nbColonnes) { rejet('COLONNES'); return { rejets: rejets }; }
     function brut(champ) { return index[champ] === undefined ? '' : enr.champs[index[champ]]; }
-    function exiger(champ, valeur) { if (valeur === '') codes.push('CHP_OBLIG:' + champ); }
+    function exiger(champ, valeur) { if (valeur === '') rejet('CHP_VIDE', champ); }
     function date(champ, obligatoire) {
       var d = Normalisation.parseDate(brut(champ), profil.format_date);
-      if (!d.ok) { codes.push(d.code + ':' + champ); return ''; }
+      if (!d.ok) { rejet(d.motif, champ); return ''; }
       if (obligatoire) exiger(champ, d.iso);
       return d.iso;
     }
+    var decimalesNulles = false;
+    function montant(champ) {
+      var m = Normalisation.parseMontant(brut(champ), profil.decimal);
+      if (!m.ok) { rejet(m.motif, champ); return null; }
+      if (m.decimalesNulles) decimalesNulles = true;
+      return m;
+    }
 
-    var ligne = {
-      client_id: client.client_id,
-      exercice_id: perimetre.exercice_id,
+    var compte = Normalisation.normCompte(brut('compte_num'), e.client.longueur_compte);
+    var l = {
+      client_id: e.client.client_id,
+      exercice_id: e.perimetre.exercice_id,
       cle_ecriture: '',
       journal_code: Normalisation.normCode(brut('journal_code')),
       journal_lib: Normalisation.normTexte(brut('journal_lib')),
       ecriture_num: Normalisation.normTexte(brut('ecriture_num')),
       ecriture_date: date('ecriture_date', true),
-      compte_num: '',
-      compte_num_source: Normalisation.normTexte(brut('compte_num')).replace(/[\s.\-]/g, '').toUpperCase(),
-      source_type: profil.type,
+      compte_num: compte.ok ? compte.compte : '',
       compte_lib: Normalisation.normTexte(brut('compte_lib')),
       comp_aux_num: Normalisation.normAuxiliaire(brut('comp_aux_num')),
       comp_aux_lib: Normalisation.normTexte(brut('comp_aux_lib')),
@@ -131,77 +120,75 @@ var Lecture = (function (Csv, Normalisation, Profil, Identite) {
       ecriture_lib: Normalisation.normTexte(brut('ecriture_lib')),
       debit_cts: 0,
       credit_cts: 0,
-      montant_cts: 0,
       ecriture_let: Normalisation.normTexte(brut('ecriture_let')),
       date_let: date('date_let', false),
       valid_date: date('valid_date', false),
-      montant_devise_cts: 0,
+      montant_devise_cts: null,
       idevise: Normalisation.normCode(brut('idevise')),
+      montant_cts: 0,
+      compte_num_source: compte.ok ? compte.source : Normalisation.normTexte(brut('compte_num')),
+      source_type: profil.type,
+      profil_id: profil.profil_id,
+      profil_version: profil.version,
+      source_import_id: e.import_id || '',
       source_rang: enr.rang
     };
-    exiger('journal_code', ligne.journal_code);
-    exiger('ecriture_num', ligne.ecriture_num);
-    exiger('ecriture_lib', ligne.ecriture_lib);
-    if (profil.type === 'FEC') exiger('piece_ref', ligne.piece_ref);
+    exiger('journal_code', l.journal_code);
+    exiger('ecriture_num', l.ecriture_num);
+    exiger('ecriture_lib', l.ecriture_lib);
+    if (profil.type === 'FEC') exiger('piece_ref', l.piece_ref);
+    if (l.journal_code.indexOf('|') !== -1) rejet('CAR_INTERDIT', 'journal_code');
+    if (l.ecriture_num.indexOf('|') !== -1) rejet('CAR_INTERDIT', 'ecriture_num');
+    if (!compte.ok) rejet(compte.motif, 'compte_num');
+    else if (compte.vide) rejet('CHP_VIDE', 'compte_num');
+    if ((profil.lettrage_vide || []).indexOf(l.ecriture_let) !== -1) l.ecriture_let = '';
 
-    var compte = Normalisation.normCompte(brut('compte_num'), client.longueur_compte);
-    if (!compte.ok) codes.push(compte.code);
-    else if (compte.vide) codes.push('CHP_OBLIG:compte_num');
-    else ligne.compte_num = compte.compte;
-
-    if ((profil.lettrage_vide || []).indexOf(ligne.ecriture_let) !== -1) ligne.ecriture_let = '';
-
-    var negatif = false;
+    var bruts;
     if (profil.mode_sens === 'DEBIT_CREDIT') {
-      var d = Normalisation.parseMontant(brut('debit'), profil.decimal);
-      var c = Normalisation.parseMontant(brut('credit'), profil.decimal);
-      if (!d.ok) codes.push(d.code + ':debit');
-      if (!c.ok) codes.push(c.code + ':credit');
-      if (d.ok && c.ok) {
-        if (d.cts !== 0 && c.cts !== 0) codes.push('MNT_DC_DOUBLE');
-        negatif = d.negatif || c.negatif;
-        ligne.montant_cts = d.cts - c.cts;
+      bruts = { rang: enr.rang, debit: brut('debit'), credit: brut('credit'), montant: '', sens: '' };
+      var d = montant('debit');
+      var c = montant('credit');
+      if (d && c) {
+        if (d.vide && c.vide) rejet('CHP_VIDE', 'debit');
+        else if (d.cts !== 0 && c.cts !== 0) rejet('DC_DOUBLE', 'debit');
+        // P3 : valeur d'origine conservée dans sa colonne, même négative (aucun reclassement automatique).
+        l.debit_cts = d.cts;
+        l.credit_cts = c.cts;
       }
     } else {
-      var m = Normalisation.parseMontant(brut('montant'), profil.decimal);
-      if (!m.ok) codes.push(m.code + ':montant');
+      bruts = { rang: enr.rang, debit: '', credit: '', montant: brut('montant'), sens: brut('sens') };
+      var m = montant('montant');
       var sens = Normalisation.normTexte(brut('sens')).toUpperCase();
-      var estD = contientSans(profil.valeurs_sens.D, sens);
-      var estC = contientSans(profil.valeurs_sens.C, sens);
-      if (estD === estC) codes.push('SENS_INCONNU');
-      if (m.ok && estD !== estC) {
-        negatif = m.negatif;
-        ligne.montant_cts = estD ? m.cts : -m.cts;
+      var estD = contient(profil.valeurs_sens.D, sens);
+      var estC = contient(profil.valeurs_sens.C, sens);
+      if (estD === estC) rejet('SENS_INCONNU', 'sens');
+      if (m && m.vide) rejet('CHP_VIDE', 'montant');
+      if (m && estD !== estC) {
+        if (estD) l.debit_cts = m.cts; else l.credit_cts = m.cts;
       }
     }
-    ligne.debit_cts = ligne.montant_cts > 0 ? ligne.montant_cts : 0;
-    ligne.credit_cts = ligne.montant_cts < 0 ? -ligne.montant_cts : 0;
+    l.montant_cts = l.debit_cts - l.credit_cts;
 
-    var md = Normalisation.parseMontant(brut('montant_devise'), profil.decimal);
-    if (!md.ok) codes.push(md.code + ':montant_devise');
-    else ligne.montant_devise_cts = md.cts;
+    var md = montant('montant_devise');
+    if (md && !md.vide) l.montant_devise_cts = md.cts;
 
-    if (codes.length) return { codes: codes };
-    ligne.cle_ecriture = Identite.cleEcriture(ligne, profil);
+    if (rejets.length) return { rejets: rejets };
+    l.cle_ecriture = Identite.cleEcriture(l, profil);
     var aNeutraliser = ['journal_lib', 'compte_lib', 'comp_aux_lib', 'piece_ref', 'ecriture_lib', 'ecriture_num']
-      .some(function (k) { return Normalisation.doitEtreNeutralise(ligne[k]); });
-    var montantsBruts = profil.mode_sens === 'DEBIT_CREDIT'
-      ? { rang: enr.rang, debit: brut('debit'), credit: brut('credit') }
-      : { rang: enr.rang, montant: brut('montant'), sens: brut('sens') };
-    return { codes: [], ligne: ligne, negatif: negatif, aNeutraliser: aNeutraliser, montantsBruts: montantsBruts };
+      .some(function (k) { return Normalisation.doitEtreNeutralise(l[k]); });
+    return { rejets: [], ligne: l, compact: compte.compact, bruts: bruts, decimalesNulles: decimalesNulles, aNeutraliser: aNeutraliser };
   }
 
-  function contientSans(liste, valeur) {
-    for (var i = 0; i < liste.length; i++) {
-      if (String(liste[i]).toUpperCase() === valeur) return true;
-    }
+  function contient(liste, valeur) {
+    for (var i = 0; i < liste.length; i++) if (String(liste[i]).toUpperCase() === valeur) return true;
     return false;
   }
 
   return { normaliserFichier: normaliserFichier };
 })(
-  typeof Csv !== 'undefined' ? Csv : require('./csv'),
+  typeof Constantes !== 'undefined' ? Constantes : require('./constantes'),
   typeof Normalisation !== 'undefined' ? Normalisation : require('./normalisation'),
+  typeof Csv !== 'undefined' ? Csv : require('./csv'),
   typeof Profil !== 'undefined' ? Profil : require('./profil'),
   typeof Identite !== 'undefined' ? Identite : require('./identite')
 );

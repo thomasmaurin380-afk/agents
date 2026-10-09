@@ -32,7 +32,6 @@
         "objet": "fichier",
         "nb_lignes": 36,
         "rangs": [
-          1,
           2,
           3,
           4,
@@ -67,13 +66,15 @@
           33,
           34,
           35,
-          36
+          36,
+          37
         ],
         "motif": "champ indispensable ecriture_num vide",
         "message": "exporter le FEC"
       }
     ],
     "infos": [],
-    "notes": "En-tête conforme, mais ecriture_num (indispensable) vide sur les 36 lignes → 36 lignes rejetées, REJ_LIGNES agrégé (BND). Aucune ligne importée, donc aucun classement."
+    "notes": "En-tête conforme, mais ecriture_num (indispensable) vide sur les 36 lignes → 36 lignes rejetées, REJ_LIGNES agrégé (BND). Aucune ligne importée, donc aucun classement.",
+    "convention_rang": "Convention E18 (2026-10-09) : rangs = numéros de ligne physique du fichier (en-tête = ligne 1). Conversion +1 des rangs d'origine (n° d'enregistrement de données), sans autre changement."
   }
 }

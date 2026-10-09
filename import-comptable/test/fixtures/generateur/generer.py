@@ -370,7 +370,7 @@ def lignes_gl(ecrs, avec_numero=True, numero_vide=False):
 # ---------------------------------------------------------------------------
 def canoniques(ecrs):
     res = []
-    rang = 0
+    rang = 1  # convention E18 : rang = ligne physique, l'en-tête occupe la ligne 1
     for e in ecrs:
         for l in e["lignes"]:
             rang += 1
@@ -473,6 +473,7 @@ def main():
                            "(la neutralisation des formules est faite à l'écriture dans Sheets "
                            "et la relecture doit restituer cette valeur).",
             "lignes": canoniques(s01()),
+            "convention_rang": "Convention E18 (2026-10-09) : rangs = numéros de ligne physique du fichier (en-tête = ligne 1). Conversion +1 des rangs d'origine (n° d'enregistrement de données), sans autre changement.",
         }, f, ensure_ascii=False, indent=1)
         f.write("\n")
     print("Fichiers générés dans", SCN)

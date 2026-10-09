@@ -4,25 +4,84 @@
   "client": "client-CLI-TEST.json",
   "profil": "profils/FEC_GENERIQUE.json",
   "fichier": "scenarios/S09/123456789FEC20260331.txt",
-  "perimetre": { "exercice_id": "2026", "du": "2026-01-01", "au": "2026-03-31" },
+  "perimetre": {
+    "exercice_id": "2026",
+    "du": "2026-01-01",
+    "au": "2026-03-31"
+  },
   "base": [],
   "attendu": {
     "rejete": true,
-    "compteurs_lignes": { "lues": 10, "importees": 8, "rejetees": 2, "vides": 0, "doublons_ignores": 0 },
-    "totaux": { "debit_cts": 48000, "credit_cts": 48000 },
-    "statuts": { "NOUVELLE": 3, "INCHANGEE": 0, "MODIFIEE": 0, "ABSENTE": 0, "COLLISION": 0, "DOUBLON_INTRA": 0 },
+    "compteurs_lignes": {
+      "lues": 10,
+      "importees": 8,
+      "rejetees": 2,
+      "vides": 0,
+      "doublons_ignores": 0
+    },
+    "totaux": {
+      "debit_cts": 48000,
+      "credit_cts": 48000
+    },
+    "statuts": {
+      "NOUVELLE": 3,
+      "INCHANGEE": 0,
+      "MODIFIEE": 0,
+      "ABSENTE": 0,
+      "COLLISION": 0,
+      "DOUBLON_INTRA": 0
+    },
     "ecritures": {
-      "AC|000080": { "statut": "NOUVELLE", "nb_lignes": 3 },
-      "AC|000081": { "statut": "NOUVELLE", "nb_lignes": 3 },
-      "OD|000091": { "statut": "NOUVELLE", "nb_lignes": 2 },
-      "OD|000090": { "statut": null, "motif": "ses 2 lignes sont rejetées (rangs 7 et 8) : aucune ligne importée" }
+      "AC|000080": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "AC|000081": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "OD|000091": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "OD|000090": {
+        "statut": null,
+        "motif": "ses 2 lignes sont rejetées (rangs 7 et 8) : aucune ligne importée"
+      }
     },
     "anomalies": [
-      { "code": "REJ_LIGNES", "gravite": "BND", "objet": "fichier", "nb_lignes": 2, "rangs": [7, 8], "motifs": { "7": "compte 401234567890 : 12 caractères > L = 8 (jamais de troncature)", "8": "compte 401DUPONT non numérique (scission collectif/auxiliaire reportée)" } },
-      { "code": "CPT_COLLISION_PADDING", "gravite": "BND", "objet": "40110000", "sources": ["4011", "40110"] },
-      { "code": "CPT_CLASSE", "gravite": "B", "objet": "90100000", "source": "901" }
+      {
+        "code": "REJ_LIGNES",
+        "gravite": "BND",
+        "objet": "fichier",
+        "nb_lignes": 2,
+        "rangs": [
+          8,
+          9
+        ],
+        "motifs": {
+          "7": "compte 401234567890 : 12 caractères > L = 8 (jamais de troncature)",
+          "8": "compte 401DUPONT non numérique (scission collectif/auxiliaire reportée)"
+        }
+      },
+      {
+        "code": "CPT_COLLISION_PADDING",
+        "gravite": "BND",
+        "objet": "40110000",
+        "sources": [
+          "4011",
+          "40110"
+        ]
+      },
+      {
+        "code": "CPT_CLASSE",
+        "gravite": "B",
+        "objet": "90100000",
+        "source": "901"
+      }
     ],
     "infos": [],
-    "notes": "REJ_LIGNES agrégé : une seule anomalie, 2 lignes, liste des rangs (1 = première ligne après l'en-tête). OD 000090 a été conçue avec ses DEUX lignes invalides pour qu'aucune écriture ne soit amputée : pas d'EQU_ECRITURE ni d'EQU_GLOBAL en cascade (lignes importées équilibrées ; lignes rejetées équilibrées entre elles, 100,00 / 100,00). 'totaux' = lignes importées seulement. CPT_INCONNU est reporté au MVP : non attendu."
+    "notes": "REJ_LIGNES agrégé : une seule anomalie, 2 lignes, liste des rangs (1 = première ligne après l'en-tête). OD 000090 a été conçue avec ses DEUX lignes invalides pour qu'aucune écriture ne soit amputée : pas d'EQU_ECRITURE ni d'EQU_GLOBAL en cascade (lignes importées équilibrées ; lignes rejetées équilibrées entre elles, 100,00 / 100,00). 'totaux' = lignes importées seulement. CPT_INCONNU est reporté au MVP : non attendu.",
+    "convention_rang": "Convention E18 (2026-10-09) : rangs = numéros de ligne physique du fichier (en-tête = ligne 1). Conversion +1 des rangs d'origine (n° d'enregistrement de données), sans autre changement."
   }
 }

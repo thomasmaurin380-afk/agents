@@ -2,7 +2,7 @@
  "description": "FICTIF — lignes canoniques attendues de S01 (transcription de la table de conception, ordre du fichier). Textes absents = \"\", montant devise absent = null. ecriture_lib = valeur d'origine (la neutralisation des formules est faite à l'écriture dans Sheets et la relecture doit restituer cette valeur).",
  "lignes": [
   {
-   "rang": 1,
+   "rang": 2,
    "cle": "VT|000120",
    "journal_code": "VT",
    "journal_lib": "Ventes",
@@ -25,7 +25,7 @@
    "idevise": ""
   },
   {
-   "rang": 2,
+   "rang": 3,
    "cle": "VT|000120",
    "journal_code": "VT",
    "journal_lib": "Ventes",
@@ -48,7 +48,7 @@
    "idevise": ""
   },
   {
-   "rang": 3,
+   "rang": 4,
    "cle": "VT|000120",
    "journal_code": "VT",
    "journal_lib": "Ventes",
@@ -71,7 +71,7 @@
    "idevise": ""
   },
   {
-   "rang": 4,
+   "rang": 5,
    "cle": "VT|000121",
    "journal_code": "VT",
    "journal_lib": "Ventes",
@@ -94,7 +94,7 @@
    "idevise": ""
   },
   {
-   "rang": 5,
+   "rang": 6,
    "cle": "VT|000121",
    "journal_code": "VT",
    "journal_lib": "Ventes",
@@ -117,7 +117,7 @@
    "idevise": ""
   },
   {
-   "rang": 6,
+   "rang": 7,
    "cle": "VT|000121",
    "journal_code": "VT",
    "journal_lib": "Ventes",
@@ -140,7 +140,7 @@
    "idevise": ""
   },
   {
-   "rang": 7,
+   "rang": 8,
    "cle": "VT|000122",
    "journal_code": "VT",
    "journal_lib": "Ventes",
@@ -163,7 +163,7 @@
    "idevise": ""
   },
   {
-   "rang": 8,
+   "rang": 9,
    "cle": "VT|000122",
    "journal_code": "VT",
    "journal_lib": "Ventes",
@@ -186,7 +186,7 @@
    "idevise": ""
   },
   {
-   "rang": 9,
+   "rang": 10,
    "cle": "VT|000122",
    "journal_code": "VT",
    "journal_lib": "Ventes",
@@ -209,7 +209,7 @@
    "idevise": ""
   },
   {
-   "rang": 10,
+   "rang": 11,
    "cle": "VT|000123",
    "journal_code": "VT",
    "journal_lib": "Ventes",
@@ -232,7 +232,7 @@
    "idevise": ""
   },
   {
-   "rang": 11,
+   "rang": 12,
    "cle": "VT|000123",
    "journal_code": "VT",
    "journal_lib": "Ventes",
@@ -255,7 +255,7 @@
    "idevise": ""
   },
   {
-   "rang": 12,
+   "rang": 13,
    "cle": "VT|000123",
    "journal_code": "VT",
    "journal_lib": "Ventes",
@@ -278,7 +278,7 @@
    "idevise": ""
   },
   {
-   "rang": 13,
+   "rang": 14,
    "cle": "AC|000044",
    "journal_code": "AC",
    "journal_lib": "Achats",
@@ -301,7 +301,7 @@
    "idevise": ""
   },
   {
-   "rang": 14,
+   "rang": 15,
    "cle": "AC|000044",
    "journal_code": "AC",
    "journal_lib": "Achats",
@@ -324,7 +324,7 @@
    "idevise": ""
   },
   {
-   "rang": 15,
+   "rang": 16,
    "cle": "AC|000044",
    "journal_code": "AC",
    "journal_lib": "Achats",
@@ -347,7 +347,7 @@
    "idevise": ""
   },
   {
-   "rang": 16,
+   "rang": 17,
    "cle": "BQ|000208",
    "journal_code": "BQ",
    "journal_lib": "Banque",
@@ -370,7 +370,7 @@
    "idevise": ""
   },
   {
-   "rang": 17,
+   "rang": 18,
    "cle": "BQ|000208",
    "journal_code": "BQ",
    "journal_lib": "Banque",
@@ -393,7 +393,7 @@
    "idevise": ""
   },
   {
-   "rang": 18,
+   "rang": 19,
    "cle": "AC|000045",
    "journal_code": "AC",
    "journal_lib": "Achats",
@@ -416,7 +416,7 @@
    "idevise": ""
   },
   {
-   "rang": 19,
+   "rang": 20,
    "cle": "AC|000045",
    "journal_code": "AC",
    "journal_lib": "Achats",
@@ -439,7 +439,7 @@
    "idevise": ""
   },
   {
-   "rang": 20,
+   "rang": 21,
    "cle": "AC|000045",
    "journal_code": "AC",
    "journal_lib": "Achats",
@@ -462,7 +462,7 @@
    "idevise": ""
   },
   {
-   "rang": 21,
+   "rang": 22,
    "cle": "BQ|000209",
    "journal_code": "BQ",
    "journal_lib": "Banque",
@@ -485,7 +485,7 @@
    "idevise": ""
   },
   {
-   "rang": 22,
+   "rang": 23,
    "cle": "BQ|000209",
    "journal_code": "BQ",
    "journal_lib": "Banque",
@@ -508,7 +508,7 @@
    "idevise": ""
   },
   {
-   "rang": 23,
+   "rang": 24,
    "cle": "BQ|000210",
    "journal_code": "BQ",
    "journal_lib": "Banque",
@@ -531,7 +531,7 @@
    "idevise": ""
   },
   {
-   "rang": 24,
+   "rang": 25,
    "cle": "BQ|000210",
    "journal_code": "BQ",
    "journal_lib": "Banque",
@@ -554,7 +554,7 @@
    "idevise": ""
   },
   {
-   "rang": 25,
+   "rang": 26,
    "cle": "OD|000012",
    "journal_code": "OD",
    "journal_lib": "Opérations diverses",
@@ -577,7 +577,7 @@
    "idevise": ""
   },
   {
-   "rang": 26,
+   "rang": 27,
    "cle": "OD|000012",
    "journal_code": "OD",
    "journal_lib": "Opérations diverses",
@@ -600,7 +600,7 @@
    "idevise": ""
   },
   {
-   "rang": 27,
+   "rang": 28,
    "cle": "AC|PROV-17",
    "journal_code": "AC",
    "journal_lib": "Achats",
@@ -623,7 +623,7 @@
    "idevise": ""
   },
   {
-   "rang": 28,
+   "rang": 29,
    "cle": "AC|PROV-17",
    "journal_code": "AC",
    "journal_lib": "Achats",
@@ -646,7 +646,7 @@
    "idevise": ""
   },
   {
-   "rang": 29,
+   "rang": 30,
    "cle": "BQ|000211",
    "journal_code": "BQ",
    "journal_lib": "Banque",
@@ -669,7 +669,7 @@
    "idevise": ""
   },
   {
-   "rang": 30,
+   "rang": 31,
    "cle": "BQ|000211",
    "journal_code": "BQ",
    "journal_lib": "Banque",
@@ -692,7 +692,7 @@
    "idevise": ""
   },
   {
-   "rang": 31,
+   "rang": 32,
    "cle": "BQ|000212",
    "journal_code": "BQ",
    "journal_lib": "Banque",
@@ -715,7 +715,7 @@
    "idevise": ""
   },
   {
-   "rang": 32,
+   "rang": 33,
    "cle": "BQ|000212",
    "journal_code": "BQ",
    "journal_lib": "Banque",
@@ -738,7 +738,7 @@
    "idevise": ""
   },
   {
-   "rang": 33,
+   "rang": 34,
    "cle": "OD|000013",
    "journal_code": "OD",
    "journal_lib": "Opérations diverses",
@@ -761,7 +761,7 @@
    "idevise": ""
   },
   {
-   "rang": 34,
+   "rang": 35,
    "cle": "OD|000013",
    "journal_code": "OD",
    "journal_lib": "Opérations diverses",
@@ -784,7 +784,7 @@
    "idevise": ""
   },
   {
-   "rang": 35,
+   "rang": 36,
    "cle": "OD|000013",
    "journal_code": "OD",
    "journal_lib": "Opérations diverses",
@@ -807,7 +807,7 @@
    "idevise": ""
   },
   {
-   "rang": 36,
+   "rang": 37,
    "cle": "OD|000013",
    "journal_code": "OD",
    "journal_lib": "Opérations diverses",
@@ -829,5 +829,6 @@
    "montant_devise_cts": null,
    "idevise": ""
   }
- ]
+ ],
+ "convention_rang": "Convention E18 (2026-10-09) : rangs = numéros de ligne physique du fichier (en-tête = ligne 1). Conversion +1 des rangs d'origine (n° d'enregistrement de données), sans autre changement."
 }

@@ -1,63 +1,74 @@
 /**
- * Identité des écritures (clé K2) et empreintes de contenu.
- *
+ * Identité des écritures (clé K2), empreintes de ligne et d'écriture, identifiant de ligne.
  * La clé dit « qui est-ce » ; les empreintes disent « ce que ça contient ».
- * Sérialisation : champs dans un ordre fixe, séparés par U+001F, préfixe de version.
  */
-var Identite = (function (Modele) {
+var Identite = (function (C, E) {
   'use strict';
 
-  var SEP = '\u001F';
   var CHAMPS_FOND = ['compte_num', 'comp_aux_num', 'debit_cts', 'credit_cts', 'idevise', 'montant_devise_cts'];
   var CHAMPS_DESC = ['ecriture_lib', 'piece_ref', 'piece_date', 'journal_lib', 'compte_lib', 'comp_aux_lib', 'valid_date'];
   var CHAMPS_LET = ['ecriture_let', 'date_let'];
 
-  /**
-   * Clé K2 : client | exercice | journal | numéro (+ | AAAA-MM en portée JOURNAL_MOIS).
-   */
+  function valeurs(ligne, champs) { return champs.map(function (c) { return ligne[c]; }); }
+
+  /** Clé K2 : client | exercice | journal | numéro. Seule la portée EXERCICE est admise à cette étape. */
   function cleEcriture(ligne, profil) {
-    var parties = [ligne.client_id, ligne.exercice_id, ligne.journal_code, ligne.ecriture_num];
-    if (profil && profil.portee_numerotation === 'JOURNAL_MOIS') parties.push(ligne.ecriture_date.slice(0, 7));
-    return parties.join('|');
+    if (profil && (profil.portee_numerotation || 'EXERCICE') !== 'EXERCICE') throw C.erreurContrat('PROFIL_INVALIDE', 'portee_numerotation');
+    return [ligne.client_id, ligne.exercice_id, ligne.journal_code, ligne.ecriture_num].join('|');
   }
 
-  function serialiser(ligne, champs) {
-    return champs.map(function (c) {
-      var v = ligne[c];
-      return v === undefined || v === null ? '' : String(v);
-    }).join(SEP);
-  }
-
-  function hacher(prefixe, contenu, hasher) {
-    return Modele.VERSION_EMPREINTE + ':' + hasher.sha256Hex(prefixe + SEP + contenu);
-  }
-
-  /**
-   * @returns {{h_fond: string, h_desc: string, h_let: string}}
-   */
+  /** @returns {{h_fond: string, h_desc: string, h_let: string}} */
   function empreintes(ligne, hasher) {
     return {
-      h_fond: hacher('FOND', serialiser(ligne, CHAMPS_FOND), hasher),
-      h_desc: hacher('DESC', serialiser(ligne, CHAMPS_DESC), hasher),
-      h_let: hacher('LET', serialiser(ligne, CHAMPS_LET), hasher)
+      h_fond: E.H('h_fond', valeurs(ligne, CHAMPS_FOND), hasher),
+      h_desc: E.H('h_desc', valeurs(ligne, CHAMPS_DESC), hasher),
+      h_let: E.H('h_let', valeurs(ligne, CHAMPS_LET), hasher)
     };
   }
 
-  /** Empreinte d'une ligne complète (champs métier), utilisée par le checksum et le staging. */
-  function empreinteLigne(ligne, hasher) {
-    return hacher('LIGNE', serialiser(ligne, Modele.CHAMPS_LIGNE), hasher);
+  /** hLigne = H("ligne", valeurs de CHAMPS_ACTIF) — ligne active complète. */
+  function hLigne(ligne, hasher) {
+    return E.H('ligne', valeurs(ligne, C.CHAMPS_ACTIF), hasher);
+  }
+
+  /** h_ecr = H("ecriture", [cle, date, liste triée des h_fond+h_desc+h_let]) — lignes munies de leurs empreintes. */
+  function hEcriture(lignes, hasher) {
+    if (!lignes.length) return '';
+    var items = lignes.map(function (l) { return l.h_fond + l.h_desc + l.h_let; }).sort(E.comparerTexte);
+    return E.H('ecriture', [lignes[0].cle_ecriture, lignes[0].ecriture_date].concat(items), hasher);
+  }
+
+  /** Ordre canonique des lignes d'une écriture : compte, auxiliaire, montant signé, rang source. */
+  function comparerLignes(a, b) {
+    if (a.compte_num !== b.compte_num) return a.compte_num < b.compte_num ? -1 : 1;
+    if (a.comp_aux_num !== b.comp_aux_num) return a.comp_aux_num < b.comp_aux_num ? -1 : 1;
+    if (a.montant_cts !== b.montant_cts) return a.montant_cts - b.montant_cts;
+    return a.source_rang - b.source_rang;
+  }
+
+  /** ligne_uid = cle_ecriture + "#" + k (k = 1..n dans l'ordre canonique). Renvoie des copies. */
+  function attribuerLigneUid(lignes) {
+    return lignes.slice().sort(comparerLignes).map(function (l, i) {
+      var c = {};
+      Object.keys(l).forEach(function (k) { c[k] = l[k]; });
+      c.ligne_uid = l.cle_ecriture + '#' + (i + 1);
+      return c;
+    });
   }
 
   return {
-    SEP: SEP,
     CHAMPS_FOND: CHAMPS_FOND,
     CHAMPS_DESC: CHAMPS_DESC,
     CHAMPS_LET: CHAMPS_LET,
     cleEcriture: cleEcriture,
-    serialiser: serialiser,
     empreintes: empreintes,
-    empreinteLigne: empreinteLigne
+    hLigne: hLigne,
+    hEcriture: hEcriture,
+    attribuerLigneUid: attribuerLigneUid
   };
-})(typeof Modele !== 'undefined' ? Modele : require('./modele'));
+})(
+  typeof Constantes !== 'undefined' ? Constantes : require('./constantes'),
+  typeof Empreinte !== 'undefined' ? Empreinte : require('./empreinte')
+);
 
 if (typeof module !== 'undefined' && module.exports) module.exports = Identite;

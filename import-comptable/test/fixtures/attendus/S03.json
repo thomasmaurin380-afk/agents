@@ -149,14 +149,14 @@
           "blocs": 2,
           "blocs_ignores": 1,
           "rangs_conserves": [
-            39,
             40,
-            41
+            41,
+            42
           ],
           "rangs_ignores": [
-            44,
             45,
-            46
+            46,
+            47
           ]
         }
       },
@@ -274,6 +274,7 @@
       "64500000": 120000,
       "70600000": -80000
     },
-    "notes": "Rangs = numéros d'enregistrement de données (1 = première ligne après l'en-tête). 'totaux' porte sur les lignes importées (hors bloc doublon) ; 'totaux_fichier' sur toutes les lignes lues. 'statuts.DOUBLON_INTRA' = nombre de blocs ignorés ; l'écriture VT|000124 elle-même est NOUVELLE (comptée dans NOUVELLE). Renumérotation non détectée au MVP : PROV-17 = ABSENTE + AC|000051 = NOUVELLE (même contenu, validée le 2026-03-10). Les deux loyers BQ 000301/000302 (même pièce LOY-03, même contenu) = 2 NOUVELLE, aucune anomalie (IDN_JUMEAU reporté). VOL_SUPPR_MASSE se déclenche mécaniquement à cause de la petite taille du jeu (2/14 > 5 %) : dérogation attendue en recette. variations_soldes = avant (actif S01) → après simulé avec ABSENTES non encore décidées (maintenues actives) et un seul bloc VT|000124 ; variations_soldes_si_absentes_acceptees = idem après acceptation des 2 ABSENTES ; variations_soldes_modifiees = contribution des seules MODIFIEE (AC|000045). Σ = 0 dans les trois cas. Lettrage AE de VT|000122 rapproché d'une ligne d'une écriture NOUVELLE (BQ|000215) : sans effet sur le classement."
+    "notes": "Rangs = numéros d'enregistrement de données (1 = première ligne après l'en-tête). 'totaux' porte sur les lignes importées (hors bloc doublon) ; 'totaux_fichier' sur toutes les lignes lues. 'statuts.DOUBLON_INTRA' = nombre de blocs ignorés ; l'écriture VT|000124 elle-même est NOUVELLE (comptée dans NOUVELLE). Renumérotation non détectée au MVP : PROV-17 = ABSENTE + AC|000051 = NOUVELLE (même contenu, validée le 2026-03-10). Les deux loyers BQ 000301/000302 (même pièce LOY-03, même contenu) = 2 NOUVELLE, aucune anomalie (IDN_JUMEAU reporté). VOL_SUPPR_MASSE se déclenche mécaniquement à cause de la petite taille du jeu (2/14 > 5 %) : dérogation attendue en recette. variations_soldes = avant (actif S01) → après simulé avec ABSENTES non encore décidées (maintenues actives) et un seul bloc VT|000124 ; variations_soldes_si_absentes_acceptees = idem après acceptation des 2 ABSENTES ; variations_soldes_modifiees = contribution des seules MODIFIEE (AC|000045). Σ = 0 dans les trois cas. Lettrage AE de VT|000122 rapproché d'une ligne d'une écriture NOUVELLE (BQ|000215) : sans effet sur le classement.",
+    "convention_rang": "Convention E18 (2026-10-09) : rangs = numéros de ligne physique du fichier (en-tête = ligne 1). Conversion +1 des rangs d'origine (n° d'enregistrement de données), sans autre changement."
   }
 }

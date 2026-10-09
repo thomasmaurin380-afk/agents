@@ -1,227 +1,212 @@
 /**
- * Cas d'usage, en mémoire : analyser un import, le publier, annuler la dernière publication.
+ * Cas d'usage en mémoire : analyser un import, valider, publier, annuler la dernière publication.
  *
  * L'état d'un client est une valeur immuable : chaque opération renvoie un nouvel état.
  * À l'intégration Apps Script, cet état sera porté par les onglets (CONFIG, IMPORTS, JOURNAL,
  * ACTIF_A/B, MOUVEMENTS) via des adaptateurs ; les règles restent ici.
  */
-var Pipeline = (function (Lecture, Comparaison, Controles, Publication, Anomalies, Identite) {
+var Pipeline = (function (C, E, Lecture, Comparaison, Controles, Publication, Anomalies) {
   'use strict';
 
-  /** @returns {{client_id: string, actif: object[], mouvements: object[], publications: object[], imports: object[], typeProfilParExercice: Object<string, string>}} */
+  /** @returns {{client_id: string, actif: object[], mouvements: object[], publications: object[], imports: object[]}} */
   function etatInitial(clientId) {
-    return { client_id: clientId, actif: [], mouvements: [], publications: [], imports: [], typeProfilParExercice: {} };
-  }
-
-  /** Empreintes des fichiers publiés et non annulés (détection REIMPORT_FICHIER). */
-  function shaPublies(etat) {
-    var annulees = {};
-    etat.publications.forEach(function (p) { if (p.type_pub === 'ANNULATION') annulees[p.annule] = true; });
-    return etat.imports.filter(function (i) { return i.publication_id && !annulees[i.publication_id]; }).map(function (i) { return i.file_sha256; });
+    return { client_id: clientId, actif: [], mouvements: [], publications: [], imports: [] };
   }
 
   /**
-   * @param {{etat: object, fichier: {texte: string, nomFichier: string, sha256: string}, profil: object,
-   *          client: object, perimetre: object, totalSaisi?: object, import_id: string, hasher: object}} e
+   * @param {{etat: object, fichier: {texte: string, nomFichier: string, sha256: string}, profil: object, client: object,
+   *          perimetre: object, identite?: object, totalSaisi?: object, import_id: string, horodatage?: string, hasher: object}} e
    */
   function analyserImport(e) {
+    E.verifierHasher(e.hasher);
     var etat = e.etat;
-    if (etat.client_id !== e.client.client_id) throw new Error('Isolation : état du client ' + etat.client_id + ' ≠ ' + e.client.client_id);
-    var resultat = {
+    if (!etat || etat.client_id !== e.client.client_id) throw C.erreurContrat('CLIENT_INCOHERENT', 'etat');
+    var exercice = e.client.exercices.filter(function (x) { return x.id === e.perimetre.exercice_id; })[0];
+    var r = {
       import_id: e.import_id,
+      client_id: e.client.client_id,
       file_sha256: e.fichier.sha256,
-      nomFichier: e.fichier.nomFichier,
-      profil: e.profil,
+      nom_fichier: e.fichier.nomFichier,
       perimetre: e.perimetre,
+      profil_ref: { profil_id: e.profil.profil_id, version: e.profil.version, type: e.profil.type },
+      version_regles: C.VERSION_REGLES,
       statut: 'ANALYSE',
       rejete: false,
       lecture: null,
       comparaison: null,
       anomalies: [],
-      actifSimule: null,
-      variationsSoldes: {}
+      controles: [],
+      variations: [],
+      total_saisi: e.totalSaisi || null,
+      decisions_reconduites: []
     };
+    var anomalies = [];
 
-    var integrite = verifierIntegrite(etat, e.hasher);
-    if (integrite) resultat.anomalies.push(integrite);
+    // Intégrité de l'actif : son checksum doit être celui de la dernière publication appliquée.
+    var derniere = etat.publications[etat.publications.length - 1];
+    var checksumAttendu = derniere ? derniere.checksum_apres : Publication.checksumActif([], e.hasher);
+    var checksumCourant = Publication.checksumActif(etat.actif, e.hasher);
+    if (checksumCourant !== checksumAttendu) anomalies.push(Anomalies.creer('SYS_ACTIF_ALTERE', { objet_type: 'ACTIF', attendu: checksumAttendu, obtenu: checksumCourant }));
 
-    // Contrôles préalables AVANT la détection de réimport : un fichier d'un autre client doit être
-    // refusé comme tel, même si ses octets sont identiques à un fichier déjà publié.
-    Array.prototype.push.apply(resultat.anomalies, Controles.controlesPrealables({
-      client: e.client, profil: e.profil, nomFichier: e.fichier.nomFichier, perimetre: e.perimetre,
-      typeProfilExercice: etat.typeProfilParExercice[e.perimetre.exercice_id]
+    // Contrôles préalables AVANT la détection de réimport (un fichier d'un autre client est refusé comme tel).
+    anomalies = anomalies.concat(Controles.controlesPrealables({
+      client: e.client, profil: e.profil, nomFichier: e.fichier.nomFichier, perimetre: e.perimetre, actif: etat.actif, identite: e.identite
     }));
-    if (resultat.anomalies.some(function (a) { return a.gravite === 'BND'; })) {
-      resultat.statut = 'REJETE';
-      resultat.rejete = true;
-      return finaliser(resultat, etat, e);
+    if (anomalies.some(function (a) { return a.gravite === 'BND'; })) {
+      r.statut = 'REJETE';
+      return finaliser(r, anomalies, etat, e, exercice);
+    }
+    if (Comparaison.detecterReimport(e.fichier.sha256, etat.imports)) {
+      r.statut = 'REIMPORT_FICHIER';
+      return finaliser(r, anomalies, etat, e, exercice);
     }
 
-    if (shaPublies(etat).indexOf(e.fichier.sha256) !== -1) {
-      resultat.statut = 'REIMPORT_FICHIER';
-      return resultat;
-    }
-
-    var lecture = Lecture.normaliserFichier({
-      texte: e.fichier.texte, nomFichier: e.fichier.nomFichier, profil: e.profil, client: e.client, perimetre: e.perimetre
+    r.lecture = Lecture.normaliserFichier({
+      texte: e.fichier.texte, nomFichier: e.fichier.nomFichier, profil: e.profil, client: e.client, perimetre: e.perimetre,
+      import_id: e.import_id, file_sha256: e.fichier.sha256
     });
-    resultat.lecture = lecture;
-    Array.prototype.push.apply(resultat.anomalies, Controles.controlesStructure({ lecture: lecture }));
-
-    if (lecture.structureValide) {
-      var comparaison = Comparaison.classer({
-        actif: etat.actif, lignes: lecture.lignes, perimetre: e.perimetre, profil: e.profil, hasher: e.hasher
+    var simule = null;
+    var collisions = false;
+    if (r.lecture.structure_ok) {
+      r.comparaison = Comparaison.classer({
+        base: etat.actif, lignes: r.lecture.lignes, perimetre: e.perimetre, profil: e.profil, client_id: e.client.client_id, hasher: e.hasher
       });
-      resultat.comparaison = comparaison;
-      var sansCollision = comparaison.ecritures.some(function (ec) { return ec.statut === 'COLLISION'; })
-        ? { ecritures: comparaison.ecritures.filter(function (ec) { return ec.statut !== 'COLLISION'; }) }
-        : comparaison;
-      var toutAccepter = {};
-      comparaison.ecritures.forEach(function (ec) { if (ec.statut === 'ABSENTE') toutAccepter[ec.cle] = 'ACCEPTER'; });
-      resultat.actifSimule = Publication.construireActif({
-        actif: etat.actif, comparaison: sansCollision, decisions: toutAccepter,
-        import_id: e.import_id, publication_id: 'SIMULATION', hasher: e.hasher
-      }).actif;
-      resultat.variationsSoldes = Controles.variationsSoldes(etat.actif, resultat.actifSimule);
-      Array.prototype.push.apply(resultat.anomalies, Controles.controlesContenu({
-        client: e.client, profil: e.profil, perimetre: e.perimetre, lecture: lecture, comparaison: comparaison,
-        actif: etat.actif, actifSimule: comparaison === sansCollision ? resultat.actifSimule : null, totalSaisi: e.totalSaisi
-      }));
+      collisions = r.comparaison.ecritures.some(function (ec) { return ec.statut === 'COLLISION'; });
+      simule = Publication.simulerActif({ base: etat.actif, comparaison: r.comparaison, hypothese: 'ABSENTES_ACCEPTEES', hasher: e.hasher });
+      r.variations = Controles.variationsSoldes(etat.actif, simule);
     }
-    resultat.rejete = resultat.anomalies.some(function (a) { return a.gravite === 'BND'; });
-    if (resultat.rejete) resultat.statut = 'REJETE';
-    return finaliser(resultat, etat, e);
-  }
-
-  /** Empreintes de dérogation (A5) et dérogations reconductibles depuis la dernière publication. */
-  function finaliser(resultat, etat, e) {
-    var exercice = e.client.exercices.filter(function (x) { return x.id === e.perimetre.exercice_id; })[0];
-    var parCle = {};
-    if (resultat.comparaison) resultat.comparaison.ecritures.forEach(function (ec) { parCle[ec.cle] = ec; });
-    resultat.anomalies.forEach(function (a) {
-      a.empreinte_objet = empreinteObjet(a, parCle, resultat.lecture, e.hasher);
-      a.empreinte_derogation = Anomalies.empreinteDerogation(a, {
-        perimetre: e.perimetre, statut_exercice: exercice ? exercice.statut : '',
-        profil_id: e.profil.profil_id, profil_version: e.profil.version, empreinte_objet: a.empreinte_objet
-      }, e.hasher);
+    var resultatControles = Controles.executerControles({
+      client: e.client, profil: e.profil, perimetre: e.perimetre, lecture: r.lecture, comparaison: r.comparaison,
+      // REC_MIROIR sans objet en cas de collision : l'import est déjà bloqué par IDN_COLLISION.
+      base: etat.actif, actif_simule: collisions ? null : simule, total_saisi: e.totalSaisi
     });
-    resultat.derogationsReconduites = Anomalies.reconduireDerogations(resultat.anomalies, derogationsEnVigueur(etat));
-    return resultat;
+    r.controles = resultatControles.controles;
+    anomalies = anomalies.concat(resultatControles.anomalies);
+    if (anomalies.some(function (a) { return a.gravite === 'BND'; })) r.statut = 'REJETE';
+    return finaliser(r, anomalies, etat, e, exercice);
   }
 
-  /** Contenu de l'objet concerné : lignes base et fichier de l'écriture, sources du compte, ou rien. */
-  function empreinteObjet(a, parCle, lecture, hasher) {
-    var contenu = '';
-    if (a.objet_type === 'ECRITURE' && parCle[a.objet_cle]) {
-      var ec = parCle[a.objet_cle];
-      var f = function (l) { return Identite.empreinteLigne(l, hasher); };
-      contenu = 'F:' + ec.lignes.map(f).sort().join(',') + ';B:' + ec.lignes_base.map(f).sort().join(',');
-    } else if (a.objet_type === 'COMPTE' && lecture) {
-      contenu = (lecture.comptesSources[a.objet_cle] || []).slice().sort().join(',');
+  /** Empreintes d'objet et de dérogation (A5, P1) ; dérogations reconductibles depuis la dernière publication. */
+  function finaliser(r, anomalies, etat, e, exercice) {
+    var parCle = {};
+    var parCompte = {};
+    if (r.comparaison) {
+      r.comparaison.ecritures.forEach(function (ec) {
+        if (ec.bloc !== 1 && ec.statut !== 'ABSENTE') return;
+        parCle[ec.cle] = ec;
+        ec.lignes.forEach(function (l) {
+          var t = parCompte[l.compte_num] || (parCompte[l.compte_num] = []);
+          if (ec.h_ecr && t.indexOf(ec.h_ecr) === -1) t.push(ec.h_ecr);
+        });
+      });
     }
-    return 'v1:' + hasher.sha256Hex('OBJET\u001F' + a.anomalie_id + '\u001F' + contenu);
-  }
-
-  /** Dérogations de la dernière publication appliquée, si elle n'a pas été annulée. */
-  function derogationsEnVigueur(etat) {
+    var ctx = { perimetre: e.perimetre, statut_exercice: exercice ? exercice.statut : '', profil_id: e.profil.profil_id, profil_version: e.profil.version };
+    r.anomalies = anomalies.map(function (a) {
+      var h = [];
+      if (a.objet_type === 'ECRITURE' && parCle[a.objet_cle]) h = [parCle[a.objet_cle].h_ecr_base, parCle[a.objet_cle].h_ecr];
+      else if (a.objet_type === 'COMPTE') h = parCompte[a.objet_cle] || [];
+      else h = a.cles.map(function (k) { return parCle[k] ? parCle[k].h_ecr || parCle[k].h_ecr_base : ''; });
+      var c = {};
+      Object.keys(a).forEach(function (k) { c[k] = a[k]; });
+      c.empreinte_objet = Anomalies.empreinteObjet(c, h, e.hasher);
+      c.empreinte_derogation = Anomalies.empreinteDerogation(c, ctx, e.hasher);
+      return c;
+    }).sort(function (a, b) { return E.comparerTexte(a.anomalie_id, b.anomalie_id); });
+    r.rejete = r.anomalies.some(function (a) { return a.gravite === 'BND'; });
     var derniere = etat.publications[etat.publications.length - 1];
-    return derniere && derniere.type_pub === 'PUBLICATION' ? (derniere.derogations || []) : [];
-  }
-
-  function verifierIntegrite(etat, hasher) {
-    var derniere = etat.publications[etat.publications.length - 1];
-    if (!derniere) return null;
-    var courant = Publication.checksumActif(etat.actif, hasher).checksum;
-    if (courant === derniere.checksum_apres) return null;
-    return Anomalies.creer('SYS_ACTIF_ALTERE', { attendu: derniere.checksum_apres, obtenu: courant });
+    var precedentes = derniere && derniere.type_pub === 'PUBLICATION' && derniere.statut === 'PUBLIEE' ? derniere.derogations_retenues || [] : [];
+    r.decisions_reconduites = Anomalies.reconduireDerogations({
+      anomalies: r.anomalies, derogations_precedentes: precedentes, import_id: r.import_id, horodatage: e.horodatage || ''
+    });
+    return r;
   }
 
   /**
-   * Fige la validation (A7) : à appeler quand le dirigeant valide.
-   * @param {{decisions?: Object<string, string>, derogations?: {anomalie_id: string, motif: string, par: string}[],
-   *          acquittements?: string[], checklist?: object, valide_par?: string, valide_le?: string}} choix
-   *   Les dérogations reconduites (A5) sont ajoutées d'office ; elles sont couvertes par la validation.
+   * Fige la validation (A7). Les dérogations reconduites (A5) sont ajoutées d'office, sauf si une dérogation
+   * manuelle porte sur la même anomalie ; elles entrent dans l'empreinte du staging, donc dans la validation.
+   * @param {{decisions?: object[], checklist?: object, validation_id: string, soumis_par: string, soumis_le: string,
+   *          valide_par: string, valide_le: string}} choix
+   * @returns {{validation: object, decisions: object[]}}
    */
   function valider(etat, analyse, choix, hasher) {
-    choix = choix || {};
-    var derniere = etat.publications[etat.publications.length - 1];
-    var parId = {};
-    analyse.anomalies.forEach(function (a) { parId[a.anomalie_id] = a; });
-    var manuelles = (choix.derogations || []).map(function (d) {
-      return { anomalie_id: d.anomalie_id, motif: d.motif, par: d.par,
-        empreinte_derogation: parId[d.anomalie_id] ? parId[d.anomalie_id].empreinte_derogation : '', origine: 'MANUELLE' };
-    });
-    var dejaManuelles = {};
-    manuelles.forEach(function (d) { dejaManuelles[d.anomalie_id] = true; });
-    var reconduites = (analyse.derogationsReconduites || []).filter(function (d) { return !dejaManuelles[d.anomalie_id]; });
-    return Publication.preparerValidation({
-      actif: etat.actif, comparaison: analyse.comparaison, anomalies: analyse.anomalies, decisions: choix.decisions,
-      derogations: reconduites.concat(manuelles), acquittements: choix.acquittements, checklist: choix.checklist,
-      version_base: derniere ? derniere.publication_id : '',
-      valide_par: choix.valide_par, valide_le: choix.valide_le, hasher: hasher
-    });
-  }
-
-  /**
-   * Publie une analyse validée. Revalide données et version au moment de la publication (A7).
-   * @returns {{ok: true, etat: object, publication: object} | {ok: false, code: string, details: *}}
-   */
-  function publier(etat, analyse, validation, publicationId, hasher) {
-    if (analyse.statut === 'REIMPORT_FICHIER') return { ok: false, code: 'REIMPORT_FICHIER', details: null };
-    if (!analyse.comparaison) return { ok: false, code: 'ANALYSE_INCOMPLETE', details: null };
-    var enCours = etat.imports.filter(function (i) { return i.import_id === analyse.import_id; });
-    if (enCours.length) return { ok: false, code: 'IMPORT_DEJA_PUBLIE', details: analyse.import_id };
-    var derniere = etat.publications[etat.publications.length - 1];
-    var plan = Publication.planifierPublication({
-      actif: etat.actif, comparaison: analyse.comparaison, anomalies: analyse.anomalies, validation: validation,
-      import_id: analyse.import_id, publication_id: publicationId,
-      version_base: derniere ? derniere.publication_id : '', hasher: hasher
-    });
-    if (!plan.ok) return plan;
-    var typeProfil = {};
-    Object.keys(etat.typeProfilParExercice).forEach(function (k) { typeProfil[k] = etat.typeProfilParExercice[k]; });
-    typeProfil[analyse.perimetre.exercice_id] = analyse.profil.type;
-    plan.publication.derogations = validation.derogations;
+    E.verifierHasher(hasher);
+    var manuelles = (choix.decisions || []).slice();
+    var derogees = {};
+    manuelles.forEach(function (d) { if (d.type === 'DEROGATION') derogees[d.anomalie_id] = true; });
+    var decisions = analyse.decisions_reconduites.filter(function (d) { return !derogees[d.anomalie_id]; }).concat(manuelles);
     return {
-      ok: true,
-      publication: plan.publication,
-      etat: {
-        client_id: etat.client_id,
-        actif: plan.actif,
-        mouvements: etat.mouvements.concat(plan.mouvements),
-        publications: etat.publications.concat([plan.publication]),
-        imports: etat.imports.concat([{ import_id: analyse.import_id, file_sha256: analyse.file_sha256, publication_id: publicationId }]),
-        typeProfilParExercice: typeProfil
+      decisions: decisions,
+      validation: {
+        validation_id: choix.validation_id,
+        import_id: analyse.import_id,
+        client_id: analyse.client_id,
+        decision: 'VALIDE',
+        empreinte_staging: Publication.empreinteStaging({ resultat: analyse, decisions: decisions }, hasher),
+        checksum_base: Publication.checksumActif(etat.actif, hasher),
+        version_base: Publication.versionActif(etat.publications),
+        checklist: choix.checklist || {},
+        soumis_par: choix.soumis_par || '', soumis_le: choix.soumis_le || '',
+        valide_par: choix.valide_par || '', valide_le: choix.valide_le || ''
       }
     };
   }
 
-  /** Annule la dernière publication (un seul niveau ; pas d'annulation d'une annulation). */
-  function annulerDernierePublication(etat, annulationId, hasher) {
-    var derniere = etat.publications[etat.publications.length - 1];
-    if (!derniere) return { ok: false, code: 'AUCUNE_PUBLICATION', details: null };
-    if (derniere.type_pub !== 'PUBLICATION') return { ok: false, code: 'ANNULATION_NON_ANNULABLE', details: derniere.publication_id };
-    var plan = Publication.planifierAnnulation({
-      actif: etat.actif, mouvements: etat.mouvements, publication: derniere,
-      publication_annulation_id: annulationId, hasher: hasher
+  /**
+   * @param {{validation: object, decisions: object[]}} validee résultat de valider()
+   * @param {{publication_id: string, horodatage?: string, autre_import_en_cours?: boolean}} options
+   * @returns {{ok: true, etat: object, publication: object} | {ok: false, refus: string[], details: object}}
+   */
+  function publier(etat, analyse, validee, options, hasher) {
+    if (analyse.statut === 'REIMPORT_FICHIER') return { ok: false, refus: ['PUB_REIMPORT'], details: {} };
+    var plan = Publication.planifierPublication({
+      base: etat.actif, publications: etat.publications, resultat: analyse, decisions: validee ? validee.decisions : [],
+      validation: validee ? validee.validation : null, autre_import_en_cours: !!options.autre_import_en_cours,
+      publication_id: options.publication_id, horodatage: options.horodatage, hasher: hasher
     });
     if (!plan.ok) return plan;
-    var typeProfil = {};
-    var exercicesRestants = {};
-    plan.actif.forEach(function (l) { exercicesRestants[l.exercice_id] = true; });
-    Object.keys(etat.typeProfilParExercice).forEach(function (k) {
-      if (exercicesRestants[k]) typeProfil[k] = etat.typeProfilParExercice[k];
-    });
     return {
       ok: true,
       publication: plan.publication,
       etat: {
         client_id: etat.client_id,
-        actif: plan.actif,
+        actif: plan.actif_suivant,
         mouvements: etat.mouvements.concat(plan.mouvements),
         publications: etat.publications.concat([plan.publication]),
-        imports: etat.imports,
-        typeProfilParExercice: typeProfil
+        imports: etat.imports.concat([{ import_id: analyse.import_id, file_sha256: analyse.file_sha256, statut: 'PUBLIE',
+          publication_id: options.publication_id }])
+      }
+    };
+  }
+
+  /**
+   * Annule la dernière publication (un seul niveau ; pas d'annulation d'une annulation).
+   * @param {{publication_id: string, horodatage?: string, import_en_cours?: boolean, tampon_inactif?: object[]}} options
+   */
+  function annulerDernierePublication(etat, options, hasher) {
+    var derniere = etat.publications[etat.publications.length - 1];
+    if (!derniere) return { ok: false, refus: ['ANN_PAS_DERNIERE'], details: {} };
+    var plan = Publication.planifierAnnulation({
+      actif: etat.actif, publications: etat.publications, mouvements: etat.mouvements, publication_id_annulee: derniere.publication_id,
+      import_en_cours: !!options.import_en_cours, tampon_inactif: options.tampon_inactif,
+      publication_id: options.publication_id, horodatage: options.horodatage, hasher: hasher
+    });
+    if (!plan.ok) return plan;
+    return {
+      ok: true,
+      publication: plan.publication_annulation,
+      etat: {
+        client_id: etat.client_id,
+        actif: plan.actif_restaure,
+        mouvements: etat.mouvements.concat(plan.mouvements_inverses),
+        publications: etat.publications.map(function (p) { return p.publication_id === derniere.publication_id ? plan.publication_annulee : p; })
+          .concat([plan.publication_annulation]),
+        imports: etat.imports.map(function (i) {
+          if (i.publication_id !== derniere.publication_id) return i;
+          var c = {};
+          Object.keys(i).forEach(function (k) { c[k] = i[k]; });
+          c.statut = 'ANNULE';
+          return c;
+        })
       }
     };
   }
@@ -234,12 +219,13 @@ var Pipeline = (function (Lecture, Comparaison, Controles, Publication, Anomalie
     annulerDernierePublication: annulerDernierePublication
   };
 })(
+  typeof Constantes !== 'undefined' ? Constantes : require('../core/constantes'),
+  typeof Empreinte !== 'undefined' ? Empreinte : require('../core/empreinte'),
   typeof Lecture !== 'undefined' ? Lecture : require('../core/lecture'),
   typeof Comparaison !== 'undefined' ? Comparaison : require('../core/comparaison'),
   typeof Controles !== 'undefined' ? Controles : require('../core/controles'),
   typeof Publication !== 'undefined' ? Publication : require('../core/publication'),
-  typeof Anomalies !== 'undefined' ? Anomalies : require('../core/anomalies'),
-  typeof Identite !== 'undefined' ? Identite : require('../core/identite')
+  typeof Anomalies !== 'undefined' ? Anomalies : require('../core/anomalies')
 );
 
 if (typeof module !== 'undefined' && module.exports) module.exports = Pipeline;

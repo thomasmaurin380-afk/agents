@@ -13,8 +13,8 @@
   "attendu": {
     "rejete": false,
     "total_saisi": {
-      "debit_cts": 1622500,
-      "credit_cts": 1622500
+      "debit_cts": 1617500,
+      "credit_cts": 1617500
     },
     "compteurs_lignes": {
       "lues": 36,
@@ -24,8 +24,8 @@
       "doublons_ignores": 0
     },
     "totaux": {
-      "debit_cts": 1622500,
-      "credit_cts": 1622500
+      "debit_cts": 1617500,
+      "credit_cts": 1617500
     },
     "statuts": {
       "NOUVELLE": 14,
@@ -99,8 +99,8 @@
         "code": "MNT_NEG",
         "nb_lignes": 2,
         "rangs": [
-          24,
-          30
+          25,
+          31
         ],
         "detail": "rang 24 : 512 Débit '25,00-' → credit_cts 2500 ; rang 30 : 627800 Crédit '(25,00)' → debit_cts 2500"
       },
@@ -128,7 +128,7 @@
     },
     "comparaison_S01": {
       "reference": "attendus/S01_lignes_canoniques.json",
-      "appariement": "par cle (JOURNAL|NUMERO) puis multiensemble des lignes",
+      "appariement": "par cle (JOURNAL|NUMERO), compte et montant signé (débit − crédit), P3",
       "champs_identiques": [
         "journal_code",
         "ecriture_num",
@@ -153,6 +153,8 @@
         "idevise": ""
       }
     },
-    "notes": "Grand livre trié par compte (écritures non contiguës, contiguite_ecritures = false) : regroupement par clé JOURNAL|N° écriture → mêmes 14 clés et mêmes 36 lignes de fond que S01 (compte, débit, crédit), hors auxiliaire (GL_TEST n'a pas de colonne auxiliaire). Formats de montants : milliers séparés par U+00A0 (ex. '2 400,00'), U+202F pour OD 000013 ('3 000,00'), négatifs '25,00-' et '(25,00)' portés dans la colonne opposée : montant signé = débit − crédit conservé, débit/crédit recalculés, MNT_NEG (info). Lettrage '0' (rangs 2 et 11) = vide (lettrage_vide). Dates JJ/MM/AAAA → ISO. AC|PROV-17 n'est pas identifiable comme brouillard (pas de ValidDate dans le GL). REC_TOTAL_SAISI (obligatoire pour un GL) : total saisi = total importé → pas d'anomalie. Premier import de l'exercice 2026 : fixe le type de profil GL pour l'exercice."
+    "notes": "Grand livre trié par compte (écritures non contiguës, contiguite_ecritures = false) : regroupement par clé JOURNAL|N° écriture → mêmes 14 clés et mêmes 36 lignes de fond que S01 (compte, débit, crédit), hors auxiliaire (GL_TEST n'a pas de colonne auxiliaire). Formats de montants : milliers séparés par U+00A0 (ex. '2 400,00'), U+202F pour OD 000013 ('3 000,00'), négatifs '25,00-' et '(25,00)' portés dans la colonne opposée : montant signé = débit − crédit conservé, débit/crédit recalculés, MNT_NEG (info). Lettrage '0' (rangs 2 et 11) = vide (lettrage_vide). Dates JJ/MM/AAAA → ISO. AC|PROV-17 n'est pas identifiable comme brouillard (pas de ValidDate dans le GL). REC_TOTAL_SAISI (obligatoire pour un GL) : total saisi = total importé → pas d'anomalie. Premier import de l'exercice 2026 : fixe le type de profil GL pour l'exercice.",
+    "convention_rang": "Convention E18 (2026-10-09) : rangs = numéros de ligne physique du fichier (en-tête = ligne 1). Conversion +1 des rangs d'origine (n° d'enregistrement de données), sans autre changement.",
+    "maj_p3": "Mise à jour P3 (décision du dirigeant, 2026-10-09) : un montant négatif reste dans sa colonne, sans reclassement. Rangs 25 ('25,00-' au débit) et 31 ('(25,00)' au crédit) : débit −2 500 et crédit −2 500 au lieu de crédit 2 500 et débit 2 500. Totaux de colonnes recalculés indépendamment (Python, décimal, sur le fichier brut) : 1 617 500 / 1 617 500 au lieu de 1 622 500. Le total logiciel saisi suit la même convention (somme des colonnes). Le fond comptable reste identique à S01 en montant signé."
   }
 }

@@ -1,378 +1,365 @@
 /**
- * Plan de publication et d'annulation, en mémoire.
+ * Version et checksum de l'actif, simulation, empreinte de staging, plan de publication et d'annulation
+ * (contrat §4.8, §4.9, §5.3, §5.4, §7). L'actif n'est jamais modifié sur place.
  *
- * L'actif n'est jamais modifié sur place : on construit un nouvel actif et la liste des
- * mouvements. Chaque mouvement « AVANT » porte l'image complète de la ligne remplacée,
- * ce qui permet le retour arrière par reconstruction (D8).
+ * Mouvements : au plus un par (publication_id, ligne_uid), avec l'image complète de la ligne avant
+ * changement ; c'est elle qui permet le retour arrière par reconstruction (D8).
  */
-var Publication = (function (Modele, Identite) {
+var Publication = (function (C, E, Identite, Anomalies) {
   'use strict';
 
-  var SEP = '\u001F';
+  function copier(o) {
+    var c = {};
+    Object.keys(o).forEach(function (k) { c[k] = o[k]; });
+    return c;
+  }
+  function parUid(a, b) { return E.comparerTexte(a.ligne_uid, b.ligne_uid); }
 
-  // ---------------------------------------------------------------- empreintes
+  // ------------------------------------------------------------------ version, checksum, statistiques
 
-  function hacher(prefixe, contenu, hasher) {
-    return Modele.VERSION_EMPREINTE + ':' + hasher.sha256Hex(prefixe + SEP + contenu);
+  /** Identifiant de la dernière publication appliquée (PUBLICATION ou ANNULATION) ; "" si aucune. */
+  function versionActif(publications) {
+    var p = publications || [];
+    return p.length ? p[p.length - 1].publication_id : '';
   }
 
-  function comparerUid(a, b) { return a.ligne_uid < b.ligne_uid ? -1 : a.ligne_uid > b.ligne_uid ? 1 : 0; }
-
-  /**
-   * Checksum de l'actif : indépendant de l'ordre de stockage (tri par ligne_uid).
-   * @returns {{checksum: string, nb_lignes: number, nb_actives: number, debit_cts: number, credit_cts: number}}
-   */
+  /** checksumActif = H("actif", [n].concat(hLigne des lignes triées par ligne_uid)). Actif vide : H("actif", ["0"]). */
   function checksumActif(actif, hasher) {
-    var lignes = (actif || []).slice().sort(comparerUid);
-    var nbActives = 0, debit = 0, credit = 0;
-    var parties = lignes.map(function (l) {
-      if (l.statut === 'ACTIVE') { nbActives++; debit += l.debit_cts; credit += l.credit_cts; }
-      return [l.ligne_uid, String(l.version), l.statut, Identite.empreinteLigne(l, hasher)].join(SEP);
+    var lignes = (actif || []).slice().sort(parUid);
+    return E.H('actif', [String(lignes.length)].concat(lignes.map(function (l) { return Identite.hLigne(l, hasher); })), hasher);
+  }
+
+  function statsActif(actif) {
+    var s = { nb_lignes: 0, nb_actives: 0, debit_cts: 0, credit_cts: 0 };
+    (actif || []).forEach(function (l) {
+      s.nb_lignes++;
+      if (l.statut === 'ACTIVE') { s.nb_actives++; s.debit_cts += l.debit_cts; s.credit_cts += l.credit_cts; }
     });
-    return {
-      checksum: hacher('ACTIF', parties.join('\n'), hasher),
-      nb_lignes: lignes.length,
-      nb_actives: nbActives,
-      debit_cts: debit,
-      credit_cts: credit
-    };
+    return s;
   }
 
-  /**
-   * Empreinte de staging : classification + contenu des lignes retenues + décisions.
-   * Figée à la validation, recalculée à la publication (A7).
-   */
-  function empreinteStaging(comparaison, decisions, anomalies, hasher) {
-    decisions = decisions || {};
-    var parties = comparaison.ecritures.map(function (e) {
-      var lignes = e.lignes.map(function (l) { return Identite.empreinteLigne(l, hasher); }).sort();
-      return [e.cle, e.statut, e.sous_types.join(','), String(e.doublons_ignores), decisions[e.cle] || ''].concat(lignes).join(SEP);
-    });
-    var anos = (anomalies || []).map(function (a) {
-      return [a.anomalie_id, a.gravite, a.attendu, a.obtenu, a.empreinte_derogation].join(SEP);
-    }).sort();
-    return hacher('STAGING', parties.join('\n') + '\n--\n' + anos.join('\n'), hasher);
-  }
+  // ------------------------------------------------------------------ construction de l'actif suivant
 
-  // ---------------------------------------------------------------- construction
-
-  function ordreCanonique(a, b) {
-    var cles = ['compte_num', 'comp_aux_num', 'debit_cts', 'credit_cts', 'h_desc', 'h_let', 'source_rang'];
-    for (var i = 0; i < cles.length; i++) {
-      var x = a[cles[i]], y = b[cles[i]];
-      if (x < y) return -1;
-      if (x > y) return 1;
-    }
-    return 0;
-  }
-
-  function versActive(ligne, cle, k, version, contexte, premierImport, hasher) {
+  function versActive(l, version, premierImport, publicationId, hasher) {
     var a = {};
-    Modele.CHAMPS_LIGNE.forEach(function (c) { a[c] = ligne[c]; });
-    a.montant_cts = ligne.debit_cts - ligne.credit_cts;
-    a.ligne_uid = cle + '#' + k;
+    C.CHAMPS_ACTIF.forEach(function (k) { a[k] = l[k] === undefined ? '' : l[k]; });
+    a.montant_devise_cts = l.montant_devise_cts === undefined ? null : l.montant_devise_cts;
     a.version = version;
     a.statut = 'ACTIVE';
-    a.first_import_id = premierImport || contexte.import_id;
-    a.source_import_id = contexte.import_id;
-    a.source_rang = ligne.source_rang;
-    a.last_publication_id = contexte.publication_id;
+    a.first_import_id = premierImport || l.source_import_id;
+    a.last_publication_id = publicationId;
     var h = Identite.empreintes(a, hasher);
     a.h_fond = h.h_fond; a.h_desc = h.h_desc; a.h_let = h.h_let;
     return a;
   }
 
-  function copier(l) {
-    var c = {};
-    Object.keys(l).forEach(function (k) { c[k] = l[k]; });
-    return c;
+  /** Décisions ABSENTE indexées par clé (ACCEPTER | REPORTER). */
+  function choixAbsentes(decisions) {
+    var choix = {};
+    (decisions || []).forEach(function (d) { if (d.type === 'ABSENTE') choix[d.cle] = d.choix; });
+    return choix;
   }
 
   /**
-   * Construit le nouvel actif sans aucune vérification (utilisé aussi pour la simulation REC_MIROIR).
-   * @param {{actif: object[], comparaison: object, decisions: Object<string, string>,
-   *          import_id: string, publication_id: string, hasher: object}} e
-   * @returns {{actif: object[], mouvements: object[]}}
+   * Construit l'actif suivant et les mouvements, sans vérification.
+   * @param {{base: object[], comparaison: object, choix: Object<string, string>, publication_id: string,
+   *          type_pub?: string, import_id: string, hasher: object}} e
    */
-  function construireActif(e) {
-    var decisions = e.decisions || {};
+  function construire(e) {
     var parCle = {};
-    (e.actif || []).forEach(function (l) { (parCle[l.cle_ecriture] || (parCle[l.cle_ecriture] = [])).push(l); });
-    var mouvements = [];
-    var seq = 0;
-    function mouvement(nature, sens, cle, ligne, versionAvant, versionApres) {
-      seq++;
-      var m = {
-        mouvement_id: e.publication_id + '-' + seq,
-        publication_id: e.publication_id,
-        type_pub: e.type_pub || 'PUBLICATION',
-        import_id: e.import_id || '',
-        cle_ecriture: cle,
-        nature: nature,
-        sens: sens,
-        ligne_uid: ligne.ligne_uid,
-        version_avant: versionAvant,
-        version_apres: versionApres,
-        statut: ligne.statut,
-        debit_cts: ligne.debit_cts,
-        credit_cts: ligne.credit_cts,
-        h_ligne: Identite.empreinteLigne(ligne, e.hasher)
-      };
-      if (sens === 'AVANT') m.avant = copier(ligne);
-      mouvements.push(m);
-    }
+    (e.base || []).forEach(function (l) { (parCle[l.cle_ecriture] || (parCle[l.cle_ecriture] = [])).push(l); });
+    var bruts = [];
 
     e.comparaison.ecritures.forEach(function (ec) {
-      var cle = ec.cle;
-      var precedentes = parCle[cle] || [];
-      var versionAvant = precedentes.reduce(function (v, l) { return Math.max(v, l.version); }, 0);
+      var avant = parCle[ec.cle] || [];
+      var versionAvant = avant.reduce(function (v, l) { return Math.max(v, l.version); }, 0);
+      var apres = null;
+      var nature = null;
       if (ec.statut === 'NOUVELLE' || ec.statut === 'MODIFIEE') {
-        var nature = ec.statut === 'NOUVELLE' ? 'INSERTION'
-          : (ec.sous_types.length === 1 && ec.sous_types[0] === 'M_LET' ? 'LETTRAGE' : 'MODIFICATION');
-        var premier = precedentes.length ? precedentes[0].first_import_id : '';
-        precedentes.forEach(function (l) { mouvement(nature, 'AVANT', cle, l, versionAvant, versionAvant + 1); });
-        var nouvelles = ec.lignes.slice().sort(ordreCanonique).map(function (l, i) {
-          return versActive(l, cle, i + 1, versionAvant + 1, e, premier, e.hasher);
-        });
-        nouvelles.forEach(function (l) { mouvement(nature, 'APRES', cle, l, versionAvant, versionAvant + 1); });
-        parCle[cle] = nouvelles;
-      } else if (ec.statut === 'ABSENTE' && decisions[cle] === 'ACCEPTER') {
-        var supprimees = precedentes.map(function (l) {
+        var premier = avant.length ? avant[0].first_import_id : '';
+        apres = ec.lignes.map(function (l) { return versActive(l, versionAvant + 1, premier, e.publication_id, e.hasher); });
+        nature = ec.statut === 'MODIFIEE' && ec.sous_types.length === 1 && ec.sous_types[0] === 'M_LET' ? 'LETTRAGE' : 'MODIFICATION';
+      } else if (ec.statut === 'ABSENTE' && e.choix[ec.cle] === 'ACCEPTER') {
+        apres = avant.map(function (l) {
           var s = copier(l);
           s.statut = 'SUPPRIMEE_SOURCE';
           s.version = versionAvant + 1;
           s.last_publication_id = e.publication_id;
           return s;
         });
-        precedentes.forEach(function (l) { mouvement('SUPPRESSION_LOGIQUE', 'AVANT', cle, l, versionAvant, versionAvant + 1); });
-        supprimees.forEach(function (l) { mouvement('SUPPRESSION_LOGIQUE', 'APRES', cle, l, versionAvant, versionAvant + 1); });
-        parCle[cle] = supprimees;
+        nature = 'SUPPRESSION_LOGIQUE';
       } else if (ec.statut === 'COLLISION') {
-        throw new Error('construireActif: écriture en collision ' + cle);
+        throw C.erreurContrat('ARGUMENT_MANQUANT', 'collision');
       }
+      if (!apres) return;
+      var sousTypes = ec.sous_types.slice();
+      if (ec.reactivation) sousTypes.push('REACTIVATION'); // P4 : réapparition tracée dans le mouvement
+      var avantParUid = {};
+      avant.forEach(function (l) { avantParUid[l.ligne_uid] = l; });
+      var apresParUid = {};
+      apres.forEach(function (l) { apresParUid[l.ligne_uid] = l; });
+      var uids = Object.keys(avantParUid).concat(Object.keys(apresParUid).filter(function (u) { return !avantParUid[u]; }));
+      uids.forEach(function (uid) {
+        var a = avantParUid[uid], b = apresParUid[uid];
+        var type = a && b ? nature : (b ? 'INSERTION' : 'RETRAIT_LIGNE');
+        bruts.push({
+          cle_ecriture: ec.cle, ligne_uid: uid, type: type, sous_types: sousTypes,
+          version_avant: a ? a.version : 0, version_apres: b ? b.version : 0,
+          h_avant: a ? Identite.hLigne(a, e.hasher) : '', h_apres: b ? Identite.hLigne(b, e.hasher) : '',
+          image_avant: a ? copier(a) : null
+        });
+      });
+      parCle[ec.cle] = apres;
     });
 
     var actif = [];
-    Object.keys(parCle).sort().forEach(function (cle) { Array.prototype.push.apply(actif, parCle[cle]); });
-    actif.sort(comparerUid);
+    Object.keys(parCle).forEach(function (cle) { actif.push.apply(actif, parCle[cle]); });
+    actif.sort(parUid);
+    bruts.sort(function (x, y) { return x.cle_ecriture !== y.cle_ecriture ? E.comparerTexte(x.cle_ecriture, y.cle_ecriture) : E.comparerTexte(x.ligne_uid, y.ligne_uid); });
+    var mouvements = bruts.map(function (m, i) {
+      var r = copier(m);
+      r.mouvement_id = e.publication_id + ':' + ('00000' + (i + 1)).slice(-6);
+      r.publication_id = e.publication_id;
+      r.type_pub = e.type_pub || 'PUBLICATION';
+      r.import_id = e.import_id || '';
+      r.annule_mouvement_id = '';
+      return r;
+    });
     return { actif: actif, mouvements: mouvements };
   }
 
-  /** Vérifie, indépendamment de la construction, que actif N = actif N-1 + mouvements (REC_PUBLICATION). */
-  function verifierMouvements(avant, apres, mouvements) {
-    var nb = avant.nb_lignes, d = avant.debit_cts, c = avant.credit_cts;
-    mouvements.forEach(function (m) {
-      var signe = m.sens === 'APRES' ? 1 : -1;
-      nb += signe;
-      if (m.statut === 'ACTIVE') { d += signe * m.debit_cts; c += signe * m.credit_cts; }
-    });
-    return nb === apres.nb_lignes && d === apres.debit_cts && c === apres.credit_cts;
+  /**
+   * Simulation (contrôles REC_MIROIR, variations de soldes).
+   * hypothese : 'ABSENTES_ACCEPTEES' | 'ABSENTES_MAINTENUES' | 'DECISIONS'.
+   */
+  function simulerActif(e) {
+    var choix;
+    if (e.hypothese === 'DECISIONS') choix = choixAbsentes(e.decisions);
+    else {
+      choix = {};
+      var valeur = e.hypothese === 'ABSENTES_ACCEPTEES' ? 'ACCEPTER' : 'REPORTER';
+      e.comparaison.ecritures.forEach(function (ec) { if (ec.statut === 'ABSENTE') choix[ec.cle] = valeur; });
+    }
+    var sansCollision = { ecritures: e.comparaison.ecritures.filter(function (ec) { return ec.statut !== 'COLLISION'; }) };
+    return construire({ base: e.base, comparaison: sansCollision, choix: choix, publication_id: 'SIMULATION', import_id: '', hasher: e.hasher }).actif;
   }
 
-  /**
-   * Défait une publication : retire les lignes des écritures touchées et restaure les images « AVANT ».
-   * Sert au retour arrière (D8) et à la preuve de réversibilité avant publication (REC_PUBLICATION).
-   */
-  function reconstruire(actif, mouvementsPublication) {
+  /** Défait des mouvements : retire les lignes des écritures touchées et restaure les images avant. */
+  function defaire(actif, mouvements) {
     var touchees = {};
-    mouvementsPublication.forEach(function (m) { touchees[m.cle_ecriture] = true; });
-    var conservees = actif.filter(function (l) { return !touchees[l.cle_ecriture]; });
-    var restaurees = mouvementsPublication.filter(function (m) { return m.sens === 'AVANT'; }).map(function (m) { return copier(m.avant); });
-    return {
-      actif: conservees.concat(restaurees).sort(comparerUid),
-      retirees: actif.filter(function (l) { return touchees[l.cle_ecriture]; }),
-      restaurees: restaurees
-    };
+    mouvements.forEach(function (m) { touchees[m.cle_ecriture] = true; });
+    var restaurees = mouvements.filter(function (m) { return m.image_avant; }).map(function (m) { return copier(m.image_avant); });
+    return actif.filter(function (l) { return !touchees[l.cle_ecriture]; }).concat(restaurees).sort(parUid);
   }
 
-  // ---------------------------------------------------------------- validation et publication
-
-  function cleAnomalie(a) { return a.code + '|' + a.objet_cle; }
+  // ------------------------------------------------------------------ empreinte de staging (A7)
 
   /**
-   * Prépare la validation : fige l'empreinte du staging et la version de l'actif de base (A7).
+   * empreinte_staging = H("staging", [import, client, périmètre, profil, règles, fichier, Lignes, Écritures,
+   * Anomalies (statuts après décisions), Décisions, Total saisi]).
    */
-  function preparerValidation(e) {
-    return {
-      empreinte_staging: empreinteStaging(e.comparaison, e.decisions, e.anomalies, e.hasher),
-      checksum_base: checksumActif(e.actif, e.hasher).checksum,
-      version_base: e.version_base || '',
-      decisions: copier(e.decisions || {}),
-      derogations: (e.derogations || []).map(copier),
-      acquittements: (e.acquittements || []).slice(),
-      checklist: copier(e.checklist || {}),
-      valide_par: e.valide_par || '',
-      valide_le: e.valide_le || ''
-    };
+  function empreinteStaging(e, hasher) {
+    var res = e.resultat;
+    var comp = res.comparaison || { ecritures: [], lignesRetenues: [], lignesIgnorees: [] };
+    var lignes = comp.lignesRetenues.concat(comp.lignesIgnorees).slice().sort(function (a, b) { return a.source_rang - b.source_rang; })
+      .map(function (l) {
+        return E.H('ligne_staging', [l.source_rang, l.cle_ecriture, l.ligne_uid, l.retenue, l.statut_staging, l.journal_code,
+          l.ecriture_num, l.ecriture_date, l.compte_num_source, l.h_fond, l.h_desc, l.h_let], hasher);
+      });
+    var ecritures = comp.ecritures.map(function (ec) {
+      return E.H('ecriture_classee', [ec.cle, ec.bloc, ec.statut, ec.sous_types.join(','), ec.version_base, ec.reactivation,
+        ec.h_ecr, ec.h_ecr_base], hasher);
+    });
+    var appliquees = Anomalies.appliquerDecisions(res.anomalies, e.decisions).anomalies;
+    var anomalies = appliquees.slice().sort(function (a, b) { return E.comparerTexte(a.anomalie_id, b.anomalie_id); }).map(function (a) {
+      return E.H('anomalie', [a.anomalie_id, a.code, a.gravite, a.statut, a.empreinte_objet, a.empreinte_derogation], hasher);
+    });
+    var decisions = (e.decisions || []).slice().sort(function (a, b) { return E.comparerTexte(a.decision_id, b.decision_id); }).map(function (d) {
+      var cible = d.type === 'ABSENTE' ? d.cle : d.type === 'DEROGATION' ? d.anomalie_id : d.code + ':' + (d.anomalie_ids || []).join(',');
+      return E.H('decision', [d.decision_id, d.type, cible, d.choix || '', d.motif || d.commentaire || '', d.reference || '',
+        d.par, d.le, d.origine || '', d.source_decision_id || ''], hasher);
+    });
+    var ts = res.total_saisi;
+    var hTs = ts ? E.H('total_saisi', [ts.debit_cts, ts.credit_cts, ts.debit_cts_confirmation, ts.credit_cts_confirmation,
+      ts.nb_lignes === undefined ? null : ts.nb_lignes, ts.source || '', ts.saisi_par || '', ts.saisi_le || ''], hasher) : '';
+    var p = res.perimetre;
+    return E.H('staging', [res.import_id, res.client_id, p.exercice_id, p.du, p.au, res.profil_ref.profil_id, res.profil_ref.version,
+      res.profil_ref.type, res.version_regles, res.file_sha256, E.Coll('staging_lignes', lignes, hasher),
+      E.Coll('staging_ecritures', ecritures, hasher), E.Coll('staging_anomalies', anomalies, hasher),
+      E.Coll('staging_decisions', decisions, hasher), hTs], hasher);
   }
 
-  var CHECKLIST = ['fichier_plus_recent', 'variations_expliquees', 'decisions_revues'];
-  var MOTIF_MIN = 20;
+  // ------------------------------------------------------------------ publication
 
   /**
-   * @param {{actif: object[], comparaison: object, anomalies: object[], validation: object,
-   *          import_id: string, publication_id: string, version_base?: string, hasher: object}} e
-   * @returns {{ok: true, actif: object[], mouvements: object[], publication: object} |
-   *           {ok: false, code: string, details: *}}
+   * @param {{base: object[], publications: object[], resultat: object, decisions: object[], validation: object,
+   *          autre_import_en_cours?: boolean, publication_id: string, horodatage: string, hasher: object}} e
+   * @returns {{ok: true, actif_suivant: object[], mouvements: object[], publication: object} |
+   *           {ok: false, refus: string[], details: Object<string, *>}}
    */
   function planifierPublication(e) {
+    E.verifierHasher(e.hasher);
+    var refus = {};
+    function refuser(code, detail) { refus[code] = detail === undefined ? true : detail; }
     var v = e.validation;
-    if (!v) return refus('VALIDATION_ABSENTE');
-    var refusListe = [];
-    var anomalies = e.anomalies || [];
-    var parId = {};
-    anomalies.forEach(function (a) { parId[a.anomalie_id] = a; });
+    var res = e.resultat;
+    if (!v || v.decision !== 'VALIDE' || v.import_id !== res.import_id || v.client_id !== res.client_id
+        || !v.valide_le || !v.soumis_le || v.valide_le < v.soumis_le) refuser('PUB_VALIDATION_ABSENTE');
+    if (v && C.CHECKLIST.some(function (k) { return !(v.checklist && v.checklist[k] === true); })) refuser('PUB_CHECKLIST');
+    if (e.autre_import_en_cours) refuser('PUB_IMPORT_EN_COURS');
+    if (!res.comparaison) refuser('PUB_BND_OUVERT', 'import non analysé ou arrêté');
 
-    if (CHECKLIST.some(function (k) { return !(v.checklist && v.checklist[k] === true); })) refusListe.push({ code: 'CHECKLIST_INCOMPLETE' });
-
+    var appli = Anomalies.appliquerDecisions(res.anomalies, e.decisions);
+    var anomalies = appli.anomalies;
+    appli.erreurs.forEach(function (x) { refuser(x.code, x.decision_id); });
+    var ids = function (liste) { return liste.map(function (a) { return a.anomalie_id; }); };
     var bnd = anomalies.filter(function (a) { return a.gravite === 'BND'; });
-    if (bnd.length) refusListe.push({ code: 'ANOMALIE_BND', details: bnd.map(function (a) { return a.anomalie_id; }) });
-
-    var derogees = {};
-    var invalides = [];
-    (v.derogations || []).forEach(function (d) {
-      var a = parId[d.anomalie_id];
-      var motif = String(d.motif || '').trim();
-      if (!a || a.gravite !== 'B' || a.empreinte_derogation !== d.empreinte_derogation || motif.length < MOTIF_MIN || !d.par) {
-        invalides.push(d.anomalie_id);
-      } else {
-        derogees[d.anomalie_id] = true;
-      }
-    });
-    if (invalides.length) refusListe.push({ code: 'DEROGATION_INVALIDE', details: invalides });
-    var bNonDerogees = anomalies.filter(function (a) { return a.gravite === 'B' && !derogees[a.anomalie_id]; });
-    if (bNonDerogees.length) refusListe.push({ code: 'BLOQUANT_NON_DEROGE', details: bNonDerogees.map(function (a) { return a.anomalie_id; }) });
-
-    var acquittes = {};
-    (v.acquittements || []).forEach(function (id) { acquittes[id] = true; });
-    var decisionsAbsentes = v.decisions || {};
-    var aNonAcquittes = anomalies.filter(function (a) {
-      if (a.gravite !== 'A' || acquittes[a.anomalie_id]) return false;
-      // Une décision explicite sur une ABSENTE vaut acquittement de son IDN_ABSENTE (A).
-      return !(a.code === 'IDN_ABSENTE' && decisionsAbsentes[a.objet_cle]);
-    });
-    if (aNonAcquittes.length) refusListe.push({ code: 'AVERTISSEMENT_NON_ACQUITTE', details: aNonAcquittes.map(function (a) { return a.anomalie_id; }) });
-
-    var sansDecision = e.comparaison.ecritures.filter(function (ec) {
-      var d = decisionsAbsentes[ec.cle];
-      return ec.statut === 'ABSENTE' && d !== 'ACCEPTER' && d !== 'REPORTER';
-    });
-    if (sansDecision.length) refusListe.push({ code: 'DECISION_MANQUANTE', details: sansDecision.map(function (ec) { return ec.cle; }) });
+    if (bnd.length) refuser('PUB_BND_OUVERT', ids(bnd));
+    var bOuvertes = anomalies.filter(function (a) { return a.gravite === 'B' && a.statut !== 'DEROGEE'; });
+    if (bOuvertes.length) refuser('PUB_B_NON_DEROGE', ids(bOuvertes));
+    var aOuvertes = anomalies.filter(function (a) { return a.gravite === 'A' && a.statut !== 'ACQUITTEE'; });
+    if (aOuvertes.length) refuser('PUB_A_NON_ACQUITTE', ids(aOuvertes));
+    var choix = choixAbsentes(e.decisions);
+    var sansDecision = res.comparaison ? res.comparaison.ecritures.filter(function (ec) {
+      return ec.statut === 'ABSENTE' && choix[ec.cle] !== 'ACCEPTER' && choix[ec.cle] !== 'REPORTER';
+    }) : [];
+    if (sansDecision.length) refuser('PUB_ABSENTE_SANS_DECISION', sansDecision.map(function (ec) { return ec.cle; }));
 
     // A7 : revalidation des données et de leur version au moment de la publication.
-    var avant = checksumActif(e.actif, e.hasher);
-    if (avant.checksum !== v.checksum_base || (v.version_base || '') !== (e.version_base || '')) {
-      refusListe.push({ code: 'VERSION_BASE_MODIFIEE', details: { checksum: avant.checksum, version: e.version_base || '' } });
-    }
-    var staging = empreinteStaging(e.comparaison, v.decisions, anomalies, e.hasher);
-    if (staging !== v.empreinte_staging) refusListe.push({ code: 'STAGING_MODIFIE' });
+    var checksumAvant = checksumActif(e.base, e.hasher);
+    var version = versionActif(e.publications);
+    if (v && (checksumAvant !== v.checksum_base || version !== v.version_base)) refuser('PUB_BASE_MODIFIEE');
+    if (v && res.comparaison && empreinteStaging({ resultat: res, decisions: e.decisions }, e.hasher) !== v.empreinte_staging) refuser('PUB_STAGING_MODIFIE');
 
-    if (refusListe.length) return { ok: false, code: refusListe[0].code, details: refusListe[0].details || null, refus: refusListe };
+    var codes = Object.keys(refus).sort(E.comparerTexte);
+    if (codes.length) return { ok: false, refus: codes, details: refus };
 
-    var plan = construireActif({
-      actif: e.actif, comparaison: e.comparaison, decisions: v.decisions,
-      import_id: e.import_id, publication_id: e.publication_id, hasher: e.hasher
-    });
-    var apres = checksumActif(plan.actif, e.hasher);
-    if (!verifierMouvements(avant, apres, plan.mouvements)) return refus('REC_PUBLICATION', 'TOTAUX');
-    // Preuve de réversibilité avant bascule : défaire les mouvements redonne exactement l'actif de base.
-    if (checksumActif(reconstruire(plan.actif, plan.mouvements).actif, e.hasher).checksum !== avant.checksum) {
-      return refus('REC_PUBLICATION', 'REVERSIBILITE');
-    }
+    var plan = construire({ base: e.base, comparaison: res.comparaison, choix: choix, publication_id: e.publication_id,
+      import_id: res.import_id, hasher: e.hasher });
+    if (!verifierPlan(e.base, plan, checksumAvant, e.hasher)) return { ok: false, refus: ['PUB_REC_PUBLICATION'], details: { PUB_REC_PUBLICATION: true } };
 
+    var stats = statsActif(plan.actif);
+    var parType = {};
+    plan.mouvements.forEach(function (m) { parType[m.type] = (parType[m.type] || 0) + 1; });
     return {
       ok: true,
-      actif: plan.actif,
+      actif_suivant: plan.actif,
       mouvements: plan.mouvements,
       publication: {
-        publication_id: e.publication_id,
-        type_pub: 'PUBLICATION',
-        import_id: e.import_id,
-        version_base: e.version_base || '',
-        checksum_avant: avant.checksum,
-        checksum_apres: apres.checksum,
-        nb_lignes: apres.nb_lignes,
-        nb_actives: apres.nb_actives,
-        debit_cts: apres.debit_cts,
-        credit_cts: apres.credit_cts
+        publication_id: e.publication_id, type_pub: 'PUBLICATION', import_id: res.import_id, validation_id: v.validation_id,
+        publication_precedente_id: version, annule_publication_id: '',
+        checksum_avant: checksumAvant, checksum_apres: checksumActif(plan.actif, e.hasher),
+        nb_lignes_avant: (e.base || []).length, nb_lignes_apres: stats.nb_lignes,
+        sigma_debit_actives: stats.debit_cts, sigma_credit_actives: stats.credit_cts,
+        nb_mouvements_par_type: parType, statut: 'PUBLIEE', annulee_par: '', horodatage: e.horodatage || '',
+        derogations_retenues: (e.decisions || []).filter(function (d) { return d.type === 'DEROGATION'; }).map(copier)
       }
     };
   }
 
   /**
-   * Retour arrière de la publication N par reconstruction depuis ses mouvements (D8).
-   * @param {{actif: object[], mouvements: object[], publication: object,
-   *          publication_annulation_id: string, hasher: object}} e
-   *   `mouvements` : mouvements de la publication N uniquement.
+   * REC_PUBLICATION, avant toute bascule :
+   * (a) chaque image avant existe dans la base avec la même empreinte ; chaque empreinte après correspond à l'actif suivant ;
+   * (b) défaire les mouvements redonne exactement la base (réversibilité) ;
+   * (c) Σ débit / crédit des lignes ACTIVE après = avant + Σ après − Σ avant.
    */
-  function planifierAnnulation(e) {
-    var pub = e.publication;
-    var courant = checksumActif(e.actif, e.hasher);
-    if (courant.checksum !== pub.checksum_apres) {
-      return refus('ACTIF_DIFFERENT_DE_N', { attendu: pub.checksum_apres, obtenu: courant.checksum });
-    }
-    var propres = e.mouvements.filter(function (m) { return m.publication_id === pub.publication_id; });
-    var r = reconstruire(e.actif, propres);
-    var actif = r.actif, retirees = r.retirees, restaurees = r.restaurees;
-
-    var reconstruit = checksumActif(actif, e.hasher);
-    if (reconstruit.checksum !== pub.checksum_avant) {
-      return refus('RECONSTRUCTION_DIVERGENTE', { attendu: pub.checksum_avant, obtenu: reconstruit.checksum });
-    }
-
-    var id = e.publication_annulation_id;
-    var seq = 0;
-    function inverse(sens, l) {
-      seq++;
-      var m = {
-        mouvement_id: id + '-' + seq, publication_id: id, type_pub: 'ANNULATION', import_id: pub.import_id,
-        cle_ecriture: l.cle_ecriture, nature: 'ANNULATION', sens: sens, ligne_uid: l.ligne_uid,
-        version_avant: '', version_apres: '', statut: l.statut, debit_cts: l.debit_cts, credit_cts: l.credit_cts,
-        h_ligne: Identite.empreinteLigne(l, e.hasher)
-      };
-      if (sens === 'AVANT') m.avant = copier(l);
-      return m;
-    }
-    var mouvements = retirees.map(function (l) { return inverse('AVANT', l); })
-      .concat(restaurees.map(function (l) { return inverse('APRES', l); }));
-
-    return {
-      ok: true,
-      actif: actif,
-      mouvements: mouvements,
-      publication: {
-        publication_id: id,
-        type_pub: 'ANNULATION',
-        annule: pub.publication_id,
-        import_id: pub.import_id,
-        checksum_avant: courant.checksum,
-        checksum_apres: reconstruit.checksum,
-        nb_lignes: reconstruit.nb_lignes,
-        nb_actives: reconstruit.nb_actives,
-        debit_cts: reconstruit.debit_cts,
-        credit_cts: reconstruit.credit_cts
+  function verifierPlan(base, plan, checksumAvant, hasher) {
+    var baseParUid = {}, suivParUid = {};
+    (base || []).forEach(function (l) { baseParUid[l.ligne_uid] = l; });
+    plan.actif.forEach(function (l) { suivParUid[l.ligne_uid] = l; });
+    var avant = statsActif(base), apres = statsActif(plan.actif);
+    var d = avant.debit_cts, c = avant.credit_cts;
+    for (var i = 0; i < plan.mouvements.length; i++) {
+      var m = plan.mouvements[i];
+      if (m.image_avant) {
+        var b = baseParUid[m.ligne_uid];
+        if (!b || Identite.hLigne(b, hasher) !== m.h_avant || Identite.hLigne(m.image_avant, hasher) !== m.h_avant) return false;
+        if (b.statut === 'ACTIVE') { d -= b.debit_cts; c -= b.credit_cts; }
       }
-    };
+      var s = suivParUid[m.ligne_uid];
+      if ((s ? Identite.hLigne(s, hasher) : '') !== m.h_apres) return false;
+      if (s && s.statut === 'ACTIVE') { d += s.debit_cts; c += s.credit_cts; }
+    }
+    if (d !== apres.debit_cts || c !== apres.credit_cts) return false;
+    return checksumActif(defaire(plan.actif, plan.mouvements), hasher) === checksumAvant;
   }
 
-  function refus(code, details) {
-    var d = details === undefined ? null : details;
-    return { ok: false, code: code, details: d, refus: [{ code: code, details: d }] };
+  // ------------------------------------------------------------------ annulation (D8)
+
+  /**
+   * @param {{actif: object[], publications: object[], mouvements: object[], publication_id_annulee: string,
+   *          import_en_cours?: boolean, tampon_inactif?: object[], publication_id: string, horodatage: string, hasher: object}} e
+   */
+  function planifierAnnulation(e) {
+    E.verifierHasher(e.hasher);
+    var refus = {};
+    var pubs = e.publications || [];
+    var p = pubs.filter(function (x) { return x.publication_id === e.publication_id_annulee; })[0];
+    if (!p) return { ok: false, refus: ['ANN_PAS_DERNIERE'], details: {} };
+    if (p.type_pub !== 'PUBLICATION') refus.ANN_TYPE = true;
+    if (p.statut === 'ANNULEE') refus.ANN_DEJA_ANNULEE = true;
+    if (versionActif(pubs) !== p.publication_id) refus.ANN_PAS_DERNIERE = true;
+    if (e.import_en_cours) refus.ANN_IMPORT_EN_COURS = true;
+    var courant = checksumActif(e.actif, e.hasher);
+    if (courant !== p.checksum_apres) refus.ANN_ACTIF_ALTERE = true;
+    var codes = Object.keys(refus).sort(E.comparerTexte);
+    if (codes.length) return { ok: false, refus: codes, details: refus };
+
+    var propres = (e.mouvements || []).filter(function (m) { return m.publication_id === p.publication_id; });
+    var restaure = defaire(e.actif, propres);
+    var stats = statsActif(restaure);
+    var checksumRestaure = checksumActif(restaure, e.hasher);
+    if (checksumRestaure !== p.checksum_avant || stats.nb_lignes !== p.nb_lignes_avant) return { ok: false, refus: ['ANN_VERIFICATION'], details: {} };
+    if (e.tampon_inactif && checksumActif(e.tampon_inactif, e.hasher) !== checksumRestaure) return { ok: false, refus: ['ANN_TAMPON_DIVERGENT'], details: {} };
+
+    var avantParUid = {}, restParUid = {};
+    e.actif.forEach(function (l) { avantParUid[l.ligne_uid] = l; });
+    restaure.forEach(function (l) { restParUid[l.ligne_uid] = l; });
+    var mouvements = propres.slice().sort(function (x, y) { return E.comparerTexte(x.mouvement_id, y.mouvement_id); }).map(function (m, i) {
+      var a = avantParUid[m.ligne_uid], b = restParUid[m.ligne_uid];
+      return {
+        mouvement_id: e.publication_id + ':' + ('00000' + (i + 1)).slice(-6), publication_id: e.publication_id,
+        type_pub: 'ANNULATION', import_id: p.import_id, ligne_uid: m.ligne_uid, cle_ecriture: m.cle_ecriture,
+        type: 'ANNULATION', sous_types: [], version_avant: a ? a.version : 0, version_apres: b ? b.version : 0,
+        h_avant: a ? Identite.hLigne(a, e.hasher) : '', h_apres: b ? Identite.hLigne(b, e.hasher) : '',
+        image_avant: a ? copier(a) : null, annule_mouvement_id: m.mouvement_id
+      };
+    });
+    var annulee = copier(p);
+    annulee.statut = 'ANNULEE';
+    annulee.annulee_par = e.publication_id;
+    return {
+      ok: true,
+      actif_restaure: restaure,
+      mouvements_inverses: mouvements,
+      publication_annulee: annulee,
+      publication_annulation: {
+        publication_id: e.publication_id, type_pub: 'ANNULATION', import_id: p.import_id, validation_id: '',
+        publication_precedente_id: p.publication_id, annule_publication_id: p.publication_id,
+        checksum_avant: courant, checksum_apres: checksumRestaure,
+        nb_lignes_avant: e.actif.length, nb_lignes_apres: stats.nb_lignes,
+        sigma_debit_actives: stats.debit_cts, sigma_credit_actives: stats.credit_cts,
+        nb_mouvements_par_type: { ANNULATION: mouvements.length }, statut: 'PUBLIEE', annulee_par: '',
+        horodatage: e.horodatage || '', derogations_retenues: []
+      }
+    };
   }
 
   return {
+    versionActif: versionActif,
     checksumActif: checksumActif,
+    statsActif: statsActif,
+    simulerActif: simulerActif,
+    defaire: defaire,
     empreinteStaging: empreinteStaging,
-    construireActif: construireActif,
-    verifierMouvements: verifierMouvements,
-    reconstruire: reconstruire,
-    preparerValidation: preparerValidation,
     planifierPublication: planifierPublication,
     planifierAnnulation: planifierAnnulation
   };
 })(
-  typeof Modele !== 'undefined' ? Modele : require('./modele'),
-  typeof Identite !== 'undefined' ? Identite : require('./identite')
+  typeof Constantes !== 'undefined' ? Constantes : require('./constantes'),
+  typeof Empreinte !== 'undefined' ? Empreinte : require('./empreinte'),
+  typeof Identite !== 'undefined' ? Identite : require('./identite'),
+  typeof Anomalies !== 'undefined' ? Anomalies : require('./anomalies')
 );
 
 if (typeof module !== 'undefined' && module.exports) module.exports = Publication;

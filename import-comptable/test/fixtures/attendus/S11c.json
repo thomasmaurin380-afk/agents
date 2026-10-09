@@ -13,8 +13,8 @@
   "attendu": {
     "rejete": true,
     "total_saisi": {
-      "debit_cts": 1622500,
-      "credit_cts": 1622500
+      "debit_cts": 1617500,
+      "credit_cts": 1617500
     },
     "compteurs_lignes": {
       "lues": 37,
@@ -24,8 +24,8 @@
       "doublons_ignores": 0
     },
     "totaux": {
-      "debit_cts": 1622500,
-      "credit_cts": 1622500
+      "debit_cts": 1617500,
+      "credit_cts": 1617500
     },
     "statuts": {
       "NOUVELLE": 14,
@@ -43,12 +43,14 @@
         "objet": "fichier",
         "nb_lignes": 1,
         "rangs": [
-          5
+          6
         ],
         "motif": "compte 'Total compte 401' non numérique ; date, journal, n° écriture, pièce, libellé vides"
       }
     ],
     "infos": [],
-    "notes": "Lignes parasites non reconnues au MVP : rejet (REJ_LIGNES, BND) → import bloqué. La ligne de total (D 300,00 / C 1 200,00) n'entre pas dans 'totaux' (lignes importées seulement). Les 36 autres lignes sont celles de S11a ; le classement (14 NOUVELLE) est indicatif, l'import étant bloqué."
+    "notes": "Lignes parasites non reconnues au MVP : rejet (REJ_LIGNES, BND) → import bloqué. La ligne de total (D 300,00 / C 1 200,00) n'entre pas dans 'totaux' (lignes importées seulement). Les 36 autres lignes sont celles de S11a ; le classement (14 NOUVELLE) est indicatif, l'import étant bloqué.",
+    "convention_rang": "Convention E18 (2026-10-09) : rangs = numéros de ligne physique du fichier (en-tête = ligne 1). Conversion +1 des rangs d'origine (n° d'enregistrement de données), sans autre changement.",
+    "maj_p3": "Mise à jour P3 (décision du dirigeant, 2026-10-09) : un montant négatif reste dans sa colonne, sans reclassement. Rangs 25 ('25,00-' au débit) et 31 ('(25,00)' au crédit) : débit −2 500 et crédit −2 500 au lieu de crédit 2 500 et débit 2 500. Totaux de colonnes recalculés indépendamment (Python, décimal, sur le fichier brut) : 1 617 500 / 1 617 500 au lieu de 1 622 500. Le total logiciel saisi suit la même convention (somme des colonnes). Le fond comptable reste identique à S01 en montant signé."
   }
 }

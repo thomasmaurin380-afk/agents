@@ -2,3 +2,4 @@ node_modules/
 # Aucune donnée client réelle ne doit être versionnée.
 donnees-reelles/
 *.local.*
+dist/

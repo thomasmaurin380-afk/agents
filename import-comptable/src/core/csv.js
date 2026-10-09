@@ -4,7 +4,7 @@
  * Compatible Node et Apps Script V8 : aucun appel d'API externe.
  * Le décodage des octets (UTF-8, windows-1252) relève de l'adaptateur.
  */
-var Csv = (function () {
+var Csv = (function (C) {
   'use strict';
 
   var BOM = '\uFEFF';
@@ -22,10 +22,10 @@ var Csv = (function () {
    *   `rang` = numéro de la ligne physique où commence l'enregistrement (l'en-tête est la ligne 1).
    */
   function parseCsv(texte, options) {
-    if (typeof texte !== 'string') throw new TypeError('parseCsv: texte attendu');
+    if (typeof texte !== 'string') throw C.erreurContrat('ARGUMENT_MANQUANT', 'texte');
     var sep = options && options.separateur;
     if (typeof sep !== 'string' || sep.length !== 1 || sep === '"' || sep === '\n' || sep === '\r') {
-      throw new Error('parseCsv: séparateur invalide');
+      throw C.erreurContrat('PROFIL_INVALIDE', 'separateur');
     }
 
     var bom = texte.charAt(0) === BOM;
@@ -138,6 +138,6 @@ var Csv = (function () {
     parseCsv: parseCsv,
     compterLignesPhysiques: compterLignesPhysiques
   };
-})();
+})(typeof Constantes !== 'undefined' ? Constantes : require('./constantes'));
 
 if (typeof module !== 'undefined' && module.exports) module.exports = Csv;
