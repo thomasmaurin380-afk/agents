@@ -52,55 +52,51 @@ Fonction RLS : `app.can_access_company(company_id)` = vrai si l'utilisateur cour
 `firm_admin` du cabinet de l'entreprise, OU affecté via `company_advisors`, OU membre via
 `company_members`. Les permissions fines (publier, valider…) sont contrôlées dans les services.
 
-## 2. Imports (couche RAW)
+## 2. Imports (couche RAW) — ✅ Phase 2
 
 ```
-import_files               company_id, kind ∈ {trial_balance, fec, general_ledger,
-                           bank_transactions, invoices, budget, other},
-                           storage_key, original_name, mime, size, sha256,
-                           status ∈ {uploaded, parsed, mapped, validated, committed,
-                                     failed, cancelled},
-                           mapping_template_id?, period_start?, period_end?,
-                           report jsonb (compteurs, erreurs, doublons)
-                           unique(company_id, sha256)   -- même fichier ⇒ détecté
+✅ import_files            company_id, kind ∈ {trial_balance, fec, bank_transactions},
+                           status ∈ {uploaded, mapped, committed, superseded, cancelled},
+                           original_name, mime_type, size_bytes, sha256, storage_key,
+                           fiscal_year_id?, period_end?, data_status?, bank_account_id? (selon le type),
+                           mapping jsonb, report jsonb, row_count, committed_at/by
+                           unique(company_id, sha256) si committed/superseded  -- même fichier refusé
+                           unique(company_id, fiscal_year_id) si FEC committed  -- un FEC courant par exercice
 
-import_rows                import_file_id, company_id, row_number, raw jsonb,
-                           normalized jsonb?, status ∈ {ok, warning, error, duplicate},
-                           messages jsonb, row_hash
-                           -- immuable après commit
+✅ import_rows             lignes en anomalie / exclues / doublons uniquement (D-17) :
+                           import_file_id, company_id, row_number, raw jsonb, status, messages jsonb
 
-column_mapping_templates   company_id? (null = modèle cabinet), kind, name,
-                           source_label (ex. « Export Pennylane balance »),
-                           mapping jsonb (colonne source → champ cible, formats)
+✅ column_mapping_templates company_id, kind, header_signature, mapping jsonb
+                           -- réappliqué automatiquement à un fichier de même en-tête
 ```
 
-Dédoublonnage : chaque ligne normalisée porte une `natural_key_hash` (ex. banque :
-compte + date + montant + libellé normalisé + référence) ; contrainte d'unicité par entreprise,
-avec arbitrage explicite (`duplicate` → écarté ou forcé avec justification).
+Dédoublonnage bancaire : `natural_key_hash` = SHA-256(compte, date, montant, libellé normalisé,
+référence, rang d'occurrence dans le fichier). Deux opérations identiques le même jour restent
+distinctes ; un réimport (même en autre format, ex. CSV puis XLSX) n'enregistre que les nouvelles.
 
 ## 3. Comptabilité importée (NORMALIZED)
 
 ```
-fiscal_years               company_id, label, start_date, end_date,
+✅ fiscal_years            company_id, label, start_date, end_date,
                            status ∈ {open, closed_provisional, closed_final}
-                           exclude constraint : pas de chevauchement par entreprise
+                           pas de chevauchement (trigger), durée < 24 mois
 
-chart_of_accounts          company_id, account_number varchar(20), label,
-                           pcg_class smallint (1–8), is_auxiliary bool
+✅ chart_of_accounts       company_id, account_number, label, pcg_account, pcg_class,
+                           is_auxiliary, mapping_status ∈ {auto_validated, to_review, manual}, mapping_rule_id
                            unique(company_id, account_number)
 
-trial_balances             company_id, fiscal_year_id, period_end date,
+✅ trial_balances          company_id, fiscal_year_id, period_end date,
                            kind ∈ {monthly, cumulative, closing},
                            data_status ∈ {provisional, final},
                            source_import_id, supersedes_id?, is_current bool
                            -- une seule balance « courante » par (fiscal_year, period_end)
 
-trial_balance_lines        trial_balance_id, company_id, account_number,
+✅ trial_balance_lines     trial_balance_id, company_id, account_number,
                            opening_debit, opening_credit, period_debit, period_credit,
                            closing_debit, closing_credit   numeric(18,2)
                            check : Σ débits = Σ crédits (contrôlé au niveau balance)
 
-accounting_entries         (FEC / grand livre) company_id, fiscal_year_id, journal_code,
+✅ accounting_entries      (FEC / grand livre) company_id, fiscal_year_id, journal_code,
                            entry_number, entry_date, account_number, aux_account?,
                            piece_ref, piece_date, label, debit, credit,
                            lettering?, validation_date?, currency_amount?, currency?,
@@ -140,11 +136,11 @@ sig_snapshots              company_id, fiscal_year_id, period_start, period_end,
 ## 5. Trésorerie
 
 ```
-bank_accounts              company_id, bank_name, label, iban_masked (4 derniers caractères
+✅ bank_accounts           company_id, bank_name, label, iban_masked (4 derniers caractères
                            en clair, IBAN complet chiffré si nécessaire), currency,
                            reference_balance numeric, reference_balance_date date
 
-bank_transactions          company_id, bank_account_id, booking_date, value_date?,
+✅ bank_transactions       company_id, bank_account_id, booking_date, value_date?,
                            amount numeric(18,2) (signé), currency, label_raw, label_normalized,
                            counterparty?, reference?, category_id?,
                            categorization_status ∈ {auto_validated, to_review, manual, blocked},

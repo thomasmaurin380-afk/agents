@@ -1,5 +1,5 @@
 # Pile minimale « Supabase-compatible » pour les tests d'intégration et E2E :
-# PostgreSQL Supabase + service d'authentification (GoTrue). Les secrets ci-dessous
+# PostgreSQL Supabase + authentification (GoTrue) + stockage de fichiers (Storage API). Les secrets ci-dessous
 # sont des valeurs de TEST uniquement, jamais utilisées ailleurs.
 # Usage : npm run stack:up / npm run stack:down
 name: daf-test
@@ -47,3 +47,27 @@ services:
       GOTRUE_MFA_MAX_ENROLLED_FACTORS: "10"
       GOTRUE_RATE_LIMIT_TOKEN_REFRESH: "1000"
       GOTRUE_RATE_LIMIT_VERIFY: "1000"
+  storage:
+    image: supabase/storage-api:v1.79.36
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+    ports:
+      - "54328:5000"
+    environment:
+      ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS10ZXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMDAwMDAsImV4cCI6MjEwNTAwMDAwMH0.CNOsU2hhht-9HgiCxReYDDdcJ3bKbRPi-IobG3dyx1Q
+      SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS10ZXN0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDAwMDAwMCwiZXhwIjoyMTA1MDAwMDAwfQ.jQme6xjm5KFr4i9--Kxq7emWtLgq_c1QiM5Z0gQaihk
+      AUTH_JWT_SECRET: test-only-jwt-secret-with-at-least-32-characters
+      PGRST_JWT_SECRET: test-only-jwt-secret-with-at-least-32-characters
+      DATABASE_URL: postgres://supabase_storage_admin:postgres@db:5432/postgres
+      FILE_SIZE_LIMIT: "52428800"
+      UPLOAD_FILE_SIZE_LIMIT: "52428800"
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      STORAGE_FILE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      REGION: stub
+      GLOBAL_S3_BUCKET: stub
+      STORAGE_S3_BUCKET: stub
+      IMAGE_TRANSFORMATION_ENABLED: "false"

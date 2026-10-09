@@ -1,0 +1,25 @@
+Atelier Numérique Conseil SAS (démo) - Balance générale
+Période du 01/01/2025 au 31/12/2025
+
+Compte;Intitulé;Mouvements débit;Mouvements crédit;Solde débit;Solde crédit
+101000;Capital social;0,00;10000,00;;10000,00
+164000;Emprunts auprès des établissements de crédit;14160,00;15000,00;;840,00
+401000;Fournisseurs;25920,00;25920,00;;
+411000;Clients;239760,00;219780,00;19980,00;
+421000;Personnel - rémunérations dues;48600,00;48600,00;;
+431000;Sécurité sociale;40800,00;40800,00;;
+445510;TVA à décaisser;29957,00;32660,00;;2703,00
+445660;TVA déductible sur ABS;7300,00;7300,00;;
+445710;TVA collectée;39960,00;39960,00;;
+512000;Banque Démo;244780,00;179059,00;65721,00;
+604000;Achats de prestations de services;21600,00;0,00;21600,00;
+606400;Fournitures administratives;560,00;0,00;560,00;
+613200;Locations immobilières;13200,00;0,00;13200,00;
+616000;Primes d'assurance;980,00;0,00;980,00;
+626000;Frais postaux et de télécommunications;1140,00;0,00;1140,00;
+627000;Services bancaires;222,00;0,00;222,00;
+641100;Salaires, appointements;62400,00;0,00;62400,00;
+645100;Cotisations URSSAF;27000,00;0,00;27000,00;
+661100;Intérêts des emprunts;540,00;0,00;540,00;
+706000;Prestations de services;0,00;199800,00;;199800,00
+Total général;;818879,00;818879,00;213343,00;213343,00

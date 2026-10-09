@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/layout/app-shell";
 import { Alert } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { IndicatorGrid } from "@/features/companies/indicator-grid";
+import { getAvailableSources } from "@/services/company-data";
 import { orNotFound, requireActor } from "@/lib/guards";
 import { getClientCompany } from "@/services/companies";
 
@@ -12,6 +13,7 @@ export default async function ClientHomePage({ params }: PageProps<"/client/[com
   const { companyId } = await params;
   const actor = await requireActor();
   const view = await orNotFound(getClientCompany(actor, companyId));
+  const sources = await getAvailableSources(actor, companyId);
   const c = view.company;
   return (
     <>
@@ -28,7 +30,7 @@ export default async function ClientHomePage({ params }: PageProps<"/client/[com
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Vos indicateurs
         </h2>
-        <IndicatorGrid available={new Set()} />
+        <IndicatorGrid available={sources} />
         <p className="text-xs text-muted-foreground">
           Les indicateurs s&apos;afficheront dès que vos données comptables et bancaires auront été
           transmises et contrôlées par votre DAF. Aucun chiffre n&apos;est estimé en l&apos;absence de données.

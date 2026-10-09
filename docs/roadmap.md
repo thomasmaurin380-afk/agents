@@ -8,8 +8,8 @@
 | Phase | Intitulé | Statut |
 |---|---|---|
 | 0 | Analyse d'architecture et définition du MVP | ✅ validée |
-| 1 | Architecture et fondations | ✅ livrée le 2026-10-09 (en attente de votre recette) |
-| 2 | Onboarding et collecte | — |
+| 1 | Architecture et fondations | ✅ validée |
+| 2 | Onboarding et collecte | ✅ livrée le 2026-10-09 (en attente de votre recette) |
 | 3 | Moteur financier et SIG | — |
 | 4 | Dashboard et KPI | — |
 | 5 | Rapports PDF | — |
@@ -83,9 +83,10 @@ pas de limitation applicative du nombre de tentatives de connexion au-delà de c
   moteur d'import générique (téléversement → analyse → colonnes → correspondance → prévisualisation
   → contrôles → doublons → validation → enregistrement → rapport) ; parseurs CSV, XLSX, FEC ;
   balance générale ; transactions bancaires ; modèles de correspondance ; conservation du brut.
-- **Fichiers** : `features/imports/*`, `domain/accounting/{fec,trial-balance}.ts`,
-  `services/imports/*`, `jobs/import-commit.ts`, `db/schema/{imports,accounting,treasury}.ts`.
-- **Dépendances** : Phase 1 ; stockage objet ; pg-boss.
+- **Fichiers (réels)** : `domain/imports/*`, `lib/imports/read-table.ts`, `lib/storage/*`, `services/{imports,company-data}.ts`,
+  `repositories/{imports,accounting,bank-accounts,fiscal-years}.ts`, `features/data/*`, `app/daf/c/[companyId]/{data,imports,accounts}`,
+  `db/schema/{imports,accounting,treasury}.ts`, `db/migrations/000{2,3}_*.sql`, `scripts/demo/generate-files.ts`.
+- **Dépendances** : Phase 1 ; stockage objet (Supabase Storage).
 - **Critères** : balance équilibrée (Σ D = Σ C) sinon rejet explicite ; FEC conforme aux 18 colonnes
   sinon rapport d'erreurs ligne à ligne ; réimport identique ⇒ 0 doublon ; données brutes intactes.
 - **Tests** : fixtures FEC (tabulation et `|`), CSV séparateur `;` + décimales à virgule, encodages
@@ -93,6 +94,36 @@ pas de limitation applicative du nombre de tentatives de connexion au-delà de c
 - **Risques** : diversité des exports logiciels (⇒ modèles de correspondance, D-06) ; montants au
   format français mal parsés (⇒ parseur dédié testé).
 - **Livrable** : import d'une vraie balance et d'un vrai relevé avec rapport d'import.
+
+### Résultat Phase 2 (2026-10-09)
+
+Livré : exercices (décalés, sans chevauchement), comptes bancaires, moteur d'import (CSV/TXT/XLSX,
+détection d'encodage, de séparateur, de ligne d'en-tête et de séparateur décimal), balances (3 modes de
+soldes, à-nouveaux et mouvements facultatifs), FEC (18 colonnes, variantes Débit/Crédit et Montant/Sens),
+relevés bancaires (montant signé ou débit/crédit, contrôle du solde courant), correspondance des colonnes
+proposée puis modifiable et mémorisée par entreprise, aperçu normalisé, contrôles bloquants et
+avertissements ligne à ligne, doublons (fichier identique refusé ; opérations bancaires déjà connues
+ignorées), remplacement explicite d'une balance ou d'un FEC (historique conservé), plan de comptes
+rattaché au PCG (automatique, règles, manuel), rapport d'import, audit, disponibilité des sources
+propagée aux indicateurs (DAF et dirigeant), fichiers de démonstration cohérents (`demo-files/`).
+
+Écarts assumés : pas de file de tâches (D-16) ; `import_rows` limité aux lignes en anomalie (D-17) ;
+le dépôt de fichiers par le dirigeant est reporté au module Documents (5b).
+
+Tests exécutés :
+
+| Suite | Résultat |
+|---|---|
+| `npm run typecheck`, `npm run lint` | ✅ |
+| `npm test` — unitaires (dont 40 sur le moteur d'import et les fichiers de démo) | ✅ 63/63 |
+| `npm run test:integration` (dont 21 Phase 2, volumétrie 100 000 lignes comprise) — Supabase PG 17 et PostgreSQL 16 standard | ✅ 70/70 |
+| `npm run build` | ✅ |
+| `npm run test:e2e` — Playwright (9 Phase 1 + 7 Phase 2) | ✅ 16/16 |
+
+Défauts trouvés et corrigés par les tests : droit manquant pour mettre à jour une règle de
+rattachement ; compteur d'opérations bancaires toujours à 0 (colonne non qualifiée dans une
+sous-requête) ; validation de 100 000 lignes en 41 s ramenée à 10 s (politiques RLS évaluées une fois
+par instruction, insertion en masse des écritures).
 
 ## Phase 3 — Moteur financier et SIG
 

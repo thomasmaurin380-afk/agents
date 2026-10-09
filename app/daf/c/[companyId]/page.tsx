@@ -11,6 +11,7 @@ import { ROLE_LABELS } from "@/domain/permissions/matrix";
 import { COMPANY_STATUS_LABELS, COMPANY_STATUS_VARIANTS } from "@/features/companies/labels";
 import { IndicatorGrid } from "@/features/companies/indicator-grid";
 import { AdvisorToggle, InviteClientForm, RevokeInvitationButton } from "@/features/companies/members-panel";
+import { getAvailableSources } from "@/services/company-data";
 import { orNotFound, requireStaff } from "@/lib/guards";
 import { getCompanyWorkspace } from "@/services/companies";
 
@@ -22,6 +23,7 @@ export default async function CompanyPage({ params }: PageProps<"/daf/c/[company
   const { companyId } = await params;
   const actor = await requireStaff();
   const ws = await orNotFound(getCompanyWorkspace(actor, companyId));
+  const sources = await getAvailableSources(actor, companyId);
   const c = ws.company;
   const isAdmin = ws.role === "firm_admin";
   const assigned = new Set(ws.advisors.map((a) => a.userId));
@@ -61,7 +63,7 @@ export default async function CompanyPage({ params }: PageProps<"/daf/c/[company
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Indicateurs clés
         </h2>
-        <IndicatorGrid available={new Set()} />
+        <IndicatorGrid available={sources} />
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">

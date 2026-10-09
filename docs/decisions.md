@@ -11,15 +11,17 @@ Statuts : `proposée` · `validée` · `rejetée` · `remplacée`.
 | D-04 | Monolithe modulaire Next.js + worker de jobs, pas de microservice | validée |
 | D-05 | Montants `numeric(18,2)` en base, decimal.js en TypeScript | validée |
 | D-06 | Aucune dépendance à un logiciel comptable : balances CSV/XLSX, FEC, banque CSV/XLSX + correspondances par entreprise | **validée** (2026-10-09) |
-| D-07 | Lecteur XLSX : choix à l'implémentation Phase 2 après test | proposée |
+| D-07 | Lecteur XLSX : `read-excel-file` (MIT, lecture seule, nombres lus en texte exact) | appliquée en Phase 2 |
 | D-08 | Budget vs réalisé après les premiers PDF ; modèle de données budgétaire prévu dès le départ | **validée** (2026-10-09) |
 | D-09 | PDF : HTML/React rendu par Chromium headless côté serveur | proposée |
 | D-10 | Multi-tenant : base partagée, `company_id` partout, scoping applicatif + RLS | validée |
 | D-11 | Référentiel PCG versionné par date d'ouverture d'exercice | **validée** (2026-10-09) |
-| D-12 | Next.js 16 : `cacheComponents` désactivé ; pages authentifiées rendues dynamiquement | appliquée en Phase 1 — à confirmer |
-| D-13 | Tables applicatives dans le schéma PostgreSQL `app`, non exposé par l'API Data de Supabase | appliquée en Phase 1 — à confirmer |
-| D-14 | Invitations par lien à usage unique, sans envoi d'e-mail en Phase 1 | appliquée en Phase 1 — à confirmer |
-| D-15 | 2FA (TOTP) obligatoire pour les utilisateurs du cabinet | appliquée en Phase 1 — à confirmer |
+| D-12 | Next.js 16 : `cacheComponents` désactivé ; pages authentifiées rendues dynamiquement | **validée** (2026-10-09) |
+| D-13 | Tables applicatives dans le schéma PostgreSQL `app`, non exposé par l'API Data de Supabase | **validée** (2026-10-09) |
+| D-14 | Invitations par lien à usage unique, sans envoi d'e-mail en Phase 1 | **validée** (2026-10-09) |
+| D-15 | 2FA (TOTP) obligatoire pour les utilisateurs du cabinet | **validée** (2026-10-09) |
+| D-16 | Imports traités de façon synchrone (pas encore de file de tâches) | appliquée en Phase 2 |
+| D-17 | Conservation du brut : fichier original + lignes en anomalie, pas de copie ligne à ligne | appliquée en Phase 2 |
 
 Paramètres généraux validés : devise **EUR**, langue **français**, référentiel **PCG français versionné**,
 multi-entreprises, deux interfaces (DAF / client), moteur financier partagé, sécurité et traçabilité prioritaires.
@@ -92,3 +94,28 @@ et le transmet lui-même. L'envoi d'e-mails transactionnels (fournisseur SMTP UE
 
 TOTP obligatoire pour les rôles cabinet avant tout accès à l'espace DAF. Recommandé mais facultatif
 pour les clients.
+
+## D-07 — Lecture des fichiers XLSX
+
+`read-excel-file` 9.3.10 (MIT) : lecture seule, maintenu, sans le paquet `xlsx` publié sur npm
+(0.18.5, figé et visé par des vulnérabilités connues) ni `exceljs` (sans nouvelle version depuis 2023).
+Les nombres sont récupérés sous forme de texte exact (`parseNumber`), jamais via un flottant ;
+les artefacts binaires (ex. `1234.5600000000001`) sont arrondis au centime, une vraie troisième
+décimale est rejetée. Les classeurs `.xls` (Excel 97-2003) sont refusés avec un message explicite.
+
+## D-16 — Imports synchrones
+
+La roadmap prévoyait une file de tâches (pg-boss) dès la Phase 2. Mesure : un FEC de 100 000 lignes
+(9,9 Mo) est analysé en ~2 s et enregistré en ~10 s (dont ~5 s d'insertion PostgreSQL), dans la limite
+d'une requête. Un FEC de TPE (5 000 à 30 000 lignes) se valide en 1 à 3 s. La file de tâches est donc
+reportée à la Phase 5 (génération PDF), où elle devient indispensable ; l'import y sera alors rattaché.
+Test de non-régression : `tests/integration/imports-volume.test.ts` (seuil 30 s).
+
+## D-17 — Conservation des données brutes
+
+Le fichier original est conservé à l'identique dans le stockage (clé = empreinte SHA-256, vérifiée
+à chaque relecture). Chaque donnée normalisée porte son numéro de ligne source (`source_row`) et son
+import d'origine. `import_rows` ne stocke que les lignes en anomalie, exclues ou rejetées comme
+doublons (avec leur contenu brut et les messages), au lieu de dupliquer tout le fichier en base.
+Les données importées ne sont ni modifiables ni supprimables par l'application : une correction
+passe par un nouvel import qui remplace explicitement le précédent (historique conservé).

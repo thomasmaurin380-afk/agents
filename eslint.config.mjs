@@ -41,13 +41,13 @@ const eslintConfig = defineConfig([
   },
   {
     files: ["**/*.{ts,tsx}"],
-    ignores: ["lib/auth/**", "proxy.ts", "scripts/**", "tests/**"],
+    ignores: ["lib/auth/**", "lib/storage/supabase.ts", "proxy.ts", "scripts/**", "tests/**"],
     rules: {
       "no-restricted-imports": [
         "error",
         {
           patterns: [
-            { group: ["@supabase/*"], message: "Seul lib/auth/ dépend de Supabase (portabilité, D-01)." },
+            { group: ["@supabase/*"], message: "Seuls lib/auth/ et lib/storage/supabase.ts dépendent de Supabase (portabilité, D-01)." },
           ],
         },
       ],

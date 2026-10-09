@@ -1,0 +1,2770 @@
+{
+  "id": "4f1e17f9-01c3-4aed-913e-54f97f7b3592",
+  "prevId": "af1b79b5-9b6a-4927-8665-447720ccade4",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "app.firm_members": {
+      "name": "firm_members",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "firm_id": {
+          "name": "firm_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "firm_role",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "firm_members_user_idx": {
+          "name": "firm_members_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "firm_members_firm_id_firms_id_fk": {
+          "name": "firm_members_firm_id_firms_id_fk",
+          "tableFrom": "firm_members",
+          "tableTo": "firms",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "firm_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "firm_members_user_id_users_id_fk": {
+          "name": "firm_members_user_id_users_id_fk",
+          "tableFrom": "firm_members",
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "firm_members_firm_user_key": {
+          "name": "firm_members_firm_user_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "firm_id",
+            "user_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.firms": {
+      "name": "firms",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "siren": {
+          "name": "siren",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_demo": {
+          "name": "is_demo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.users": {
+      "name": "users",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "full_name": {
+          "name": "full_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_demo": {
+          "name": "is_demo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "disabled_at": {
+          "name": "disabled_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_email_key": {
+          "name": "users_email_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "users_email_lowercase": {
+          "name": "users_email_lowercase",
+          "value": "\"app\".\"users\".\"email\" = lower(\"app\".\"users\".\"email\")"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "app.companies": {
+      "name": "companies",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "firm_id": {
+          "name": "firm_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "legal_name": {
+          "name": "legal_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trade_name": {
+          "name": "trade_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "siren": {
+          "name": "siren",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "legal_form": {
+          "name": "legal_form",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "naf_code": {
+          "name": "naf_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sector": {
+          "name": "sector",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'EUR'"
+        },
+        "fiscal_year_start_month": {
+          "name": "fiscal_year_start_month",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "status": {
+          "name": "status",
+          "type": "company_status",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'onboarding'"
+        },
+        "enabled_modules": {
+          "name": "enabled_modules",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::text[]"
+        },
+        "lead_advisor_id": {
+          "name": "lead_advisor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_version": {
+          "name": "data_version",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "companies_firm_idx": {
+          "name": "companies_firm_idx",
+          "columns": [
+            {
+              "expression": "firm_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "companies_firm_id_firms_id_fk": {
+          "name": "companies_firm_id_firms_id_fk",
+          "tableFrom": "companies",
+          "tableTo": "firms",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "firm_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "companies_lead_advisor_id_users_id_fk": {
+          "name": "companies_lead_advisor_id_users_id_fk",
+          "tableFrom": "companies",
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "lead_advisor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "companies_created_by_users_id_fk": {
+          "name": "companies_created_by_users_id_fk",
+          "tableFrom": "companies",
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "companies_firm_siren_key": {
+          "name": "companies_firm_siren_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "firm_id",
+            "siren"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "companies_currency_eur": {
+          "name": "companies_currency_eur",
+          "value": "\"app\".\"companies\".\"currency\" = 'EUR'"
+        },
+        "companies_fy_month": {
+          "name": "companies_fy_month",
+          "value": "\"app\".\"companies\".\"fiscal_year_start_month\" between 1 and 12"
+        },
+        "companies_siren_format": {
+          "name": "companies_siren_format",
+          "value": "\"app\".\"companies\".\"siren\" is null or \"app\".\"companies\".\"siren\" ~ '^[0-9]{9}$'"
+        },
+        "companies_legal_name_not_blank": {
+          "name": "companies_legal_name_not_blank",
+          "value": "length(trim(\"app\".\"companies\".\"legal_name\")) > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "app.company_advisors": {
+      "name": "company_advisors",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "company_advisors_user_idx": {
+          "name": "company_advisors_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "company_advisors_company_id_companies_id_fk": {
+          "name": "company_advisors_company_id_companies_id_fk",
+          "tableFrom": "company_advisors",
+          "tableTo": "companies",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "company_advisors_user_id_users_id_fk": {
+          "name": "company_advisors_user_id_users_id_fk",
+          "tableFrom": "company_advisors",
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "company_advisors_company_user_key": {
+          "name": "company_advisors_company_user_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "company_id",
+            "user_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.company_members": {
+      "name": "company_members",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "client_role",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "company_members_user_idx": {
+          "name": "company_members_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "company_members_company_id_companies_id_fk": {
+          "name": "company_members_company_id_companies_id_fk",
+          "tableFrom": "company_members",
+          "tableTo": "companies",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "company_members_user_id_users_id_fk": {
+          "name": "company_members_user_id_users_id_fk",
+          "tableFrom": "company_members",
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "company_members_company_user_key": {
+          "name": "company_members_company_user_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "company_id",
+            "user_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.invitations": {
+      "name": "invitations",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "firm_id": {
+          "name": "firm_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "invitation_role",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "accepted_at": {
+          "name": "accepted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "accepted_by": {
+          "name": "accepted_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "invitations_company_idx": {
+          "name": "invitations_company_idx",
+          "columns": [
+            {
+              "expression": "company_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "invitations_firm_id_firms_id_fk": {
+          "name": "invitations_firm_id_firms_id_fk",
+          "tableFrom": "invitations",
+          "tableTo": "firms",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "firm_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "invitations_company_id_companies_id_fk": {
+          "name": "invitations_company_id_companies_id_fk",
+          "tableFrom": "invitations",
+          "tableTo": "companies",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "invitations_accepted_by_users_id_fk": {
+          "name": "invitations_accepted_by_users_id_fk",
+          "tableFrom": "invitations",
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "accepted_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "invitations_created_by_users_id_fk": {
+          "name": "invitations_created_by_users_id_fk",
+          "tableFrom": "invitations",
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "invitations_token_hash_key": {
+          "name": "invitations_token_hash_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token_hash"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "invitations_email_lowercase": {
+          "name": "invitations_email_lowercase",
+          "value": "\"app\".\"invitations\".\"email\" = lower(\"app\".\"invitations\".\"email\")"
+        },
+        "invitations_scope": {
+          "name": "invitations_scope",
+          "value": "(\"app\".\"invitations\".\"role\" in ('firm_admin','firm_analyst') and \"app\".\"invitations\".\"company_id\" is null)\n       or (\"app\".\"invitations\".\"role\" in ('client_owner','client_member','client_readonly') and \"app\".\"invitations\".\"company_id\" is not null)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "app.audit_log": {
+      "name": "audit_log",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "at": {
+          "name": "at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actor_user_id": {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "actor_kind": {
+          "name": "actor_kind",
+          "type": "audit_actor_kind",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "firm_id": {
+          "name": "firm_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "action": {
+          "name": "action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "object_type": {
+          "name": "object_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "object_id": {
+          "name": "object_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "audit_outcome",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "details": {
+          "name": "details",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "audit_log_company_at_idx": {
+          "name": "audit_log_company_at_idx",
+          "columns": [
+            {
+              "expression": "company_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "audit_log_firm_at_idx": {
+          "name": "audit_log_firm_at_idx",
+          "columns": [
+            {
+              "expression": "firm_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.column_mapping_templates": {
+      "name": "column_mapping_templates",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "import_kind",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "header_signature": {
+          "name": "header_signature",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mapping": {
+          "name": "mapping",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "column_mapping_templates_company_id_companies_id_fk": {
+          "name": "column_mapping_templates_company_id_companies_id_fk",
+          "tableFrom": "column_mapping_templates",
+          "tableTo": "companies",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "column_mapping_templates_created_by_users_id_fk": {
+          "name": "column_mapping_templates_created_by_users_id_fk",
+          "tableFrom": "column_mapping_templates",
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "column_mapping_templates_key": {
+          "name": "column_mapping_templates_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "company_id",
+            "kind",
+            "header_signature"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.import_files": {
+      "name": "import_files",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "import_kind",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "import_status",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'uploaded'"
+        },
+        "original_name": {
+          "name": "original_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mime_type": {
+          "name": "mime_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "size_bytes": {
+          "name": "size_bytes",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sha256": {
+          "name": "sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "storage_key": {
+          "name": "storage_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fiscal_year_id": {
+          "name": "fiscal_year_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "period_end": {
+          "name": "period_end",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_status": {
+          "name": "data_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bank_account_id": {
+          "name": "bank_account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mapping": {
+          "name": "mapping",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "report": {
+          "name": "report",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "row_count": {
+          "name": "row_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "committed_at": {
+          "name": "committed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "committed_by": {
+          "name": "committed_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "import_files_company_idx": {
+          "name": "import_files_company_idx",
+          "columns": [
+            {
+              "expression": "company_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "import_files_same_file_key": {
+          "name": "import_files_same_file_key",
+          "columns": [
+            {
+              "expression": "company_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sha256",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"app\".\"import_files\".\"status\" in ('committed', 'superseded')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "import_files_current_fec_key": {
+          "name": "import_files_current_fec_key",
+          "columns": [
+            {
+              "expression": "company_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fiscal_year_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"app\".\"import_files\".\"kind\" = 'fec' and \"app\".\"import_files\".\"status\" = 'committed'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "import_files_company_id_companies_id_fk": {
+          "name": "import_files_company_id_companies_id_fk",
+          "tableFrom": "import_files",
+          "tableTo": "companies",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "import_files_created_by_users_id_fk": {
+          "name": "import_files_created_by_users_id_fk",
+          "tableFrom": "import_files",
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "import_files_committed_by_users_id_fk": {
+          "name": "import_files_committed_by_users_id_fk",
+          "tableFrom": "import_files",
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "committed_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.import_rows": {
+      "name": "import_rows",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "import_file_id": {
+          "name": "import_file_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "row_number": {
+          "name": "row_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raw": {
+          "name": "raw",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "import_row_status",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "messages": {
+          "name": "messages",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        }
+      },
+      "indexes": {
+        "import_rows_file_idx": {
+          "name": "import_rows_file_idx",
+          "columns": [
+            {
+              "expression": "import_file_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "row_number",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "import_rows_import_file_id_import_files_id_fk": {
+          "name": "import_rows_import_file_id_import_files_id_fk",
+          "tableFrom": "import_rows",
+          "tableTo": "import_files",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "import_file_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "import_rows_company_id_companies_id_fk": {
+          "name": "import_rows_company_id_companies_id_fk",
+          "tableFrom": "import_rows",
+          "tableTo": "companies",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.account_mapping_rules": {
+      "name": "account_mapping_rules",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "match_type": {
+          "name": "match_type",
+          "type": "account_rule_match",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pattern": {
+          "name": "pattern",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pcg_account": {
+          "name": "pcg_account",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "account_mapping_rules_company_id_companies_id_fk": {
+          "name": "account_mapping_rules_company_id_companies_id_fk",
+          "tableFrom": "account_mapping_rules",
+          "tableTo": "companies",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "account_mapping_rules_created_by_users_id_fk": {
+          "name": "account_mapping_rules_created_by_users_id_fk",
+          "tableFrom": "account_mapping_rules",
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "account_mapping_rules_key": {
+          "name": "account_mapping_rules_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "company_id",
+            "match_type",
+            "pattern"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "account_mapping_rules_pcg": {
+          "name": "account_mapping_rules_pcg",
+          "value": "\"app\".\"account_mapping_rules\".\"pcg_account\" ~ '^[1-8][0-9]{2,}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "app.accounting_entries": {
+      "name": "accounting_entries",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fiscal_year_id": {
+          "name": "fiscal_year_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "import_file_id": {
+          "name": "import_file_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "journal_code": {
+          "name": "journal_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "journal_label": {
+          "name": "journal_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "entry_number": {
+          "name": "entry_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entry_date": {
+          "name": "entry_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_number": {
+          "name": "account_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_label": {
+          "name": "account_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "aux_account": {
+          "name": "aux_account",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aux_label": {
+          "name": "aux_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "piece_ref": {
+          "name": "piece_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "piece_date": {
+          "name": "piece_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "debit": {
+          "name": "debit",
+          "type": "numeric(18, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "credit": {
+          "name": "credit",
+          "type": "numeric(18, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lettering": {
+          "name": "lettering",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lettering_date": {
+          "name": "lettering_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "validation_date": {
+          "name": "validation_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currency_amount": {
+          "name": "currency_amount",
+          "type": "numeric(18, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_row": {
+          "name": "source_row",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "accounting_entries_import_idx": {
+          "name": "accounting_entries_import_idx",
+          "columns": [
+            {
+              "expression": "import_file_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "accounting_entries_company_account_idx": {
+          "name": "accounting_entries_company_account_idx",
+          "columns": [
+            {
+              "expression": "company_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fiscal_year_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "account_number",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "accounting_entries_company_date_idx": {
+          "name": "accounting_entries_company_date_idx",
+          "columns": [
+            {
+              "expression": "company_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "entry_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "accounting_entries_company_id_companies_id_fk": {
+          "name": "accounting_entries_company_id_companies_id_fk",
+          "tableFrom": "accounting_entries",
+          "tableTo": "companies",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "accounting_entries_fiscal_year_id_fiscal_years_id_fk": {
+          "name": "accounting_entries_fiscal_year_id_fiscal_years_id_fk",
+          "tableFrom": "accounting_entries",
+          "tableTo": "fiscal_years",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "fiscal_year_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "accounting_entries_import_file_id_import_files_id_fk": {
+          "name": "accounting_entries_import_file_id_import_files_id_fk",
+          "tableFrom": "accounting_entries",
+          "tableTo": "import_files",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "import_file_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.chart_of_accounts": {
+      "name": "chart_of_accounts",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_number": {
+          "name": "account_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "pcg_account": {
+          "name": "pcg_account",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pcg_class": {
+          "name": "pcg_class",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_auxiliary": {
+          "name": "is_auxiliary",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mapping_status": {
+          "name": "mapping_status",
+          "type": "account_mapping_status",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mapping_rule_id": {
+          "name": "mapping_rule_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "first_seen_import_id": {
+          "name": "first_seen_import_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "chart_of_accounts_company_id_companies_id_fk": {
+          "name": "chart_of_accounts_company_id_companies_id_fk",
+          "tableFrom": "chart_of_accounts",
+          "tableTo": "companies",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "chart_of_accounts_first_seen_import_id_import_files_id_fk": {
+          "name": "chart_of_accounts_first_seen_import_id_import_files_id_fk",
+          "tableFrom": "chart_of_accounts",
+          "tableTo": "import_files",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "first_seen_import_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "chart_of_accounts_updated_by_users_id_fk": {
+          "name": "chart_of_accounts_updated_by_users_id_fk",
+          "tableFrom": "chart_of_accounts",
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "updated_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "chart_of_accounts_company_account_key": {
+          "name": "chart_of_accounts_company_account_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "company_id",
+            "account_number"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "chart_of_accounts_pcg": {
+          "name": "chart_of_accounts_pcg",
+          "value": "\"app\".\"chart_of_accounts\".\"pcg_account\" is null or \"app\".\"chart_of_accounts\".\"pcg_account\" ~ '^[1-8][0-9]{2,}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "app.fiscal_years": {
+      "name": "fiscal_years",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start_date": {
+          "name": "start_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "fiscal_year_status",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "fiscal_years_company_idx": {
+          "name": "fiscal_years_company_idx",
+          "columns": [
+            {
+              "expression": "company_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "start_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "fiscal_years_company_id_companies_id_fk": {
+          "name": "fiscal_years_company_id_companies_id_fk",
+          "tableFrom": "fiscal_years",
+          "tableTo": "companies",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fiscal_years_created_by_users_id_fk": {
+          "name": "fiscal_years_created_by_users_id_fk",
+          "tableFrom": "fiscal_years",
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "fiscal_years_dates": {
+          "name": "fiscal_years_dates",
+          "value": "\"app\".\"fiscal_years\".\"end_date\" > \"app\".\"fiscal_years\".\"start_date\" and \"app\".\"fiscal_years\".\"end_date\" < \"app\".\"fiscal_years\".\"start_date\" + interval '24 months'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "app.trial_balance_lines": {
+      "name": "trial_balance_lines",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "trial_balance_id": {
+          "name": "trial_balance_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_number": {
+          "name": "account_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_label": {
+          "name": "account_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "opening_debit": {
+          "name": "opening_debit",
+          "type": "numeric(18, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "opening_credit": {
+          "name": "opening_credit",
+          "type": "numeric(18, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "movement_debit": {
+          "name": "movement_debit",
+          "type": "numeric(18, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "movement_credit": {
+          "name": "movement_credit",
+          "type": "numeric(18, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "closing_debit": {
+          "name": "closing_debit",
+          "type": "numeric(18, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "closing_credit": {
+          "name": "closing_credit",
+          "type": "numeric(18, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_row": {
+          "name": "source_row",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "trial_balance_lines_company_idx": {
+          "name": "trial_balance_lines_company_idx",
+          "columns": [
+            {
+              "expression": "company_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "account_number",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "trial_balance_lines_trial_balance_id_trial_balances_id_fk": {
+          "name": "trial_balance_lines_trial_balance_id_trial_balances_id_fk",
+          "tableFrom": "trial_balance_lines",
+          "tableTo": "trial_balances",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "trial_balance_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "trial_balance_lines_company_id_companies_id_fk": {
+          "name": "trial_balance_lines_company_id_companies_id_fk",
+          "tableFrom": "trial_balance_lines",
+          "tableTo": "companies",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "trial_balance_lines_account_key": {
+          "name": "trial_balance_lines_account_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "trial_balance_id",
+            "account_number"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "trial_balance_lines_closing": {
+          "name": "trial_balance_lines_closing",
+          "value": "\"app\".\"trial_balance_lines\".\"closing_debit\" >= 0 and \"app\".\"trial_balance_lines\".\"closing_credit\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "app.trial_balances": {
+      "name": "trial_balances",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fiscal_year_id": {
+          "name": "fiscal_year_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "period_end": {
+          "name": "period_end",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data_status": {
+          "name": "data_status",
+          "type": "data_status",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_import_id": {
+          "name": "source_import_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "supersedes_id": {
+          "name": "supersedes_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_current": {
+          "name": "is_current",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "total_debit": {
+          "name": "total_debit",
+          "type": "numeric(18, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total_credit": {
+          "name": "total_credit",
+          "type": "numeric(18, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "line_count": {
+          "name": "line_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "trial_balances_current_key": {
+          "name": "trial_balances_current_key",
+          "columns": [
+            {
+              "expression": "company_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fiscal_year_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "period_end",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"app\".\"trial_balances\".\"is_current\"",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "trial_balances_company_id_companies_id_fk": {
+          "name": "trial_balances_company_id_companies_id_fk",
+          "tableFrom": "trial_balances",
+          "tableTo": "companies",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "trial_balances_fiscal_year_id_fiscal_years_id_fk": {
+          "name": "trial_balances_fiscal_year_id_fiscal_years_id_fk",
+          "tableFrom": "trial_balances",
+          "tableTo": "fiscal_years",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "fiscal_year_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "trial_balances_source_import_id_import_files_id_fk": {
+          "name": "trial_balances_source_import_id_import_files_id_fk",
+          "tableFrom": "trial_balances",
+          "tableTo": "import_files",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "source_import_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "trial_balances_balanced": {
+          "name": "trial_balances_balanced",
+          "value": "\"app\".\"trial_balances\".\"total_debit\" = \"app\".\"trial_balances\".\"total_credit\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "app.bank_accounts": {
+      "name": "bank_accounts",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bank_name": {
+          "name": "bank_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "iban_last4": {
+          "name": "iban_last4",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'EUR'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "bank_accounts_company_idx": {
+          "name": "bank_accounts_company_idx",
+          "columns": [
+            {
+              "expression": "company_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bank_accounts_company_id_companies_id_fk": {
+          "name": "bank_accounts_company_id_companies_id_fk",
+          "tableFrom": "bank_accounts",
+          "tableTo": "companies",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bank_accounts_created_by_users_id_fk": {
+          "name": "bank_accounts_created_by_users_id_fk",
+          "tableFrom": "bank_accounts",
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "bank_accounts_currency_eur": {
+          "name": "bank_accounts_currency_eur",
+          "value": "\"app\".\"bank_accounts\".\"currency\" = 'EUR'"
+        },
+        "bank_accounts_iban_last4": {
+          "name": "bank_accounts_iban_last4",
+          "value": "\"app\".\"bank_accounts\".\"iban_last4\" is null or \"app\".\"bank_accounts\".\"iban_last4\" ~ '^[0-9A-Z]{4}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "app.bank_transactions": {
+      "name": "bank_transactions",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bank_account_id": {
+          "name": "bank_account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "booking_date": {
+          "name": "booking_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value_date": {
+          "name": "value_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "amount": {
+          "name": "amount",
+          "type": "numeric(18, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'EUR'"
+        },
+        "label_raw": {
+          "name": "label_raw",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "label_normalized": {
+          "name": "label_normalized",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reference": {
+          "name": "reference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "balance_after": {
+          "name": "balance_after",
+          "type": "numeric(18, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_import_id": {
+          "name": "source_import_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_row": {
+          "name": "source_row",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "natural_key_hash": {
+          "name": "natural_key_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "bank_transactions_account_date_idx": {
+          "name": "bank_transactions_account_date_idx",
+          "columns": [
+            {
+              "expression": "bank_account_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "booking_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bank_transactions_company_id_companies_id_fk": {
+          "name": "bank_transactions_company_id_companies_id_fk",
+          "tableFrom": "bank_transactions",
+          "tableTo": "companies",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bank_transactions_bank_account_id_bank_accounts_id_fk": {
+          "name": "bank_transactions_bank_account_id_bank_accounts_id_fk",
+          "tableFrom": "bank_transactions",
+          "tableTo": "bank_accounts",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "bank_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bank_transactions_source_import_id_import_files_id_fk": {
+          "name": "bank_transactions_source_import_id_import_files_id_fk",
+          "tableFrom": "bank_transactions",
+          "tableTo": "import_files",
+          "schemaTo": "app",
+          "columnsFrom": [
+            "source_import_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "bank_transactions_natural_key": {
+          "name": "bank_transactions_natural_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "company_id",
+            "bank_account_id",
+            "natural_key_hash"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "app.firm_role": {
+      "name": "firm_role",
+      "schema": "app",
+      "values": [
+        "firm_admin",
+        "firm_analyst"
+      ]
+    },
+    "app.client_role": {
+      "name": "client_role",
+      "schema": "app",
+      "values": [
+        "client_owner",
+        "client_member",
+        "client_readonly"
+      ]
+    },
+    "app.company_status": {
+      "name": "company_status",
+      "schema": "app",
+      "values": [
+        "onboarding",
+        "active",
+        "paused",
+        "archived"
+      ]
+    },
+    "app.invitation_role": {
+      "name": "invitation_role",
+      "schema": "app",
+      "values": [
+        "firm_admin",
+        "firm_analyst",
+        "client_owner",
+        "client_member",
+        "client_readonly"
+      ]
+    },
+    "app.audit_actor_kind": {
+      "name": "audit_actor_kind",
+      "schema": "app",
+      "values": [
+        "user",
+        "job",
+        "system"
+      ]
+    },
+    "app.audit_outcome": {
+      "name": "audit_outcome",
+      "schema": "app",
+      "values": [
+        "success",
+        "denied",
+        "failure"
+      ]
+    },
+    "app.import_kind": {
+      "name": "import_kind",
+      "schema": "app",
+      "values": [
+        "trial_balance",
+        "fec",
+        "bank_transactions"
+      ]
+    },
+    "app.import_row_status": {
+      "name": "import_row_status",
+      "schema": "app",
+      "values": [
+        "error",
+        "warning",
+        "duplicate",
+        "ignored"
+      ]
+    },
+    "app.import_status": {
+      "name": "import_status",
+      "schema": "app",
+      "values": [
+        "uploaded",
+        "mapped",
+        "committed",
+        "superseded",
+        "cancelled"
+      ]
+    },
+    "app.account_mapping_status": {
+      "name": "account_mapping_status",
+      "schema": "app",
+      "values": [
+        "auto_validated",
+        "to_review",
+        "manual"
+      ]
+    },
+    "app.account_rule_match": {
+      "name": "account_rule_match",
+      "schema": "app",
+      "values": [
+        "exact",
+        "prefix"
+      ]
+    },
+    "app.data_status": {
+      "name": "data_status",
+      "schema": "app",
+      "values": [
+        "provisional",
+        "final"
+      ]
+    },
+    "app.fiscal_year_status": {
+      "name": "fiscal_year_status",
+      "schema": "app",
+      "values": [
+        "open",
+        "closed_provisional",
+        "closed_final"
+      ]
+    }
+  },
+  "schemas": {
+    "app": "app"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
 
 export const DEMO_PASSWORD = "DemoDaf-2026-Pilotage";
@@ -33,7 +34,26 @@ export async function login(page: Page, email: string, password = DEMO_PASSWORD)
   await page.getByRole("button", { name: "Se connecter" }).click();
 }
 
-const secrets = new Map<string, string>();
+// Secrets TOTP des comptes enrôlés pendant la campagne (partagés entre fichiers de test).
+const SECRETS_FILE = "test-results/.totp-secrets.json";
+const secrets = {
+  get(email: string): string | undefined {
+    try {
+      return (JSON.parse(readFileSync(SECRETS_FILE, "utf8")) as Record<string, string>)[email];
+    } catch {
+      return undefined;
+    }
+  },
+  set(email: string, secret: string) {
+    let all: Record<string, string> = {};
+    try {
+      all = JSON.parse(readFileSync(SECRETS_FILE, "utf8"));
+    } catch {}
+    all[email] = secret;
+    mkdirSync("test-results", { recursive: true });
+    writeFileSync(SECRETS_FILE, JSON.stringify(all));
+  },
+};
 
 /** Connexion d'un membre du cabinet, avec enrôlement TOTP à la première connexion. */
 export async function loginStaff(page: Page, email: string) {

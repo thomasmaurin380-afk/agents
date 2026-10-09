@@ -31,7 +31,7 @@ export function dafCompanyNav(companyId: string): NavItem[] {
     { label: "Tableau de bord", plannedPhase: "4", icon: "dashboard" },
     { label: "KPI", plannedPhase: "4", icon: "kpi" },
     { label: "SIG", plannedPhase: "3", icon: "sig" },
-    { label: "Comptabilité importée", plannedPhase: "2", icon: "accounting" },
+    { label: "Données comptables", href: `${base}/data`, icon: "accounting" },
     { label: "Trésorerie", plannedPhase: "5b", icon: "treasury" },
     { label: "Budgets", plannedPhase: "7", icon: "budget" },
     { label: "Rentabilité", plannedPhase: "7", icon: "profitability" },

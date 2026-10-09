@@ -105,6 +105,18 @@ async function reset() {
                           where cm.user_id = u.id and not (c.firm_id = any(${firmIds})))
           and not exists (select 1 from app.firm_members fm where fm.user_id = u.id and not (fm.firm_id = any(${firmIds})))`;
       userIds = exclusive.map((e) => e.id as string);
+      // Données de la phase 2 (ordre imposé par les clés étrangères).
+      for (const table of [
+        "bank_transactions", "accounting_entries", "trial_balance_lines", "import_rows", "chart_of_accounts",
+        "account_mapping_rules", "column_mapping_templates",
+      ]) {
+        await tx.unsafe(`delete from app.${table} where company_id = any($1)`, [companyIds]);
+      }
+      await tx`update app.trial_balances set supersedes_id = null where company_id = any(${companyIds})`;
+      await tx`delete from app.trial_balances where company_id = any(${companyIds})`;
+      await tx`delete from app.import_files where company_id = any(${companyIds})`;
+      await tx`delete from app.bank_accounts where company_id = any(${companyIds})`;
+      await tx`delete from app.fiscal_years where company_id = any(${companyIds})`;
       await tx`delete from app.company_advisors where company_id = any(${companyIds})`;
       await tx`delete from app.company_members where company_id = any(${companyIds})`;
       await tx`delete from app.invitations where firm_id = any(${firmIds})`;

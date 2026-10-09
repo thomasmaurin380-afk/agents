@@ -9,11 +9,16 @@ reposant sur un moteur financier unique (SIG, KPI, trésorerie) et un reporting 
 | Phase | Statut |
 |---|---|
 | 0 — Architecture et MVP | ✅ validée |
-| 1 — Fondations (auth, multi-tenant, RLS, deux espaces, démo) | ✅ livrée — voir `docs/roadmap.md` |
-| 2 — Onboarding et imports | à venir |
+| 1 — Fondations (auth, multi-tenant, RLS, deux espaces, démo) | ✅ validée |
+| 2 — Imports comptables et bancaires (balance, FEC, relevés) | ✅ livrée — voir `docs/roadmap.md` |
+| 3 — Moteur financier et SIG | à venir |
 
-Aucune donnée financière n'est encore importable : tous les indicateurs s'affichent
-« Données insuffisantes », avec la source manquante. Aucune valeur n'est estimée.
+Les balances, FEC et relevés bancaires sont importables et contrôlés ; les indicateurs seront
+calculés en phase 3-4. D'ici là, aucune valeur n'est affichée ni estimée.
+
+Fichiers de démonstration fictifs et cohérents (FEC 2025, balance au 31/12/2025, relevés CSV et XLSX) :
+`demo-files/`, régénérables avec `npx tsx scripts/demo/generate-files.ts`. Parcours : fiche
+« Atelier Numérique » → Données comptables → créer l'exercice 2025 et un compte bancaire → Nouvel import.
 
 ## Stack
 
@@ -41,8 +46,8 @@ npm run dev                        # http://127.0.0.1:3000
 
 ```bash
 npm ci
-npm run stack:up                   # docker/compose.test.yml
-npm run dev:gateway &              # routage /auth/v1 (remplace la passerelle Supabase)
+npm run stack:up                   # docker/compose.test.yml (PostgreSQL, Auth, Storage)
+npm run dev:gateway &              # routage /auth/v1 et /storage/v1 (remplace la passerelle Supabase)
 cp .env.test .env.local            # valeurs de TEST uniquement ; adapter APP_URL=http://127.0.0.1:3000
 npm run db:migrate && npm run db:seed:demo
 npm run dev

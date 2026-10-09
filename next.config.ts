@@ -11,6 +11,10 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // D-12 : pas de Cache Components — toutes les pages authentifiées sont rendues à la demande.
   poweredByHeader: false,
+  experimental: {
+    // Téléversement des fichiers d'import (20 Mo maximum, contrôlé côté service).
+    serverActions: { bodySizeLimit: "21mb" },
+  },
   turbopack: {
     rules: {
       "*.css": {

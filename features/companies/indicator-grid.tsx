@@ -3,8 +3,8 @@ import { availability, HEADLINE_INDICATORS } from "@/domain/indicators/availabil
 import type { DataSource } from "@/domain/shared/computation";
 
 /**
- * Grille des indicateurs d'en-tête. En phase 1, aucune source n'est importable : tous les
- * indicateurs s'affichent en « Données insuffisantes » avec la source manquante.
+ * Grille des indicateurs d'en-tête. Sans la source requise : « Données insuffisantes » + source
+ * manquante. Avec la source : le calcul arrive en phase 4 (aucune valeur affichée d'ici là).
  */
 export function IndicatorGrid({ available }: { available: ReadonlySet<DataSource> }) {
   return (
