@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Statut | **Partie A (cible)** : orientation validée (D1–D8) · **Partie B (MVP)** : arbitrages A1–A8 rendus · **Étape 1** (prototype local du cœur, données fictives) réalisée, en attente de validation — §26–§28 |
-| Version | 0.3 — 2026-10-09 (0.1 : cible initiale ; 0.2 : décisions D1–D8, périmètre MVP ; 0.3 : arbitrages A1–A8, étape 1 réalisée, planning révisé) |
+| Statut | **Partie A (cible)** : orientation validée (D1–D8) · **Partie B (MVP)** : arbitrages A1–A8 et P1–P7 rendus · **Étapes 1 et 2** (cœur local aligné sur le contrat, données fictives) réalisées · **Apps Script** : premier test fictif préparé, non déployé — §26–§30 |
+| Version | 0.4 — 2026-10-09 (0.1 : cible initiale ; 0.2 : D1–D8, périmètre MVP ; 0.3 : A1–A8, étape 1, planning révisé ; 0.4 : P1–P7, alignement sur le contrat, plan d'intégration Apps Script, risques bloquants) |
 | Contributeurs | `directeur-operations` (organisation, workflow, plan), `architecte` (topologie, onglets, flux, code), `ingenieur-outils-financiers` (modèle, règles d'identification, contrôles, tests) |
 | Existant | Dépôt vide hors définitions d'agents : tout ce document est une **proposition** |
 
@@ -44,6 +44,8 @@ Conventions : **[H]** hypothèse à confirmer sur des exports réels anonymisés
 26. [Arbitrages du 2026-10-09 (A1–A8, Workspace, compte technique)](#26-arbitrages-du-2026-10-09-a1a8-workspace-compte-technique)
 27. [Étape 1 réalisée : prototype local du cœur](#27-étape-1-réalisée--prototype-local-du-cœur)
 28. [Planning révisé : temps humain, travail des agents, délais calendaires](#28-planning-révisé--temps-humain-travail-des-agents-délais-calendaires)
+29. [Arbitrages P1–P7 et étape 2 réalisée](#29-arbitrages-p1p7-et-étape-2-réalisée)
+30. [Intégration Google : plan minimal et risques bloquants](#30-intégration-google--plan-minimal-et-risques-bloquants)
 
 > La **partie A** décrit l'architecture **cible**, qui reste la référence à long terme. La **partie B** définit le **MVP** : un sous-ensemble réalisable en Google Sheets + Apps Script. En cas de divergence, la partie B fait foi pour le premier prototype.
 
@@ -1287,4 +1289,58 @@ Par rapport à la v0.2 (43–69 jours-session, 71–109 h), l'estimation des age
 - **Temps humain** : à 0,5 jour par semaine, le calendrier s'allonge d'environ 60 % (≈ 21–30 semaines), car les revues deviennent le goulot d'étranglement ; à 2 jours par semaine, le calendrier descend vers 9–12 semaines, mais E6 reste limité par la clôture mensuelle du client.
 - **Délais externes** : un retard de Workspace, des exports pilotes ou de l'expert-comptable **décale J4 d'autant**, sans réduire le travail restant. Ces démarches peuvent être lancées dès E2, en parallèle.
 - **Saison de clôture** (janvier à avril) : risque sur E5 et E6 ; il vaut mieux décaler la recette que la réduire.
+
+## 29. Arbitrages P1–P7 et étape 2 réalisée
+
+### 29.1 Arbitrages du dirigeant sur le contrat d'interface
+
+| # | Décision | Règle appliquée (contrat §12) |
+|---|---|---|
+| P1 | Périmètre de dérogation limité à l'exercice, identité de l'anomalie et contexte strictement vérifiés | Empreinte de dérogation : code, gravité, objet, contenu de l'objet, exercice (période complète pour les anomalies de niveau fichier), statut de l'exercice, profil et sa version, version des règles. Reconduction seulement si l'égalité est stricte |
+| P2 | Total du grand livre obligatoire par défaut, dérogation exceptionnelle motivée possible | `REC_TOTAL_SAISI` (B, `TOTAL_ABSENT`) ; dérogation motivée **jamais reconduite** |
+| P3 | Valeur d'origine des montants négatifs conservée, sans reclassement automatique tant que l'expert-comptable n'a pas validé | Le montant reste signé dans sa colonne ; `MNT_NEG` (I) ; le contrôle indépendant suit la même règle |
+| P4 | Code de réapparition informatif et traçable | `IDN_REAPPARITION` (I) ; mouvement marqué `REACTIVATION` avec l'image avant |
+| P5 | Validation explicite renforcée pour une ABSENTE sur exercice clôturé, sans doublon | Une seule anomalie `IDN_ABSENTE` (B), pas de PER_CLOTURE en plus ; levée par la décision ABSENTE motivée (≥ 20 caractères) |
+| P6 | Ne pas rejeter un FEC sur le seul nom ; vérifier l'identité par des informations fiables | Dossier de dépôt, SIREN déclaré, SIREN du nom : toute contradiction → `CLI_MISMATCH` (BND) ; aucune confirmation par le dossier ou la déclaration → `CLI_IDENTITE_NON_CONFIRMEE` (B) ; nom non conforme → `CLI_NOM_FEC_NON_CONFORME` (A) |
+| P7 | Décimales supplémentaires nulles acceptées après validation stricte, sans arrondi | `1,230` → 1,23 € ; `1,235` → rejet `PRECISION` ; `MNT_DECIMALES_NULLES` (I) |
+
+### 29.2 Étape 2 : livrables
+
+| Livrable | Emplacement |
+|---|---|
+| Cœur aligné sur le contrat : `constantes.js`, `empreinte.js`, `ordre.json`, décisions typées, mouvements par ligne, codes `PUB_*` / `ANN_*` | `import-comptable/src/` |
+| Contrat d'interface v0.2 : conformité (14 écarts résolus, 4 maintenus et justifiés) et amendements P1–P7 | `docs/import-comptable/contrat-interface.md` §11–§12 |
+| Empreintes harmonisées et vérifiées par une implémentation Python indépendante | `import-comptable/scripts/empreintes_reference.py` |
+| Tests de non-mutation, de validation du Hasher, de P1–P7, des caractères invisibles et du paquet Apps Script | `import-comptable/test/` |
+| Résultats des tests v0.2 | `docs/import-comptable/resultats-tests.md` |
+| Plan d'intégration Apps Script et premier test fictif (non déployé) | `docs/import-comptable/plan-integration-gas.md`, `import-comptable/gas/`, `scripts/construire-gas.js` |
+
+**Résultat** : 79 tests sur 79 réussis. Les 22 scénarios de l'ingénieur restent conformes. Seules les valeurs imposées par P3 (S11a, S11c, S11e) ont été mises à jour, après un recalcul indépendant.
+
+### 29.3 Planning (mise à jour du §28.2)
+
+| Étape | État | Agents (j-session) | Humain (h) |
+|---|---|---|---|
+| E1 — Prototype local | ✅ Réalisé | ≈ 1 | revue faite |
+| E2 — Cœur complet sous Node | ✅ **Partiellement réalisé** : contrat, empreintes, décisions, validations faits. **Restent** la machine à états `IMPORTS`, les lots avec curseur et T13 en mémoire, désormais intégrés à E4 (couche `app/` + adaptateurs) | ≈ 1 consommé ; ≈ 1–2 restants | revue de cette étape : 2–3 h |
+| E3 — Paliers G0–G3 (spikes) | **G0 prêt à exécuter** | 2–4 | 4–8 (exécutions sur un compte de test, relevés) |
+| E4–E6 | Inchangés (§28.2) | — | — |
+
+## 30. Intégration Google : plan minimal et risques bloquants
+
+Le plan détaillé figure dans `plan-integration-gas.md`. Il procède par paliers sur des données fictives : **G0** (cœur seul, aucune autorisation), G1 (classeur de test vierge), G2 (volume, quotas, reprise), G3 (Drive, identité), G4 (adaptateurs et CONSOLE).
+
+### Risques bloquants avant l'intégration Google
+
+| # | Risque | Pourquoi il bloque | Levée |
+|---|---|---|---|
+| RB1 | **Coût du hachage dans Apps Script** : ≈ 3 empreintes par ligne, plus le checksum, le staging et la preuve de réversibilité. Sous Node : ≈ 12 s pour 60 000 lignes | Si `computeDigest` est 20 à 50 fois plus lent, un import de 50 000 lignes dépasse les 6 minutes et impose des lots dès l'analyse | G0 (premier relevé), puis G2 (SP2) ; à défaut, plafond plus bas ou empreintes calculées par lots |
+| RB2 | **Égalité bit à bit de `computeDigest` UTF-8 avec Node** (non ASCII, octets signés) | Sans elle, les empreintes figées en `v1` ne seraient pas reproductibles, et rien ne pourrait être persisté | G0-2 (vecteurs de référence vérifiés au démarrage) |
+| RB3 | **Aller-retour Sheets** : neutralisation des formules, zéros de tête, dates, entiers (SP1) | Une valeur relue différente change les empreintes et casse l'idempotence | G1, sur un classeur de test vierge |
+| RB4 | **Reprise par lots (T13) non implémentée** | Pas de publication fiable au-delà d'une exécution sans lots | G2 et G4 |
+| RB5 | **Atomicité de la bascule** par cellule pointeur (SP6) | Sans elle, pas de garantie qu'une panne laisse l'actif N-1 intact | G1 |
+| RB6 | **Décodage windows-1252 dans Apps Script** (le TextDecoder de Node s'est révélé non conforme) | Un mauvais décodage change les libellés, donc les empreintes | G3 (`getDataAsString`), comparé au décodeur de référence |
+| RB7 | **Préalables aux données réelles** : Workspace, décision D4 (compte technique), DPA, clause « copie d'analyse », avis de l'expert-comptable (P3, classe 9, écritures validées) | Aucune donnée client avant leur levée | Jalon J4 |
+
+**Aucun de ces risques ne bloque G0**, qui n'utilise ni données Google ni autorisation. G0 sert précisément à mesurer RB1 et à lever RB2.
 

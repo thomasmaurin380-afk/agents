@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Statut | Rédigé par `architecte` ; prototype développé en parallèle — écarts listés au §11 ; à valider par le dirigeant |
-| Version | 0.1 — 2026-10-09 |
+| Statut | Rédigé par `architecte` ; points ouverts P1–P7 tranchés par le dirigeant ; prototype conforme, sauf écarts justifiés listés au §11 (à valider) ; amendements au §12 |
+| Version | 0.2 — 2026-10-09 (0.1 : rédaction initiale ; 0.2 : arbitrages P1–P7, résolution des écarts E1–E18) |
 | Références | `cahier-des-charges.md` v0.2, partie B (§13–§18 font foi) ; arbitrages A1–A8 du 2026-10-09 |
 | Existant | Aucun code dans le dépôt à cette date. Tout ce document est une spécification |
 
@@ -683,6 +683,8 @@ Les tests comparent ces projections, dans l'ordre spécifié.
 
 ## 10. Points ouverts
 
+> **v0.2** — P1 à P7 ont été tranchés par le dirigeant le 2026-10-09 : voir §12. P8 à P13 restent ouverts.
+
 | # | Point | Proposition |
 |---|---|---|
 | P1 | Périmètre retenu dans l'ED pour les anomalies ECRITURE et COMPTE (§5.5) | `exercice_id` seul ; le périmètre complet pour les anomalies de niveau fichier |
@@ -701,47 +703,52 @@ Les tests comparent ces projections, dans l'ordre spécifié.
 
 ---
 
-## 11. Conformité du prototype au contrat (état au 2026-10-09)
+## 11. Conformité du prototype au contrat (v0.2)
 
-Le prototype `import-comptable/` a été développé en parallèle de la rédaction de ce contrat. Il respecte les **principes structurants** : cœur pur et portable, déterminisme, clé K2, version à l'écriture entière, empreintes séparées, périmètre déclaré, publication atomique, réversibilité, A4 à A7. Les écarts de forme sont listés ci-dessous. Ils sont **à résorber avant l'intégration Apps Script** ou à entériner par une mise à jour du contrat.
+Le prototype (`import-comptable/`) applique le contrat ainsi amendé. Les 18 écarts relevés en v0.1 ont été traités : **14 sont résolus** dans le code et **4 sont des écarts maintenus**, justifiés ci-dessous. Ces 4 écarts sont **à valider**. Chaque ligne cite le test qui le prouve.
 
-### 11.1 Conforme (vérifié par un test automatisé)
-
-| Exigence | Test |
-|---|---|
-| R1 : aucune API Node ou Google dans le cœur | `architecture.test.js` |
-| R2, R3 : aucun `Date`, `Math.random`, `localeCompare`, `console` ; syntaxe ES2019 | `architecture.test.js` |
-| Chargement dans un espace global sans `require` (simulation Apps Script), résultat identique à Node | `architecture.test.js` |
-| Clé K2, classification, sous-types M_FOND, M_DATE, M_DESC, M_LET, collisions, DOUBLON_INTRA | `comparaison-publication.test.js`, `proprietes.test.js`, `scenarios.test.js` |
-| §4.6 (4) : une clé de F présente dans B hors période est comparée (jamais NOUVELLE) | `comparaison-publication.test.js` (M_DATE) |
-| A4 : PRF_CHANGEMENT bloquant, contrôlé avant la lecture | S11d, test « Profils » |
-| A5 : empreinte de dérogation et reconduction (P1 retenu : exercice seul pour ECRITURE et COMPTE) | test « Dérogations (A5) », test « Empreinte de dérogation » |
-| A6 : contrôles C1 (double saisie), C2, C3, C4 (lignes physiques), C5 (parseur brut indépendant), C6, C7, C8 | test « Contrôle A6 », S11e, propriétés « Intégrité » |
-| A7 : refus si le staging, le checksum ou la **version** de l'actif ont changé (effet ABA compris) | test « Publication (A7) » |
-| T15 : refus cumulés | test « Publication (T15) » |
-| I1 à I4, I5, I7, I8, I9 | `proprietes.test.js`, `scenarios.test.js` |
-| REC_PUBLICATION (b) : réversibilité prouvée avant de rendre `ok` | `publication.js` (refus `REC_PUBLICATION/REVERSIBILITE`) ; propriétés « Retour arrière » |
-| CLI_MISMATCH vérifié **avant** REIMPORT_FICHIER | S10c |
-
-### 11.2 Écarts
-
-| # | Contrat | Prototype | Décision proposée |
+| # | Écart v0.1 | Traitement v0.2 | Preuve |
 |---|---|---|---|
-| E1 | Fichiers `constantes.js`, `empreinte.js`, `ordre.json` | `modele.js` (codes, gravités, versions), sérialisation dans `identite.js`, `publication.js` et `anomalies.js`, ordre de chargement dans `test/architecture.test.js` | Regrouper la sérialisation dans `empreinte.js` avant gel des empreintes de référence |
-| E2 | Format `H(nom, valeurs) = "v1:" + sha256("v1:" + nom + US + …)` | `"v1:" + sha256(NOM + US + …)`, avec des noms en majuscules (`FOND`, `DESC`, `LET`, `LIGNE`, `ACTIF`, `STAGING`, `DEROGATION`) | **À aligner avant toute donnée persistée**. Aucune empreinte de référence externe n'existe encore |
-| E3 | `ErreurContrat` avec `code`, message sans donnée | `Error` avec un message explicite pouvant citer un identifiant (profil, exercice), jamais une donnée comptable | Adopter `ErreurContrat` à l'étape Apps Script |
-| E4 | `executerControles` → `{controles, anomalies, variations}` | `controlesPrealables`, `controlesStructure`, `controlesContenu`, `variationsSoldes` : anomalies seulement, pas de liste des contrôles OK | Ajouter la liste des contrôles OK/KO (restitution A6) |
-| E5 | Mapping de l'en-tête sensible à la casse | Insensible à la casse, après normTexte | À trancher ; la tolérance évite des refus sur `Montantdevise` / `MontantDevise` |
-| E6 | P3 : montant négatif conservé dans sa colonne | Reclassé : montant signé = débit − crédit, puis débit et crédit recalculés (règle du cahier des charges et de l'ingénieur), MNT_NEG en info | **[V-EC]** à valider par l'expert-comptable |
-| E7 | Montant devise absent = `null` | `0` | Sans effet sur les empreintes actuelles ; aligner sur `null` |
-| E8 | REJ_LIGNES : une anomalie par motif | **Une** anomalie par import, détaillée par motif et par rang (convention de l'ingénieur) | Garder une anomalie unique (plus lisible en revue) |
-| E9 | C2 : total saisi comparé aux lignes retenues | Comparé aux totaux du fichier (lignes valides). Le contrôle n'est pas exécuté s'il existe des lignes rejetées, puisque REJ_LIGNES bloque déjà | À entériner |
-| E10 | Mouvement unique par (`publication_id`, `ligne_uid`), type `RETRAIT_LIGNE` | Deux lignes de mouvement par changement : `AVANT` (image complète) et `APRES` (empreinte, montants, statut) ; natures INSERTION, MODIFICATION, LETTRAGE, SUPPRESSION_LOGIQUE, ANNULATION | Fonctionnellement équivalent (réversibilité prouvée) ; à harmoniser avec le schéma de l'onglet `MOUVEMENTS` |
-| E11 | Codes de refus `PUB_*`, `ANN_*` | `CHECKLIST_INCOMPLETE`, `ANOMALIE_BND`, `DEROGATION_INVALIDE`, `BLOQUANT_NON_DEROGE`, `AVERTISSEMENT_NON_ACQUITTE`, `DECISION_MANQUANTE`, `VERSION_BASE_MODIFIEE`, `STAGING_MODIFIE`, `REC_PUBLICATION`, `ACTIF_DIFFERENT_DE_N`, `ANNULATION_NON_ANNULABLE`, `RECONSTRUCTION_DIVERGENTE` | Renommer lors de l'intégration |
-| E12 | `PUB_IMPORT_EN_COURS`, `ANN_IMPORT_EN_COURS`, `valide_le < soumis_le`, `tampon_inactif` | Non implémentés (pas de machine à états des imports à cette étape) | Étape suivante (`app/` avec états et ports) |
-| E13 | Décisions typées (`decision_id`, horodatage injecté) | Décisions simplifiées : table clé → ACCEPTER/REPORTER, dérogations `{anomalie_id, motif, par}`, acquittements = liste explicite d'`anomalie_id`, check-list | Typer à l'étape suivante |
-| E14 | Anomalie : `nb`, `rangs`, `cles`, `statut`, `control_version` | `details` libre ; les statuts d'anomalie (OUVERTE…ACQUITTEE) ne sont pas portés par le cœur | Étape suivante |
-| E15 | P5 : ABSENTE sur exercice clôturé → IDN_ABSENTE (B) + PER_CLOTURE (B) | IDN_ABSENTE (A) + PER_CLOTURE (B) : une seule dérogation requise | À trancher (P5) |
-| E16 | P4 : réapparition sans code dédié | Code `IDN_REAPPARITION` (I) | À entériner |
-| E17 | Vérification du Hasher au premier appel (vecteur `abc`) ; I10 (entrées gelées en profondeur) | Non implémentés ; aucune mutation des entrées n'a été observée, mais rien ne la prouve | Ajouter les deux tests |
-| E18 | `rang` = ligne physique | Conforme. Les attendus de l'ingénieur utilisent le n° d'enregistrement de données (1 = première ligne après l'en-tête) : l'outil de comparaison convertit | Harmoniser les attendus |
+| E1 | Fichiers `constantes.js`, `empreinte.js`, `ordre.json` absents | **Résolu.** Les trois fichiers existent ; `modele.js` est supprimé | `architecture.test.js` : `ordre.json` couvre exactement le cœur, et chaque module ne dépend que de modules chargés avant lui |
+| E2 | Format d'empreinte différent du §5 | **Résolu.** `H(nom, valeurs)` et `Coll` exactement comme au §5 ; noms `h_fond`, `h_desc`, `h_let`, `ecriture`, `ligne`, `actif`, `ligne_staging`, `ecriture_classee`, `anomalie`, `decision`, `total_saisi`, `staging`, `objet`, `derogation` ; `hLigne` sur les 36 champs de `CHAMPS_ACTIF` | `scenarios.test.js` : **égalité exacte avec une implémentation Python indépendante** (`scripts/empreintes_reference.py`, écrite d'après le §5) sur les 36 lignes et les 14 écritures de S01 ; vecteur `sha256sum` sur une sérialisation `h_fond` |
+| E3 | `Error` au lieu d'`ErreurContrat` | **Résolu.** `Constantes.erreurContrat(code, champ)`, message = code | `architecture.test.js` : aucun `throw new Error` dans le cœur ; message conforme à `/^[A-Z_]+$/` |
+| E4 | `executerControles` ne rendait que les anomalies | **Résolu.** Rend `{controles, anomalies, variations}`, avec les variations triées par écart absolu | Test « Restitution » |
+| E5 | En-tête lu sans tenir compte de la casse | **Résolu.** Correspondance exacte, sensible à la casse, après `normTexte` (règle « imposer plutôt que deviner ») | Scénarios S01–S11 (en-têtes exacts) |
+| E6 | Montants négatifs reclassés | **Résolu par P3.** Le montant reste dans sa colonne | Test « Lecture (P3) » ; S11a, S11e |
+| E7 | Montant en devise absent = 0 | **Résolu.** `null` | Test « Lecture (P3) » ; lignes canoniques de S01 |
+| E8 | Contrat : une anomalie REJ_LIGNES par motif | **Écart maintenu.** Une seule REJ_LIGNES par import, avec `rangs` et le détail par motif dans `message`. Justification : A2 bloque l'import dès la première ligne rejetée, donc une seule anomalie lisible suffit en revue, et c'est aussi la convention de l'ingénieur | S09, S11b2, S11c |
+| E9 | C2 rapproché des lignes retenues | **Écart maintenu.** C2 compare le total saisi aux totaux **du fichier** (lignes normalisées), car le total du logiciel porte sur l'export entier. Il n'est pas exécuté s'il existe des lignes rejetées (REJ_LIGNES bloque déjà ; l'écart serait mécanique) | S11b2, S11c, S11e ; test « Contrôle A6 » |
+| E10 | Mouvements `AVANT` et `APRES` | **Résolu.** Un mouvement par (`publication_id`, `ligne_uid`) ; types INSERTION, MODIFICATION, LETTRAGE, SUPPRESSION_LOGIQUE, RETRAIT_LIGNE, ANNULATION ; `image_avant` complète ; `h_avant` / `h_apres` ; `mouvement_id` sur 6 chiffres | Tests « Retour arrière » ; propriétés « annuler(publier(B)) = B » ; REC_PUBLICATION (a), (b) et (c) vérifiés avant `ok` |
+| E11 | Codes de refus propres au prototype | **Résolu.** Codes `PUB_*` / `ANN_*` du §4.9 et du §7, rendus triés et cumulés. Trois codes ajoutés : `PUB_ACQUITTEMENT_INVALIDE`, `PUB_ABSENTE_CLOTURE_NON_MOTIVEE` (P5), `PUB_REIMPORT` | Test « Publication (T15) » |
+| E12 | `PUB_IMPORT_EN_COURS`, `ANN_IMPORT_EN_COURS`, `valide_le < soumis_le`, `tampon_inactif` absents | **Résolu.** Les quatre sont implémentés. L'information « import en cours » est **fournie par l'appelant** (la machine à états `IMPORTS` relève de l'étape Apps Script) | Tests « Publication (T15) », « Retour arrière », « Validation » |
+| E13 | Décisions simplifiées | **Résolu.** `DecisionAbsente`, `DecisionDerogation`, `DecisionAcquittement` typées ; `Validation` conforme au §3 ; `appliquerDecisions` ; acquittement sans joker | Test « Décisions » |
+| E14 | Champs d'anomalie incomplets | **Résolu.** `anomalie_id`, `nb`, `rangs`, `cles`, `mention`, `statut`, `control_version`, `empreinte_objet`, `empreinte_derogation`. Les statuts sont appliqués sur des **copies** par `appliquerDecisions` | Tests « Décisions » et « Non-mutation » |
+| E15 | P5 ouvert | **Résolu par P5** (§12) | Test « Exercice clôturé (P5) » |
+| E16 | P4 ouvert | **Résolu par P4.** `IDN_REAPPARITION` (I) agrégé, et mouvement portant le sous-type `REACTIVATION` | Test « Réapparition (P4) » |
+| E17 | Vérification du Hasher et immutabilité non testées | **Résolu.** `Empreinte.verifierHasher` (vecteur `abc` et vecteur non ASCII calculés hors Node) à chaque cas d'usage ; test de non-mutation sur entrées **gelées en profondeur**, sur 60 cycles complets | Tests « Hasher » et « Non-mutation » |
+| E18 | Rangs des attendus en numéros d'enregistrement | **Résolu.** Les attendus sont convertis en numéros de ligne physique (+1, champ `convention_rang`) ; le générateur est aligné et la régénération est identique à l'octet près | `verifier_fixtures.py` : TOUT CONFORME ; 22 scénarios |
+
+**Écarts maintenus restants, à valider** :
+- E8 : une seule anomalie de rejet par import.
+- E9 : le total saisi est rapproché des totaux du fichier, et seulement en l'absence de rejets.
+- `reconduireDerogations` se limite aux dérogations retenues par la **dernière publication appliquée de type PUBLICATION**. Après une annulation, rien n'est reconduit (repli sûr).
+- `verifierEncodage` rend la liste des motifs (`CARACTERE_REMPLACEMENT`, `DOUBLE_ENCODAGE`) au lieu de `{ok, texte, motif}`. Le retrait du BOM est fait par `parseCsv`.
+
+## 12. Amendements v0.2 (arbitrages du dirigeant du 2026-10-09)
+
+Les règles ci-dessous **remplacent** celles des sections indiquées.
+
+| Point | Décision | Sections amendées | Règle appliquée |
+|---|---|---|---|
+| P1 | Périmètre de dérogation limité à l'exercice, identité de l'anomalie et contexte strictement vérifiés | §5.5 | `perimetre_anomalie` = `exercice_id` pour ECRITURE et COMPTE ; `exercice_id\|du\|au` pour FICHIER, EXERCICE et ACTIF. L'empreinte de dérogation inclut le code, la gravité, l'objet, `empreinte_objet` (contenu base et fichier de l'écriture), le statut de l'exercice, le profil et sa version, et `version_regles` (`regles_v2`). Reconduction seulement si l'égalité est stricte |
+| P2 | Total du grand livre obligatoire par défaut, avec dérogation exceptionnelle motivée | §6.2 (C3) | `REC_TOTAL_SAISI` (B, objet `TOTAL_ABSENT`), dérogeable avec un motif d'au moins 20 caractères. **Jamais reconduit** (`reconductible: false`) : la dérogation doit être renouvelée à chaque import |
+| P3 | Valeur d'origine des montants négatifs conservée, sans reclassement automatique, tant qu'un expert-comptable ne l'a pas validé | §4.5 (5) | `debit_cts` / `credit_cts` gardent la valeur signée de leur colonne ; `montant_cts = debit_cts − credit_cts` ; `MNT_NEG` (I) avec les rangs. Le contrôle indépendant C5 applique la même règle. Le fond comptable d'un grand livre et celui d'un FEC se comparent sur le montant signé |
+| P4 | Code de réapparition informatif et traçable | §4.9, §6.1 | `IDN_REAPPARITION` (I, agrégé, `cles`) ; mouvements de l'écriture portant `sous_types` ⊇ `REACTIVATION`, avec `image_avant` au statut `SUPPRIMEE_SOURCE` |
+| P5 | Validation explicite renforcée pour une écriture absente sur exercice clôturé, sans doublonner les validations | §6.1, §7 | Sur un exercice clôturé, une ABSENTE produit **une seule** anomalie `IDN_ABSENTE` (B, mention `EXERCICE_CLOTURE`) et **pas** de PER_CLOTURE. Elle est levée par la **seule décision ABSENTE**, qui doit alors porter un motif d'au moins 20 caractères et son auteur. Aucune dérogation séparée. À défaut : refus `PUB_ABSENTE_CLOTURE_NON_MOTIVEE` |
+| P6 | Ne pas rejeter un FEC sur le seul nom ; vérifier l'identité avec les métadonnées et informations fiables disponibles | §4.5 (3), §6.1 | Contrôle **avant toute lecture et avant la détection de réimport**. Sources : dossier de dépôt (fourni par l'adaptateur), SIREN déclaré par l'opérateur, SIREN du nom FEC. **Une source qui désigne un autre client → `CLI_MISMATCH` (BND)**. Aucune confirmation par le dossier ou la déclaration → `CLI_IDENTITE_NON_CONFIRMEE` (B, motivée) ; le nom du fichier seul ne suffit pas à confirmer. Nom FEC non conforme → `CLI_NOM_FEC_NON_CONFORME` (A) |
+| P7 | Décimales supplémentaires nulles acceptées après validation stricte du format, sans arrondi | §4.1 | Au-delà de 2 décimales, les chiffres supplémentaires doivent **tous** valoir 0 (`1,230` → 123), sinon `PRECISION`. Jamais d'arrondi. Information `MNT_DECIMALES_NULLES` (I) avec les rangs. Le format reste strict : séparateur de milliers par groupes de 3, au plus un marqueur négatif |
+
+Autres précisions apportées par v0.2 :
+- débit et crédit vides ensemble → rejet `CHP_VIDE` (§4.5) ;
+- la décision ABSENTE doit avoir un motif non vide et un auteur ;
+- le type de source d'un exercice (A4) est dérivé de l'actif (`source_type`), comme prévu au §6.1.

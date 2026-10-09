@@ -87,3 +87,18 @@ test('Le cœur se charge sans require ni module (simulation de la portée global
   const node = require('../src/app/pipeline').analyserImport(entree(require('../src/app/pipeline')));
   assert.equal(JSON.stringify(gas), JSON.stringify(node));
 });
+
+test('Aucun caractère invisible littéral dans le code (espaces spéciales, BOM, contrôles) : séquences \\uXXXX obligatoires', () => {
+  const RACINE_PROJET = path.join(__dirname, '..');
+  const dossiers = ['src/core', 'src/app', 'src/adapters/node', 'gas', 'scripts', 'test'];
+  // Construit à partir de codes numériques : aucun caractère invisible ni séquence d'échappement dans ce fichier.
+  const plages = [[0x00, 0x08], [0x0B, 0x0C], [0x0E, 0x1F], [0x7F, 0x9F], [0xA0, 0xA0], [0x2000, 0x200F], [0x2028, 0x202F], [0x205F, 0x205F], [0xFEFF, 0xFEFF]];
+  const hex = (n) => n.toString(16).padStart(4, '0');
+  const invisibles = new RegExp('[' + plages.map(([a, b]) => '\\u' + hex(a) + '-\\u' + hex(b)).join('') + ']');
+  for (const d of dossiers) {
+    for (const f of fs.readdirSync(path.join(RACINE_PROJET, d)).filter((x) => /\.(js|py)$/.test(x))) {
+      const lignes = fs.readFileSync(path.join(RACINE_PROJET, d, f), 'utf8').split('\n');
+      lignes.forEach((l, i) => assert.equal(invisibles.test(l), false, `${d}/${f}:${i + 1}`));
+    }
+  }
+});

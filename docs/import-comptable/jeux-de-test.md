@@ -113,3 +113,11 @@ aligner ou l'attendu doit être corrigé (décision tracée).
 4. Tout écart est soit un défaut du code, soit un arbitrage §5 à trancher par
    le dirigeant ; un attendu n'est jamais modifié pour faire passer un test
    sans décision tracée.
+
+## Mise à jour du 2026-10-09 (orchestration, étape 2)
+
+- **E18** : les rangs des attendus sont désormais des **numéros de ligne physique** (en-tête = ligne 1), soit +1 par rapport à la convention d'origine (champ `convention_rang`). Le générateur est aligné, et la régénération est identique à l'octet près.
+- **P3** (décision du dirigeant) : les montants négatifs restent dans leur colonne. S11a, S11c et S11e ont été mis à jour (note `maj_p3`) : les totaux de colonnes passent à 1 617 500, valeur recalculée indépendamment en Python sur le fichier brut ; le total saisi suit la même convention ; l'écart volontaire de 1,00 € de S11e est conservé. La base de S11d est alignée.
+- **Empreintes de référence** : `attendus/S01_empreintes_reference.json` est produit par `scripts/empreintes_reference.py`, qui réimplémente le contrat §5 en Python.
+- Aucune autre valeur attendue n'a été modifiée.
+
