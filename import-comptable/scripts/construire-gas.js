@@ -63,22 +63,45 @@ function construire(sortie) {
     fs.copyFileSync(path.join(RACINE, src), path.join(SORTIE_EFFECTIVE, cible));
     fichiers.push(cible);
   });
-  const donnees = { client, profil, s01, s03, horodatage: HORO, attendu_node: attendu, avertissement: 'DONNÉES FICTIVES UNIQUEMENT' };
+  const donnees = { client, profil, s01, s03, horodatage: HORO, attendu_node: attendu, avertissement: 'DONNEES FICTIVES UNIQUEMENT' };
   const nomJeux = String(fichiers.length + 1).padStart(2, '0') + '_JeuxFictifs.js';
   fs.writeFileSync(path.join(SORTIE_EFFECTIVE, nomJeux), '/** Jeux FICTIFS S01 et S03 — généré par scripts/construire-gas.js, ne pas modifier. */\nvar JeuxFictifs = '
-    + JSON.stringify(donnees, null, 1) + ';\n');
+    + JSON.stringify(donnees, null, 1).replace(/[\u007f-\uffff]/g, (c) => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0')) + ';\n');
   fichiers.push(nomJeux);
   fs.copyFileSync(path.join(RACINE, 'gas', 'appsscript.json'), path.join(SORTIE_EFFECTIVE, 'appsscript.json'));
   // Modèle de configuration clasp : l'identifiant du projet de TEST est à renseigner localement, jamais dans Git.
   fs.writeFileSync(path.join(SORTIE_EFFECTIVE, '.clasp.json.exemple'), JSON.stringify({
     scriptId: 'A_RENSEIGNER_PROJET_DE_TEST_UNIQUEMENT', rootDir: '.', filePushOrder: fichiers
   }, null, 2) + '\n');
-  return { sortie: SORTIE_EFFECTIVE, fichiers, attendu };
+  // Fichier unique à copier-coller dans l'éditeur Apps Script (palier G0) : mêmes fichiers, même contenu,
+  // concaténés. Le test est placé en tête pour que `testPrototypeFictif` soit la fonction proposée par défaut ;
+  // le cœur et les données sont ensuite chargés dans l'ordre de ordre.json (exécution séquentielle du fichier).
+  const enTete = [
+    '/**',
+    ' * TEST G0 - IMPORT COMPTABLE - FICHIER UNIQUE (DONNEES FICTIVES UNIQUEMENT)',
+    ' *',
+    ' * Mode d\'emploi : coller ce fichier en entier dans un projet Google Apps Script vide,',
+    ' * enregistrer, choisir la fonction testPrototypeFictif, cliquer sur Executer.',
+    ' * Le resultat s\'affiche dans le journal d\'execution : RESULTAT G0 : REUSSI ou ECHEC.',
+    ' *',
+    ' * Ce code ne lit ni n\'ecrit aucun classeur, aucun fichier Drive, aucun e-mail ;',
+    ' * il n\'appelle aucun service externe et ne demande aucune autorisation.',
+    ' * Genere automatiquement par scripts/construire-gas.js - ne pas modifier a la main.',
+    ' */',
+    ''
+  ].join('\n');
+  const ordreUnique = ['TestFictif', 'HasherGas'].map((n) => fichiers.find((f) => f.endsWith('_' + n + '.js')))
+    .concat(fichiers.filter((f) => !/_(TestFictif|HasherGas)\.js$/.test(f)));
+  const corps = ordreUnique.map((f) => '// ===== ' + f + ' =====\n' + fs.readFileSync(path.join(SORTIE_EFFECTIVE, f), 'utf8').trimEnd() + '\n').join('\n');
+  const unique = enTete + corps;
+  fs.writeFileSync(path.join(SORTIE_EFFECTIVE, 'G0_fichier_unique.gs'), unique);
+  return { sortie: SORTIE_EFFECTIVE, fichiers, attendu, fichierUnique: 'G0_fichier_unique.gs' };
 }
 
 if (require.main === module) {
   const r = construire();
-  console.log(`Paquet Apps Script assemblé dans ${path.relative(RACINE, r.sortie)} (${r.fichiers.length} fichiers + appsscript.json). Rien n'a été déployé.`);
+  console.log(`Paquet Apps Script assemblé dans ${path.relative(RACINE, r.sortie)} (${r.fichiers.length} fichiers + appsscript.json), `
+    + `et fichier unique ${r.fichierUnique}. Rien n'a été déployé.`);
 }
 
 module.exports = { construire };

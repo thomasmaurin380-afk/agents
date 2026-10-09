@@ -31,6 +31,16 @@ Chaque palier n'utilise que des **données fictives**. Il demande le minimum d'a
 | Assemblage | `import-comptable/scripts/construire-gas.js` | Produit `dist/gas/` : le cœur dans l'ordre de `ordre.json`, l'adaptateur, le test, `JeuxFictifs.js` (S01 et S03 **fictifs**, plus les valeurs Node attendues), et `.clasp.json.exemple` avec `filePushOrder` et **sans identifiant de projet** |
 | Vérification locale | `import-comptable/test/gas.test.js` | Exécute le paquet dans un Apps Script **simulé** (vm Node, octets signés) : même résultat que Node. Un Hasher qui omettrait la conversion des octets signés est rejeté. Le paquet ne contient aucun appel à SpreadsheetApp, DriveApp, UrlFetchApp, PropertiesService, Session… |
 
+### 2.2 bis Procédure simplifiée (recommandée) : un seul fichier à copier-coller
+
+`node scripts/construire-gas.js` produit aussi **`G0_fichier_unique.gs`**, dont une copie versionnée se trouve dans `import-comptable/gas/G0_fichier_unique.gs`. C'est le même code, concaténé dans un seul fichier, avec `testPrototypeFictif` en tête et les données fictives en ASCII strict. Il suffit de le coller à la place de `Code.gs` dans un projet vide, sans toucher au manifeste ni utiliser clasp. Instructions clic par clic : **`guide-test-G0.md`**.
+
+Vérifications automatiques (`test/gas.test.js`) :
+- la copie versionnée est identique au fichier régénéré ;
+- le fichier ne contient aucun appel aux données Google ni au réseau ;
+- il s'exécute seul dans un Apps Script simulé et affiche « RESULTAT G0 : REUSSI » ;
+- ses résultats S01 et S03 (statuts, sous-types, anomalies, totaux, statut de chaque écriture attendue) sont **identiques aux attendus de l'ingénieur** et au moteur sous Node.
+
 ### 2.2 Procédure (actions humaines, sur un compte Google de test)
 
 À exécuter **uniquement après votre feu vert**. Un compte Google personnel suffit : Workspace n'est pas requis pour des données fictives, conformément à votre arbitrage.

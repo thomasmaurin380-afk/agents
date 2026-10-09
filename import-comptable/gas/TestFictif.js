@@ -52,6 +52,10 @@ function testPrototypeFictif() {
   noter('statuts S03', obtenu.s03_statuts);
   noter('checksum après annulation = publication 1', obtenu.checksum_apres_annulation === obtenu.checksum_pub1);
   var resultat = { ok: ecarts.length === 0, ecarts: ecarts, duree_ms: new Date().getTime() - t0, journal: journal };
+  // Message lisible en premier : c'est la seule ligne à relever pour le dirigeant.
+  Logger.log(resultat.ok
+    ? 'RESULTAT G0 : REUSSI - le moteur donne dans Google Apps Script exactement les memes resultats que les tests (duree : ' + resultat.duree_ms + ' ms).'
+    : 'RESULTAT G0 : ECHEC - ' + ecarts.length + ' ecart(s) avec les tests. Copier tout le journal et le transmettre.');
   Logger.log(JSON.stringify(resultat, null, 1));
   return resultat;
 }
