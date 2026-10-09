@@ -1,0 +1,56 @@
+{
+  "id": "S07b",
+  "description": "FICTIF — Contenu de S01 encodé en windows-1252, profil FEC_GENERIQUE_CP1252.",
+  "client": "client-CLI-TEST.json",
+  "profil": "profils/FEC_GENERIQUE_CP1252.json",
+  "fichier": "scenarios/S07/b_cp1252/123456789FEC20260331.txt",
+  "perimetre": {
+    "exercice_id": "2026",
+    "du": "2026-01-01",
+    "au": "2026-03-31"
+  },
+  "base": [
+    {
+      "fichier": "scenarios/S01/123456789FEC20260331.txt",
+      "profil": "profils/FEC_GENERIQUE.json",
+      "perimetre": {
+        "exercice_id": "2026",
+        "du": "2026-01-01",
+        "au": "2026-03-31"
+      }
+    }
+  ],
+  "attendu": {
+    "rejete": false,
+    "compteurs_lignes": {
+      "lues": 36,
+      "importees": 36,
+      "rejetees": 0,
+      "vides": 0,
+      "doublons_ignores": 0
+    },
+    "totaux": {
+      "debit_cts": 1622500,
+      "credit_cts": 1622500
+    },
+    "statuts": {
+      "NOUVELLE": 0,
+      "INCHANGEE": 14,
+      "MODIFIEE": 0,
+      "ABSENTE": 0,
+      "COLLISION": 0,
+      "DOUBLON_INTRA": 0
+    },
+    "ecritures": {},
+    "anomalies": [],
+    "infos": [
+      {
+        "code": "SEC_NEUTRALISE",
+        "nb_lignes": 13
+      }
+    ],
+    "variations_soldes": {},
+    "lignes_canoniques": "attendus/S01_lignes_canoniques.json",
+    "notes": "Fichier encodé windows-1252 (é = E9, — = 97, É = C9), décodé selon le profil FEC_GENERIQUE_CP1252 puis NFC : lignes canoniques identiques à S01 ⇒ 14 INCHANGEE. Contre-épreuve facultative : ce fichier lu avec le profil UTF-8 doit donner STR_ENCODAGE (BND, octets invalides / U+FFFD)."
+  }
+}

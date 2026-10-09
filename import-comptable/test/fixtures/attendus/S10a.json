@@ -1,0 +1,124 @@
+{
+  "id": "S10a",
+  "description": "FICTIF — Isolation : contenu S01 importé chez CLI-TEST-A (SIREN 111111111).",
+  "client": "client-CLI-TEST-A.json",
+  "profil": "profils/FEC_GENERIQUE.json",
+  "fichier": "scenarios/S10/A/111111111FEC20260331.txt",
+  "perimetre": {
+    "exercice_id": "2026",
+    "du": "2026-01-01",
+    "au": "2026-03-31"
+  },
+  "base": [],
+  "attendu": {
+    "rejete": false,
+    "compteurs_lignes": {
+      "lues": 36,
+      "importees": 36,
+      "rejetees": 0,
+      "vides": 0,
+      "doublons_ignores": 0
+    },
+    "totaux": {
+      "debit_cts": 1622500,
+      "credit_cts": 1622500
+    },
+    "statuts": {
+      "NOUVELLE": 14,
+      "INCHANGEE": 0,
+      "MODIFIEE": 0,
+      "ABSENTE": 0,
+      "COLLISION": 0,
+      "DOUBLON_INTRA": 0
+    },
+    "ecritures": {
+      "VT|000120": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "VT|000121": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "VT|000122": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "VT|000123": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "AC|000044": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "BQ|000208": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "AC|000045": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "BQ|000209": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "BQ|000210": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "OD|000012": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "AC|PROV-17": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2,
+        "brouillard": true
+      },
+      "BQ|000211": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "BQ|000212": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "OD|000013": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 4
+      }
+    },
+    "anomalies": [],
+    "infos": [
+      {
+        "code": "SEC_NEUTRALISE",
+        "nb_lignes": 13,
+        "objet": "VT|000120 (3 lignes '=1+1…'), VT|000122 (3 lignes '+Facture…'), AC|000044 (3 lignes '@Achat…'), OD|000013 (4 lignes '=IMPORTRANGE(\"x\",\"y\")')"
+      }
+    ],
+    "variations_soldes": {
+      "40100000": -90000,
+      "40810000": -30000,
+      "41100000": 180000,
+      "42100000": -300000,
+      "43100000": -120000,
+      "44566000": 15000,
+      "44571000": -100000,
+      "51200000": 387500,
+      "60610000": 55000,
+      "60700000": 50000,
+      "62260000": 30000,
+      "62780000": 2500,
+      "64100000": 300000,
+      "64500000": 120000,
+      "70600000": -500000
+    },
+    "notes": "Même contenu (mêmes octets) que S01, nommé au SIREN fictif 111111111. Résultat identique à S01 mais toutes les clés complètes sont préfixées par CLI-TEST-A : aucune cle_ecriture ni ligne_uid commune avec l'autre client. Le file_sha256 identique chez A et B ne déclenche PAS de REIMPORT_FICHIER (l'unicité est par client).",
+    "lignes_canoniques": "attendus/S01_lignes_canoniques.json",
+    "exemple_cle_complete": {
+      "AC|000045": "CLI-TEST-A|2026|AC|000045"
+    }
+  }
+}

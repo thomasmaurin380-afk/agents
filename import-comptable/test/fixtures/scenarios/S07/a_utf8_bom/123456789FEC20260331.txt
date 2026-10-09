@@ -1,0 +1,37 @@
+﻿JournalCode	JournalLib	EcritureNum	EcritureDate	CompteNum	CompteLib	CompAuxNum	CompAuxLib	PieceRef	PieceDate	EcritureLib	Debit	Credit	EcritureLet	DateLet	ValidDate	Montantdevise	Idevise
+VT	Ventes	000120	20260108	411	Clients	0012	Dupont Fictif SARL	F2026-001	20260108	=1+1 Facture Dupont Fictif	600,00	0,00	AA	20260131	20260108		
+VT	Ventes	000120	20260108	706000	Prestations de services			F2026-001	20260108	=1+1 Facture Dupont Fictif	0,00	500,00			20260108		
+VT	Ventes	000120	20260108	44571	TVA collectée			F2026-001	20260108	=1+1 Facture Dupont Fictif	0,00	100,00			20260108		
+VT	Ventes	000121	20260112	411	Clients	0045	Élan Conseil Fictif	F2026-002	20260112	Prestation de conseil — été	2400,00	0,00			20260112		
+VT	Ventes	000121	20260112	706000	Prestations de services			F2026-002	20260112	Prestation de conseil — été	0,00	2000,00			20260112		
+VT	Ventes	000121	20260112	44571	TVA collectée			F2026-002	20260112	Prestation de conseil — été	0,00	400,00			20260112		
+VT	Ventes	000122	20260114	411	Clients	0045	Élan Conseil Fictif	F2026-003	20260114	+Facture complémentaire janvier	1800,00	0,00			20260114		
+VT	Ventes	000122	20260114	706000	Prestations de services			F2026-003	20260114	+Facture complémentaire janvier	0,00	1500,00			20260114		
+VT	Ventes	000122	20260114	44571	TVA collectée			F2026-003	20260114	+Facture complémentaire janvier	0,00	300,00			20260114		
+VT	Ventes	000123	20260115	411	Clients	0012	Dupont Fictif SARL	F2026-004	20260115	Facture Dupont janvier	1200,00	0,00			20260115		
+VT	Ventes	000123	20260115	706000	Prestations de services			F2026-004	20260115	Facture Dupont janvier	0,00	1000,00			20260115		
+VT	Ventes	000123	20260115	44571	TVA collectée			F2026-004	20260115	Facture Dupont janvier	0,00	200,00			20260115		
+AC	Achats	000044	20260120	606100	Fournitures non stockables			FA-7781	20260120	@Achat fournitures bureau	250,00	0,00			20260120		
+AC	Achats	000044	20260120	44566	TVA déductible sur ABS			FA-7781	20260120	@Achat fournitures bureau	50,00	0,00			20260120		
+AC	Achats	000044	20260120	401	Fournisseurs	0078	Bureau Fictif SAS	FA-7781	20260120	@Achat fournitures bureau	0,00	300,00			20260120		
+BQ	Banque	000208	20260131	512	Banque			RB-0131	20260131	Règlement Dupont F2026-001	600,00	0,00			20260131		
+BQ	Banque	000208	20260131	411	Clients	0012	Dupont Fictif SARL	RB-0131	20260131	Règlement Dupont F2026-001	0,00	600,00	AA	20260131	20260131		
+AC	Achats	000045	20260210	607	Achats de marchandises			FA-9045	20260210	Achat marchandises février	500,00	0,00			20260210		
+AC	Achats	000045	20260210	44566	TVA déductible sur ABS			FA-9045	20260210	Achat marchandises février	100,00	0,00			20260210		
+AC	Achats	000045	20260210	401	Fournisseurs	0091	Grossiste Fictif	FA-9045	20260210	Achat marchandises février	0,00	600,00			20260210		
+BQ	Banque	000209	20260215	401	Fournisseurs	0078	Bureau Fictif SAS	RB-0215	20260215	Règlement Bureau Fictif	300,00	0,00			20260215		
+BQ	Banque	000209	20260215	512	Banque			RB-0215	20260215	Règlement Bureau Fictif	0,00	300,00			20260215		
+BQ	Banque	000210	20260220	512	Banque			RB-0220	20260220	Règlement facture Dupont	1200,00	0,00			20260220		
+BQ	Banque	000210	20260220	411	Clients	0012	Dupont Fictif SARL	RB-0220	20260220	Règlement facture Dupont	0,00	1200,00			20260220		
+OD	Opérations diverses	000012	20260228	6226	Honoraires			OD-0228	20260228	Honoraires à recevoir février	300,00	0,00			20260228		
+OD	Opérations diverses	000012	20260228	4081	Fournisseurs - factures non parvenues			OD-0228	20260228	Honoraires à recevoir février	0,00	300,00			20260228		
+AC	Achats	PROV-17	20260305	606100	Fournitures non stockables			FA-1717	20260305	Achat petit matériel	300,00	0,00					
+AC	Achats	PROV-17	20260305	401	Fournisseurs	0078	Bureau Fictif SAS	FA-1717	20260305	Achat petit matériel	0,00	300,00					
+BQ	Banque	000211	20260305	627800	Frais bancaires			RB-0305	20260305	Frais bancaires mars	25,00	0,00			20260305		
+BQ	Banque	000211	20260305	512	Banque			RB-0305	20260305	Frais bancaires mars	0,00	25,00			20260305		
+BQ	Banque	000212	20260310	512	Banque			RB-0310	20260310	Virement Élan Conseil	2400,00	0,00			20260310		
+BQ	Banque	000212	20260310	411	Clients	0045	Élan Conseil Fictif	RB-0310	20260310	Virement Élan Conseil	0,00	2400,00			20260310		
+OD	Opérations diverses	000013	20260331	641000	Rémunérations du personnel			PAIE-03	20260331	"=IMPORTRANGE(""x"",""y"")"	3000,00	0,00			20260331		
+OD	Opérations diverses	000013	20260331	645000	Charges de sécurité sociale			PAIE-03	20260331	"=IMPORTRANGE(""x"",""y"")"	1200,00	0,00			20260331		
+OD	Opérations diverses	000013	20260331	421	Personnel - rémunérations dues			PAIE-03	20260331	"=IMPORTRANGE(""x"",""y"")"	0,00	3000,00			20260331		
+OD	Opérations diverses	000013	20260331	431	Sécurité sociale			PAIE-03	20260331	"=IMPORTRANGE(""x"",""y"")"	0,00	1200,00			20260331		

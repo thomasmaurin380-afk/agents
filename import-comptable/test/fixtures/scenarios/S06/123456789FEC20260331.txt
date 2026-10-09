@@ -1,0 +1,9 @@
+JournalCode	JournalLib	EcritureNum	EcritureDate	CompteNum	CompteLib	CompAuxNum	CompAuxLib	PieceRef	PieceDate	EcritureLib	Debit	Credit	EcritureLet	DateLet	ValidDate	Montantdevise	Idevise
+VT	Ventes	000140	20260120	411	Clients	0012	Dupont Fictif SARL	F2026-020	20260120	Facture Dupont	1200,01	0,00			20260120		
+VT	Ventes	000140	20260120	706000	Prestations de services			F2026-020	20260120	Facture Dupont	0,00	1000,00			20260120		
+VT	Ventes	000140	20260120	44571	TVA collectée			F2026-020	20260120	Facture Dupont	0,00	200,00			20260120		
+BQ	Banque	000230	20260125	512	Banque			RB-0125	20260125	Règlement Dupont	500,00	0,00			20260125		
+BQ	Banque	000230	20260125	411	Clients	0012	Dupont Fictif SARL	RB-0125	20260125	Règlement Dupont	0,00	500,00			20260125		
+AC	Achats	000070	20260128	606100	Fournitures non stockables			FA-7070	20260128	Achat fournitures	100,00	0,00			20260128		
+AC	Achats	000070	20260128	44566	TVA déductible sur ABS			FA-7070	20260128	Achat fournitures	20,00	0,00			20260128		
+AC	Achats	000070	20260128	401	Fournisseurs	0078	Bureau Fictif SAS	FA-7070	20260128	Achat fournitures	0,00	120,00			20260128		

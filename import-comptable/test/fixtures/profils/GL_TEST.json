@@ -1,0 +1,37 @@
+{
+  "profil_id": "GL_TEST",
+  "version": 1,
+  "type": "GL",
+  "encodage": "UTF-8",
+  "separateur": ";",
+  "decimal": ",",
+  "format_date": "JJ/MM/AAAA",
+  "mode_sens": "DEBIT_CREDIT",
+  "colonnes": {
+    "Compte": "compte_num",
+    "Libellé compte": "compte_lib",
+    "Date": "ecriture_date",
+    "Journal": "journal_code",
+    "N° écriture": "ecriture_num",
+    "Pièce": "piece_ref",
+    "Libellé": "ecriture_lib",
+    "Débit": "debit",
+    "Crédit": "credit",
+    "Lettrage": "ecriture_let"
+  },
+  "colonnes_ignorees": [],
+  "valeurs_sens": {
+    "D": [
+      "D"
+    ],
+    "C": [
+      "C"
+    ]
+  },
+  "lettrage_vide": [
+    "",
+    "0"
+  ],
+  "portee_numerotation": "EXERCICE",
+  "contiguite_ecritures": false
+}

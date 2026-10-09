@@ -1,0 +1,46 @@
+{
+  "id": "S11d",
+  "description": "FICTIF — FEC S01 importé sur l'exercice 2026 déjà alimenté par le grand livre S11a.",
+  "client": "client-CLI-TEST.json",
+  "profil": "profils/FEC_GENERIQUE.json",
+  "fichier": "scenarios/S11/d_fec_apres_gl/123456789FEC20260331.txt",
+  "perimetre": {
+    "exercice_id": "2026",
+    "du": "2026-01-01",
+    "au": "2026-03-31"
+  },
+  "base": [
+    {
+      "fichier": "scenarios/S11/a_gl_avec_numero/GL_TEST_2026T1.csv",
+      "profil": "profils/GL_TEST.json",
+      "perimetre": {
+        "exercice_id": "2026",
+        "du": "2026-01-01",
+        "au": "2026-03-31"
+      },
+      "total_saisi": {
+        "debit_cts": 1622500,
+        "credit_cts": 1622500
+      }
+    }
+  ],
+  "attendu": {
+    "rejete": true,
+    "compteurs_lignes": null,
+    "totaux": null,
+    "statuts": {},
+    "ecritures": {},
+    "anomalies": [
+      {
+        "code": "PRF_CHANGEMENT",
+        "gravite": "BND",
+        "objet": "exercice 2026",
+        "attendu": "GL",
+        "constate": "FEC"
+      }
+    ],
+    "infos": [],
+    "variations_soldes": {},
+    "notes": "Un seul type de profil par exercice : 2026 a été fixé à GL par S11a. Repli sûr du DOUBLON_INTER (reporté) : sans ce blocage, les 14 écritures seraient comptées deux fois. Compteurs non significatifs (contrôle de profil avant classement) ; actif inchangé."
+  }
+}

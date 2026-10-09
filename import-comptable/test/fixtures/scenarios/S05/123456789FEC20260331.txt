@@ -1,0 +1,12 @@
+JournalCode	JournalLib	EcritureNum	EcritureDate	CompteNum	CompteLib	CompAuxNum	CompAuxLib	PieceRef	PieceDate	EcritureLib	Debit	Credit	EcritureLet	DateLet	ValidDate	Montantdevise	Idevise
+VT	Ventes	000130	20260105	411	Clients	0012	Dupont Fictif SARL	F2026-010	20260105	Facture Dupont	1200,00	0,00			20260105		
+VT	Ventes	000130	20260105	706000	Prestations de services			F2026-010	20260105	Facture Dupont	0,00	1000,00			20260105		
+VT	Ventes	000130	20260105	44571	TVA collectée			F2026-010	20260105	Facture Dupont	0,00	200,00			20260105		
+AC	Achats	000060	20260112	606100	Fournitures non stockables			FA-6060	20260112	Achat fournitures	100,00	0,00			20260112		
+AC	Achats	000060	20260112	44566	TVA déductible sur ABS			FA-6060	20260112	Achat fournitures	20,00	0,00			20260112		
+AC	Achats	000060	20260112	401	Fournisseurs	0078	Bureau Fictif SAS	FA-6060	20260112	Achat fournitures	0,00	120,00			20260112		
+VT	Ventes	000130	20260105	411	Clients	0045	Élan Conseil Fictif	F2026-011	20260105	Facture Élan	600,00	0,00			20260105		
+VT	Ventes	000130	20260105	706000	Prestations de services			F2026-011	20260105	Facture Élan	0,00	500,00			20260105		
+VT	Ventes	000130	20260105	44571	TVA collectée			F2026-011	20260105	Facture Élan	0,00	100,00			20260105		
+BQ	Banque	000220	20260110	512	Banque			RB-0110	20260110	Règlement Dupont	500,00	0,00			20260111		
+BQ	Banque	000220	20260111	411	Clients	0012	Dupont Fictif SARL	RB-0110	20260110	Règlement Dupont	0,00	500,00			20260111		

@@ -1,0 +1,22 @@
+{
+  "id": "S02b",
+  "description": "FICTIF — Réexport au contenu identique : écritures de S01 en ordre inverse (lignes de VT 000120 et OD 000013 aussi inversées), fins de ligne CRLF.",
+  "client": "client-CLI-TEST.json",
+  "profil": "profils/FEC_GENERIQUE.json",
+  "fichier": "scenarios/S02/b_reordonne_crlf/123456789FEC20260331.txt",
+  "perimetre": { "exercice_id": "2026", "du": "2026-01-01", "au": "2026-03-31" },
+  "base": [
+    { "fichier": "scenarios/S01/123456789FEC20260331.txt", "profil": "profils/FEC_GENERIQUE.json", "perimetre": { "exercice_id": "2026", "du": "2026-01-01", "au": "2026-03-31" } }
+  ],
+  "attendu": {
+    "rejete": false,
+    "compteurs_lignes": { "lues": 36, "importees": 36, "rejetees": 0, "vides": 0, "doublons_ignores": 0 },
+    "totaux": { "debit_cts": 1622500, "credit_cts": 1622500 },
+    "statuts": { "NOUVELLE": 0, "INCHANGEE": 14, "MODIFIEE": 0, "ABSENTE": 0, "COLLISION": 0, "DOUBLON_INTRA": 0 },
+    "ecritures": {},
+    "anomalies": [],
+    "infos": [ { "code": "SEC_NEUTRALISE", "nb_lignes": 13 } ],
+    "variations_soldes": {},
+    "notes": "Propriété d'idempotence : 100 % INCHANGEE (14/14), aucune variation de solde. Le CRLF ne doit laisser aucun \\r dans le dernier champ (Idevise vide). ligne_uid inchangés car k = rang dans l'ordre canonique (compte, auxiliaire, montant, rang source), indépendant de l'ordre du fichier. file_sha256 différent de S01 : pas de REIMPORT_FICHIER."
+  }
+}

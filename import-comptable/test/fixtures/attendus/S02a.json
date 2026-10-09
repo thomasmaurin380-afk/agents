@@ -1,0 +1,24 @@
+{
+  "id": "S02a",
+  "description": "FICTIF — Réimport à l'identique : mêmes octets que S01 après publication de S01.",
+  "client": "client-CLI-TEST.json",
+  "profil": "profils/FEC_GENERIQUE.json",
+  "fichier": "scenarios/S02/a_memes_octets/123456789FEC20260331.txt",
+  "perimetre": { "exercice_id": "2026", "du": "2026-01-01", "au": "2026-03-31" },
+  "base": [
+    { "fichier": "scenarios/S01/123456789FEC20260331.txt", "profil": "profils/FEC_GENERIQUE.json", "perimetre": { "exercice_id": "2026", "du": "2026-01-01", "au": "2026-03-31" } }
+  ],
+  "attendu": {
+    "rejete": false,
+    "arrete": true,
+    "statut_import": "REIMPORT_FICHIER",
+    "compteurs_lignes": null,
+    "totaux": null,
+    "statuts": { "REIMPORT_FICHIER": 1 },
+    "ecritures": {},
+    "anomalies": [],
+    "infos": [ { "code": "REIMPORT_FICHIER", "objet": "file_sha256 identique à l'import S01 publié" } ],
+    "variations_soldes": {},
+    "notes": "Import arrêté dès le contrôle file_sha256 (étape REÇU), avant toute normalisation : aucun compteur de lignes n'est produit (null), aucune ligne en staging, actif inchangé, événement journalisé. 'rejete' = false car ce n'est pas un BND : c'est un arrêt (info)."
+  }
+}

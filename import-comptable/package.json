@@ -1,0 +1,12 @@
+{
+  "name": "import-comptable",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Prototype local du moteur d'import comptable incrémental (cœur JavaScript pur, sans dépendance).",
+  "license": "UNLICENSED",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "rapport": "node scripts/rapport-scenarios.js"
+  }
+}

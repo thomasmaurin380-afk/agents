@@ -1,0 +1,31 @@
+{
+  "id": "S11b1",
+  "description": "FICTIF — Grand livre GL_TEST sans colonne « N° écriture ».",
+  "client": "client-CLI-TEST.json",
+  "profil": "profils/GL_TEST.json",
+  "fichier": "scenarios/S11/b1_gl_sans_colonne_numero/GL_TEST_2026T1.csv",
+  "perimetre": {
+    "exercice_id": "2026",
+    "du": "2026-01-01",
+    "au": "2026-03-31"
+  },
+  "base": [],
+  "attendu": {
+    "rejete": true,
+    "compteurs_lignes": null,
+    "totaux": null,
+    "statuts": {},
+    "ecritures": {},
+    "anomalies": [
+      {
+        "code": "STR_ENTETE",
+        "gravite": "BND",
+        "objet": "en-tête",
+        "colonne_absente": "N° écriture",
+        "message": "exporter le FEC"
+      }
+    ],
+    "infos": [],
+    "notes": "Colonne obligatoire du profil absente de l'en-tête → STR_ENTETE (BND) avant toute lecture des lignes ; message d'aide « exporter le FEC » (GL sans numéro refusé au MVP, K3/K4 reportés)."
+  }
+}

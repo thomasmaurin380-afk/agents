@@ -1,0 +1,79 @@
+{
+  "id": "S11b2",
+  "description": "FICTIF — Grand livre GL_TEST avec colonne « N° écriture » présente mais vide sur toutes les lignes.",
+  "client": "client-CLI-TEST.json",
+  "profil": "profils/GL_TEST.json",
+  "fichier": "scenarios/S11/b2_gl_numero_vide/GL_TEST_2026T1.csv",
+  "perimetre": {
+    "exercice_id": "2026",
+    "du": "2026-01-01",
+    "au": "2026-03-31"
+  },
+  "base": [],
+  "attendu": {
+    "rejete": true,
+    "compteurs_lignes": {
+      "lues": 36,
+      "importees": 0,
+      "rejetees": 36,
+      "vides": 0,
+      "doublons_ignores": 0
+    },
+    "totaux": {
+      "debit_cts": 0,
+      "credit_cts": 0
+    },
+    "statuts": {},
+    "ecritures": {},
+    "anomalies": [
+      {
+        "code": "REJ_LIGNES",
+        "gravite": "BND",
+        "objet": "fichier",
+        "nb_lignes": 36,
+        "rangs": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36
+        ],
+        "motif": "champ indispensable ecriture_num vide",
+        "message": "exporter le FEC"
+      }
+    ],
+    "infos": [],
+    "notes": "En-tête conforme, mais ecriture_num (indispensable) vide sur les 36 lignes → 36 lignes rejetées, REJ_LIGNES agrégé (BND). Aucune ligne importée, donc aucun classement."
+  }
+}

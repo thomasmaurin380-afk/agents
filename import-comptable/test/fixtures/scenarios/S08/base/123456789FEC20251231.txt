@@ -1,0 +1,11 @@
+JournalCode	JournalLib	EcritureNum	EcritureDate	CompteNum	CompteLib	CompAuxNum	CompAuxLib	PieceRef	PieceDate	EcritureLib	Debit	Credit	EcritureLet	DateLet	ValidDate	Montantdevise	Idevise
+VT	Ventes	000501	20251105	411	Clients	0012	Dupont Fictif SARL	F2025-501	20251105	Facture Dupont novembre	1800,00	0,00			20251105		
+VT	Ventes	000501	20251105	706000	Prestations de services			F2025-501	20251105	Facture Dupont novembre	0,00	1500,00			20251105		
+VT	Ventes	000501	20251105	44571	TVA collectée			F2025-501	20251105	Facture Dupont novembre	0,00	300,00			20251105		
+AC	Achats	000301	20251110	607	Achats de marchandises			FA-5301	20251110	Achat marchandises novembre	400,00	0,00			20251110		
+AC	Achats	000301	20251110	44566	TVA déductible sur ABS			FA-5301	20251110	Achat marchandises novembre	80,00	0,00			20251110		
+AC	Achats	000301	20251110	401	Fournisseurs	0091	Grossiste Fictif	FA-5301	20251110	Achat marchandises novembre	0,00	480,00			20251110		
+BQ	Banque	000601	20251215	512	Banque			RB-1215	20251215	Règlement Dupont F2025-501	1800,00	0,00			20251215		
+BQ	Banque	000601	20251215	411	Clients	0012	Dupont Fictif SARL	RB-1215	20251215	Règlement Dupont F2025-501	0,00	1800,00			20251215		
+OD	Opérations diverses	000201	20251231	6226	Honoraires			OD-1231	20251231	Honoraires à recevoir 2025	250,00	0,00			20251231		
+OD	Opérations diverses	000201	20251231	4081	Fournisseurs - factures non parvenues			OD-1231	20251231	Honoraires à recevoir 2025	0,00	250,00			20251231		

@@ -1,0 +1,158 @@
+{
+  "id": "S11a",
+  "description": "FICTIF — Grand livre GL_TEST trié par compte, avec N° écriture, données de S01.",
+  "client": "client-CLI-TEST.json",
+  "profil": "profils/GL_TEST.json",
+  "fichier": "scenarios/S11/a_gl_avec_numero/GL_TEST_2026T1.csv",
+  "perimetre": {
+    "exercice_id": "2026",
+    "du": "2026-01-01",
+    "au": "2026-03-31"
+  },
+  "base": [],
+  "attendu": {
+    "rejete": false,
+    "total_saisi": {
+      "debit_cts": 1622500,
+      "credit_cts": 1622500
+    },
+    "compteurs_lignes": {
+      "lues": 36,
+      "importees": 36,
+      "rejetees": 0,
+      "vides": 0,
+      "doublons_ignores": 0
+    },
+    "totaux": {
+      "debit_cts": 1622500,
+      "credit_cts": 1622500
+    },
+    "statuts": {
+      "NOUVELLE": 14,
+      "INCHANGEE": 0,
+      "MODIFIEE": 0,
+      "ABSENTE": 0,
+      "COLLISION": 0,
+      "DOUBLON_INTRA": 0
+    },
+    "ecritures": {
+      "VT|000120": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "VT|000121": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "VT|000122": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "VT|000123": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "AC|000044": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "BQ|000208": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "AC|000045": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "BQ|000209": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "BQ|000210": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "OD|000012": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "AC|PROV-17": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "BQ|000211": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "BQ|000212": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "OD|000013": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 4
+      }
+    },
+    "anomalies": [],
+    "infos": [
+      {
+        "code": "MNT_NEG",
+        "nb_lignes": 2,
+        "rangs": [
+          24,
+          30
+        ],
+        "detail": "rang 24 : 512 Débit '25,00-' → credit_cts 2500 ; rang 30 : 627800 Crédit '(25,00)' → debit_cts 2500"
+      },
+      {
+        "code": "SEC_NEUTRALISE",
+        "nb_lignes": 13
+      }
+    ],
+    "variations_soldes": {
+      "40100000": -90000,
+      "40810000": -30000,
+      "41100000": 180000,
+      "42100000": -300000,
+      "43100000": -120000,
+      "44566000": 15000,
+      "44571000": -100000,
+      "51200000": 387500,
+      "60610000": 55000,
+      "60700000": 50000,
+      "62260000": 30000,
+      "62780000": 2500,
+      "64100000": 300000,
+      "64500000": 120000,
+      "70600000": -500000
+    },
+    "comparaison_S01": {
+      "reference": "attendus/S01_lignes_canoniques.json",
+      "appariement": "par cle (JOURNAL|NUMERO) puis multiensemble des lignes",
+      "champs_identiques": [
+        "journal_code",
+        "ecriture_num",
+        "ecriture_date",
+        "compte_num",
+        "compte_num_source",
+        "compte_lib",
+        "piece_ref",
+        "ecriture_lib",
+        "debit_cts",
+        "credit_cts",
+        "ecriture_let"
+      ],
+      "champs_vides_dans_GL": {
+        "journal_lib": "",
+        "comp_aux_num": "",
+        "comp_aux_lib": "",
+        "piece_date": "",
+        "date_let": "",
+        "valid_date": "",
+        "montant_devise_cts": null,
+        "idevise": ""
+      }
+    },
+    "notes": "Grand livre trié par compte (écritures non contiguës, contiguite_ecritures = false) : regroupement par clé JOURNAL|N° écriture → mêmes 14 clés et mêmes 36 lignes de fond que S01 (compte, débit, crédit), hors auxiliaire (GL_TEST n'a pas de colonne auxiliaire). Formats de montants : milliers séparés par U+00A0 (ex. '2 400,00'), U+202F pour OD 000013 ('3 000,00'), négatifs '25,00-' et '(25,00)' portés dans la colonne opposée : montant signé = débit − crédit conservé, débit/crédit recalculés, MNT_NEG (info). Lettrage '0' (rangs 2 et 11) = vide (lettrage_vide). Dates JJ/MM/AAAA → ISO. AC|PROV-17 n'est pas identifiable comme brouillard (pas de ValidDate dans le GL). REC_TOTAL_SAISI (obligatoire pour un GL) : total saisi = total importé → pas d'anomalie. Premier import de l'exercice 2026 : fixe le type de profil GL pour l'exercice."
+  }
+}

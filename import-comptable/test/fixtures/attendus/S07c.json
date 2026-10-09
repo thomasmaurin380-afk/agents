@@ -1,0 +1,40 @@
+{
+  "id": "S07c",
+  "description": "FICTIF — Contenu de S01 doublement encodé (UTF-8 relu comme windows-1252 puis réencodé en UTF-8), profil FEC_GENERIQUE (UTF-8).",
+  "client": "client-CLI-TEST.json",
+  "profil": "profils/FEC_GENERIQUE.json",
+  "fichier": "scenarios/S07/c_double_encodage/123456789FEC20260331.txt",
+  "perimetre": {
+    "exercice_id": "2026",
+    "du": "2026-01-01",
+    "au": "2026-03-31"
+  },
+  "base": [
+    {
+      "fichier": "scenarios/S01/123456789FEC20260331.txt",
+      "profil": "profils/FEC_GENERIQUE.json",
+      "perimetre": {
+        "exercice_id": "2026",
+        "du": "2026-01-01",
+        "au": "2026-03-31"
+      }
+    }
+  ],
+  "attendu": {
+    "rejete": true,
+    "compteurs_lignes": null,
+    "totaux": null,
+    "statuts": {},
+    "ecritures": {},
+    "anomalies": [
+      {
+        "code": "STR_ENCODAGE",
+        "gravite": "BND",
+        "objet": "fichier",
+        "motif": "double encodage (motifs 'Ã©', 'Ã‰', 'â€”')"
+      }
+    ],
+    "infos": [],
+    "notes": "Octets UTF-8 de S01 relus en windows-1252 puis réencodés en UTF-8 : le fichier est de l'UTF-8 valide mais contient 'TVA collectÃ©e', 'Ã‰lan', 'â€”'. Détection par motif Ã[\\x80-\\xBF] (et â€). Import bloqué avant classement : compteurs et statuts non significatifs (null / vides), aucune ligne en staging."
+  }
+}

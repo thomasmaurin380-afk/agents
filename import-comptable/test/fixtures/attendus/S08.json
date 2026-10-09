@@ -1,0 +1,33 @@
+{
+  "id": "S08",
+  "description": "FICTIF — Exercice clôturé : base = petit FEC 2025 publié (exercice alors ouvert) ; nouveau FEC 2025 après clôture avec un montant modifié (AC 000301) et un lettrage a posteriori (VT 000501 / BQ 000601).",
+  "client": "client-CLI-TEST.json",
+  "profil": "profils/FEC_GENERIQUE.json",
+  "fichier": "scenarios/S08/import/123456789FEC20251231.txt",
+  "perimetre": { "exercice_id": "2025", "du": "2025-01-01", "au": "2025-12-31" },
+  "base": [
+    { "fichier": "scenarios/S08/base/123456789FEC20251231.txt", "profil": "profils/FEC_GENERIQUE.json", "perimetre": { "exercice_id": "2025", "du": "2025-01-01", "au": "2025-12-31" }, "client": "client-CLI-TEST-2025-OUVERT.json", "note": "Base publiée quand 2025 était OUVERT (4 NOUVELLE, 10 lignes, ΣD = ΣC = 433000), puis exercice clôturé : le scénario s'exécute avec client-CLI-TEST.json (2025 CLOTURE)." }
+  ],
+  "attendu": {
+    "rejete": false,
+    "compteurs_lignes": { "lues": 10, "importees": 10, "rejetees": 0, "vides": 0, "doublons_ignores": 0 },
+    "totaux": { "debit_cts": 439000, "credit_cts": 439000 },
+    "statuts": { "NOUVELLE": 0, "INCHANGEE": 1, "MODIFIEE": 3, "ABSENTE": 0, "COLLISION": 0, "DOUBLON_INTRA": 0 },
+    "ecritures": {
+      "OD|000201": { "statut": "INCHANGEE" },
+      "AC|000301": { "statut": "MODIFIEE", "sous_types": ["M_FOND"], "detail": "607 400,00→450,00 ; 44566 80,00→90,00 ; 401/0091 480,00→540,00" },
+      "VT|000501": { "statut": "MODIFIEE", "sous_types": ["M_LET"], "detail": "ligne 411/0012 lettrée AA au 2025-12-15" },
+      "BQ|000601": { "statut": "MODIFIEE", "sous_types": ["M_LET"], "detail": "ligne 411/0012 lettrée AA au 2025-12-15" }
+    },
+    "anomalies": [
+      { "code": "PER_CLOTURE", "gravite": "B", "objet": "AC|000301" },
+      { "code": "IDN_MOD_FOND", "gravite": "A", "objet": "AC|000301", "mention": "validée" }
+    ],
+    "infos": [
+      { "code": "M_LET", "objet": "VT|000501" },
+      { "code": "M_LET", "objet": "BQ|000601" }
+    ],
+    "variations_soldes": { "60700000": 5000, "44566000": 1000, "40100000": -6000 },
+    "notes": "Le lettrage seul (M_LET) est accepté automatiquement même sur exercice clôturé : pas de PER_CLOTURE pour VT|000501 ni BQ|000601. AC|000301 : M_FOND sur exercice clôturé → PER_CLOTURE (B, dérogeable). L'import n'est pas 'rejete' (aucun BND) mais non publiable sans dérogation. IDN_MOD_FOND est attendu en plus de PER_CLOTURE (contrôles indépendants) — voir ambiguïtés du README."
+  }
+}

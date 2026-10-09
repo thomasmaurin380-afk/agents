@@ -1,0 +1,26 @@
+{
+  "id": "S05",
+  "description": "FICTIF — Collisions : sur base vide, VT 000130 porte 2 contenus différents en blocs disjoints, et BQ 000220 porte 2 dates différentes.",
+  "client": "client-CLI-TEST.json",
+  "profil": "profils/FEC_GENERIQUE.json",
+  "fichier": "scenarios/S05/123456789FEC20260331.txt",
+  "perimetre": { "exercice_id": "2026", "du": "2026-01-01", "au": "2026-03-31" },
+  "base": [],
+  "attendu": {
+    "rejete": true,
+    "compteurs_lignes": { "lues": 11, "importees": 11, "rejetees": 0, "vides": 0, "doublons_ignores": 0 },
+    "totaux": { "debit_cts": 242000, "credit_cts": 242000 },
+    "statuts": { "NOUVELLE": 1, "INCHANGEE": 0, "MODIFIEE": 0, "ABSENTE": 0, "COLLISION": 2, "DOUBLON_INTRA": 0 },
+    "ecritures": {
+      "VT|000130": { "statut": "COLLISION", "motif": "blocs disjoints de contenu différent (rangs 1-3 : 411/0012 1 200,00 ; rangs 7-9 : 411/0045 600,00)" },
+      "BQ|000220": { "statut": "COLLISION", "motif": "même clé, 2 dates (2026-01-10 rang 10, 2026-01-11 rang 11)" },
+      "AC|000060": { "statut": "NOUVELLE", "nb_lignes": 3 }
+    },
+    "anomalies": [
+      { "code": "IDN_COLLISION", "gravite": "BND", "objet": "VT|000130" },
+      { "code": "IDN_COLLISION", "gravite": "BND", "objet": "BQ|000220" }
+    ],
+    "infos": [],
+    "notes": "Import bloqué (BND non dérogeable), aucune publication possible. Chaque bloc pris isolément est équilibré, et la somme par clé aussi : aucune anomalie EQU_ECRITURE ni EQU_GLOBAL. Compteurs : toutes les lignes sont lisibles et normalisées (importées en staging) ; c'est la classification qui bloque."
+  }
+}

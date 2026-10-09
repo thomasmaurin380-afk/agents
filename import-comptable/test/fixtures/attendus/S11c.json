@@ -1,0 +1,54 @@
+{
+  "id": "S11c",
+  "description": "FICTIF — Grand livre GL_TEST de S11a avec une ligne parasite « Total compte 401 » insérée après les lignes du compte 401.",
+  "client": "client-CLI-TEST.json",
+  "profil": "profils/GL_TEST.json",
+  "fichier": "scenarios/S11/c_gl_ligne_total/GL_TEST_2026T1.csv",
+  "perimetre": {
+    "exercice_id": "2026",
+    "du": "2026-01-01",
+    "au": "2026-03-31"
+  },
+  "base": [],
+  "attendu": {
+    "rejete": true,
+    "total_saisi": {
+      "debit_cts": 1622500,
+      "credit_cts": 1622500
+    },
+    "compteurs_lignes": {
+      "lues": 37,
+      "importees": 36,
+      "rejetees": 1,
+      "vides": 0,
+      "doublons_ignores": 0
+    },
+    "totaux": {
+      "debit_cts": 1622500,
+      "credit_cts": 1622500
+    },
+    "statuts": {
+      "NOUVELLE": 14,
+      "INCHANGEE": 0,
+      "MODIFIEE": 0,
+      "ABSENTE": 0,
+      "COLLISION": 0,
+      "DOUBLON_INTRA": 0
+    },
+    "ecritures": {},
+    "anomalies": [
+      {
+        "code": "REJ_LIGNES",
+        "gravite": "BND",
+        "objet": "fichier",
+        "nb_lignes": 1,
+        "rangs": [
+          5
+        ],
+        "motif": "compte 'Total compte 401' non numérique ; date, journal, n° écriture, pièce, libellé vides"
+      }
+    ],
+    "infos": [],
+    "notes": "Lignes parasites non reconnues au MVP : rejet (REJ_LIGNES, BND) → import bloqué. La ligne de total (D 300,00 / C 1 200,00) n'entre pas dans 'totaux' (lignes importées seulement). Les 36 autres lignes sont celles de S11a ; le classement (14 NOUVELLE) est indicatif, l'import étant bloqué."
+  }
+}

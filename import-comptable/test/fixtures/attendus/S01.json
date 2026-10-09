@@ -1,0 +1,43 @@
+{
+  "id": "S01",
+  "description": "FICTIF — Nominal : FEC 2026 janvier–mars, 14 écritures / 36 lignes, premier import sur base vide.",
+  "client": "client-CLI-TEST.json",
+  "profil": "profils/FEC_GENERIQUE.json",
+  "fichier": "scenarios/S01/123456789FEC20260331.txt",
+  "perimetre": { "exercice_id": "2026", "du": "2026-01-01", "au": "2026-03-31" },
+  "base": [],
+  "attendu": {
+    "rejete": false,
+    "compteurs_lignes": { "lues": 36, "importees": 36, "rejetees": 0, "vides": 0, "doublons_ignores": 0 },
+    "totaux": { "debit_cts": 1622500, "credit_cts": 1622500 },
+    "statuts": { "NOUVELLE": 14, "INCHANGEE": 0, "MODIFIEE": 0, "ABSENTE": 0, "COLLISION": 0, "DOUBLON_INTRA": 0 },
+    "ecritures": {
+      "VT|000120": { "statut": "NOUVELLE", "nb_lignes": 3 },
+      "VT|000121": { "statut": "NOUVELLE", "nb_lignes": 3 },
+      "VT|000122": { "statut": "NOUVELLE", "nb_lignes": 3 },
+      "VT|000123": { "statut": "NOUVELLE", "nb_lignes": 3 },
+      "AC|000044": { "statut": "NOUVELLE", "nb_lignes": 3 },
+      "BQ|000208": { "statut": "NOUVELLE", "nb_lignes": 2 },
+      "AC|000045": { "statut": "NOUVELLE", "nb_lignes": 3 },
+      "BQ|000209": { "statut": "NOUVELLE", "nb_lignes": 2 },
+      "BQ|000210": { "statut": "NOUVELLE", "nb_lignes": 2 },
+      "OD|000012": { "statut": "NOUVELLE", "nb_lignes": 2 },
+      "AC|PROV-17": { "statut": "NOUVELLE", "nb_lignes": 2, "brouillard": true },
+      "BQ|000211": { "statut": "NOUVELLE", "nb_lignes": 2 },
+      "BQ|000212": { "statut": "NOUVELLE", "nb_lignes": 2 },
+      "OD|000013": { "statut": "NOUVELLE", "nb_lignes": 4 }
+    },
+    "anomalies": [],
+    "infos": [
+      { "code": "SEC_NEUTRALISE", "nb_lignes": 13, "objet": "VT|000120 (3 lignes '=1+1…'), VT|000122 (3 lignes '+Facture…'), AC|000044 (3 lignes '@Achat…'), OD|000013 (4 lignes '=IMPORTRANGE(\"x\",\"y\")')" }
+    ],
+    "variations_soldes": {
+      "40100000": -90000, "40810000": -30000, "41100000": 180000, "42100000": -300000,
+      "43100000": -120000, "44566000": 15000, "44571000": -100000, "51200000": 387500,
+      "60610000": 55000, "60700000": 50000, "62260000": 30000, "62780000": 2500,
+      "64100000": 300000, "64500000": 120000, "70600000": -500000
+    },
+    "lignes_canoniques": "attendus/S01_lignes_canoniques.json",
+    "notes": "Clés à zéros de tête conservées (\"000123\" ≠ \"123\"), auxiliaires \"0012\"/\"0045\"/\"0078\"/\"0091\" conservés en texte. Comptes paddés à 8 (401 → 40100000, 606100 → 60610000). AC|PROV-17 : ValidDate vide (brouillard). BQ|000210 non lettrée. Seules VT|000120 (411) et BQ|000208 (411) sont lettrées 'AA' au 2026-01-31. Libellés commençant par = + @ : stockés en texte, relus identiques, aucune formule évaluée (SEC_NEUTRALISE info). Variations de soldes = soldes (D−C) depuis une base vide ; Σ = 0. Le RFC 4180 s'applique : le libellé =IMPORTRANGE(\"x\",\"y\") est écrit entre guillemets avec guillemets doublés dans le fichier."
+  }
+}

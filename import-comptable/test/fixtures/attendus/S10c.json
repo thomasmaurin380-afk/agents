@@ -1,0 +1,45 @@
+{
+  "id": "S10c",
+  "description": "FICTIF — Isolation : fichier au SIREN de CLI-TEST-A déposé chez CLI-TEST-B.",
+  "client": "client-CLI-TEST-B.json",
+  "profil": "profils/FEC_GENERIQUE.json",
+  "fichier": "scenarios/S10/A/111111111FEC20260331.txt",
+  "perimetre": {
+    "exercice_id": "2026",
+    "du": "2026-01-01",
+    "au": "2026-03-31"
+  },
+  "base": [
+    {
+      "fichier": "scenarios/S10/B/222222222FEC20260331.txt",
+      "profil": "profils/FEC_GENERIQUE.json",
+      "perimetre": {
+        "exercice_id": "2026",
+        "du": "2026-01-01",
+        "au": "2026-03-31"
+      },
+      "client": "client-CLI-TEST-B.json"
+    }
+  ],
+  "attendu": {
+    "rejete": true,
+    "statut_import": "REJETE",
+    "compteurs_lignes": null,
+    "totaux": null,
+    "lignes_ecrites_classeur_client": 0,
+    "statuts": {},
+    "ecritures": {},
+    "anomalies": [
+      {
+        "code": "CLI_MISMATCH",
+        "gravite": "BND",
+        "objet": "fichier",
+        "attendu": "222222222",
+        "constate": "111111111"
+      }
+    ],
+    "infos": [],
+    "variations_soldes": {},
+    "notes": "Contrôle du SIREN du nom de fichier avant toute lecture du contenu : quarantaine, 0 ligne écrite dans le classeur de B (ni STAGING, ni actif, ni MOUVEMENTS) ; l'actif de B (base = S10b publié) reste strictement identique (checksum). Note : les octets sont identiques à S10b déjà publié chez B ; CLI_MISMATCH doit être contrôlé AVANT le contrôle file_sha256 (sinon on obtiendrait REIMPORT_FICHIER) — triple contrôle client à l'étape REÇU en premier."
+  }
+}

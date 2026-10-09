@@ -1,0 +1,45 @@
+{
+  "profil_id": "FEC_MONTANT_SENS",
+  "version": 1,
+  "type": "FEC",
+  "encodage": "UTF-8",
+  "separateur": "\t",
+  "decimal": ",",
+  "format_date": "AAAAMMJJ",
+  "mode_sens": "MONTANT_SENS",
+  "colonnes": {
+    "JournalCode": "journal_code",
+    "JournalLib": "journal_lib",
+    "EcritureNum": "ecriture_num",
+    "EcritureDate": "ecriture_date",
+    "CompteNum": "compte_num",
+    "CompteLib": "compte_lib",
+    "CompAuxNum": "comp_aux_num",
+    "CompAuxLib": "comp_aux_lib",
+    "PieceRef": "piece_ref",
+    "PieceDate": "piece_date",
+    "EcritureLib": "ecriture_lib",
+    "Montant": "montant",
+    "Sens": "sens",
+    "EcritureLet": "ecriture_let",
+    "DateLet": "date_let",
+    "ValidDate": "valid_date",
+    "Montantdevise": "montant_devise",
+    "Idevise": "idevise"
+  },
+  "colonnes_ignorees": [],
+  "valeurs_sens": {
+    "D": [
+      "D"
+    ],
+    "C": [
+      "C"
+    ]
+  },
+  "lettrage_vide": [
+    "",
+    "0"
+  ],
+  "portee_numerotation": "EXERCICE",
+  "contiguite_ecritures": true
+}

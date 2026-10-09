@@ -1,0 +1,23 @@
+{
+  "client_id": "CLI-TEST-B",
+  "siren": "222222222",
+  "longueur_compte": 8,
+  "exercices": [
+    {
+      "id": "2025",
+      "debut": "2025-01-01",
+      "fin": "2025-12-31",
+      "statut": "CLOTURE"
+    },
+    {
+      "id": "2026",
+      "debut": "2026-01-01",
+      "fin": "2026-12-31",
+      "statut": "OUVERT"
+    }
+  ],
+  "seuils": {
+    "suppr_masse_pct": 5,
+    "suppr_masse_nb": 50
+  }
+}

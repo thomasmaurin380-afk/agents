@@ -1,0 +1,11 @@
+JournalCode	JournalLib	EcritureNum	EcritureDate	CompteNum	CompteLib	CompAuxNum	CompAuxLib	PieceRef	PieceDate	EcritureLib	Debit	Credit	EcritureLet	DateLet	ValidDate	Montantdevise	Idevise
+AC	Achats	000080	20260115	606100	Fournitures non stockables			FA-8080	20260115	Achat fournitures divers	100,00	0,00			20260115		
+AC	Achats	000080	20260115	44566	TVA déductible sur ABS			FA-8080	20260115	Achat fournitures divers	20,00	0,00			20260115		
+AC	Achats	000080	20260115	4011	Fournisseurs divers			FA-8080	20260115	Achat fournitures divers	0,00	120,00			20260115		
+AC	Achats	000081	20260116	606100	Fournitures non stockables			FA-8081	20260116	Achat fournitures groupe	50,00	0,00			20260116		
+AC	Achats	000081	20260116	44566	TVA déductible sur ABS			FA-8081	20260116	Achat fournitures groupe	10,00	0,00			20260116		
+AC	Achats	000081	20260116	40110	Fournisseurs groupe			FA-8081	20260116	Achat fournitures groupe	0,00	60,00			20260116		
+OD	Opérations diverses	000090	20260120	401234567890	Compte trop long fictif			OD-0120	20260120	Reclassement fournisseur	100,00	0,00			20260120		
+OD	Opérations diverses	000090	20260120	401DUPONT	Fournisseur Dupont			OD-0120	20260120	Reclassement fournisseur	0,00	100,00			20260120		
+OD	Opérations diverses	000091	20260125	901	Compte analytique fictif			OD-0125	20260125	Écriture analytique	300,00	0,00			20260125		
+OD	Opérations diverses	000091	20260125	512	Banque			OD-0125	20260125	Écriture analytique	0,00	300,00			20260125		

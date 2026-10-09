@@ -1,0 +1,173 @@
+{
+  "id": "S11e",
+  "description": "FICTIF — Grand livre S11a avec total saisi par l'opérateur volontairement en écart de 1,00 €.",
+  "client": "client-CLI-TEST.json",
+  "profil": "profils/GL_TEST.json",
+  "fichier": "scenarios/S11/a_gl_avec_numero/GL_TEST_2026T1.csv",
+  "perimetre": {
+    "exercice_id": "2026",
+    "du": "2026-01-01",
+    "au": "2026-03-31"
+  },
+  "base": [],
+  "attendu": {
+    "rejete": false,
+    "total_saisi": {
+      "debit_cts": 1622400,
+      "credit_cts": 1622500
+    },
+    "compteurs_lignes": {
+      "lues": 36,
+      "importees": 36,
+      "rejetees": 0,
+      "vides": 0,
+      "doublons_ignores": 0
+    },
+    "totaux": {
+      "debit_cts": 1622500,
+      "credit_cts": 1622500
+    },
+    "statuts": {
+      "NOUVELLE": 14,
+      "INCHANGEE": 0,
+      "MODIFIEE": 0,
+      "ABSENTE": 0,
+      "COLLISION": 0,
+      "DOUBLON_INTRA": 0
+    },
+    "ecritures": {
+      "VT|000120": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "VT|000121": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "VT|000122": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "VT|000123": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "AC|000044": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "BQ|000208": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "AC|000045": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 3
+      },
+      "BQ|000209": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "BQ|000210": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "OD|000012": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "AC|PROV-17": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "BQ|000211": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "BQ|000212": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 2
+      },
+      "OD|000013": {
+        "statut": "NOUVELLE",
+        "nb_lignes": 4
+      }
+    },
+    "anomalies": [
+      {
+        "code": "REC_TOTAL_SAISI",
+        "gravite": "B",
+        "objet": "fichier",
+        "attendu": {
+          "debit_cts": 1622400,
+          "credit_cts": 1622500
+        },
+        "constate": {
+          "debit_cts": 1622500,
+          "credit_cts": 1622500
+        },
+        "ecart_debit_cts": 100
+      }
+    ],
+    "infos": [
+      {
+        "code": "MNT_NEG",
+        "nb_lignes": 2,
+        "rangs": [
+          24,
+          30
+        ],
+        "detail": "rang 24 : 512 Débit '25,00-' → credit_cts 2500 ; rang 30 : 627800 Crédit '(25,00)' → debit_cts 2500"
+      },
+      {
+        "code": "SEC_NEUTRALISE",
+        "nb_lignes": 13
+      }
+    ],
+    "variations_soldes": {
+      "40100000": -90000,
+      "40810000": -30000,
+      "41100000": 180000,
+      "42100000": -300000,
+      "43100000": -120000,
+      "44566000": 15000,
+      "44571000": -100000,
+      "51200000": 387500,
+      "60610000": 55000,
+      "60700000": 50000,
+      "62260000": 30000,
+      "62780000": 2500,
+      "64100000": 300000,
+      "64500000": 120000,
+      "70600000": -500000
+    },
+    "comparaison_S01": {
+      "reference": "attendus/S01_lignes_canoniques.json",
+      "appariement": "par cle (JOURNAL|NUMERO) puis multiensemble des lignes",
+      "champs_identiques": [
+        "journal_code",
+        "ecriture_num",
+        "ecriture_date",
+        "compte_num",
+        "compte_num_source",
+        "compte_lib",
+        "piece_ref",
+        "ecriture_lib",
+        "debit_cts",
+        "credit_cts",
+        "ecriture_let"
+      ],
+      "champs_vides_dans_GL": {
+        "journal_lib": "",
+        "comp_aux_num": "",
+        "comp_aux_lib": "",
+        "piece_date": "",
+        "date_let": "",
+        "valid_date": "",
+        "montant_devise_cts": null,
+        "idevise": ""
+      }
+    },
+    "notes": "Même fichier que S11a ; l'opérateur saisit un total débit du logiciel volontairement faux (16 224,00 au lieu de 16 225,00) → REC_TOTAL_SAISI (B, dérogeable). Tout le reste identique à S11a."
+  }
+}

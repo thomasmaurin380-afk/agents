@@ -1,0 +1,19 @@
+JournalCode	JournalLib	EcritureNum	EcritureDate	CompteNum	CompteLib	CompAuxNum	CompAuxLib	PieceRef	PieceDate	EcritureLib	Debit	Credit	EcritureLet	DateLet	ValidDate	Montantdevise	Idevise
+AC	Achats	PROV-17	20260305	606100	Fournitures non stockables			FA-1717	20260305	Achat petit matériel	300,00	0,00					
+AC	Achats	PROV-17	20260305	401	Fournisseurs	0078	Bureau Fictif SAS	FA-1717	20260305	Achat petit matériel	0,00	300,00					
+BQ	Banque	000211	20260305	627800	Frais bancaires			RB-0305	20260305	Frais bancaires mars	25,00	0,00			20260305		
+BQ	Banque	000211	20260305	512	Banque			RB-0305	20260305	Frais bancaires mars	0,00	25,00			20260305		
+
+BQ	Banque	000212	20260310	512	Banque			RB-0310	20260310	Virement Élan Conseil	2400,00	0,00			20260310		
+BQ	Banque	000212	20260310	411	Clients	0045	Élan Conseil Fictif	RB-0310	20260310	Virement Élan Conseil	0,00	2400,00			20260310		
+OD	Opérations diverses	000013	20260331	641000	Rémunérations du personnel			PAIE-03	20260331	"=IMPORTRANGE(""x"",""y"")"	3000,00	0,00			20260331		
+OD	Opérations diverses	000013	20260331	645000	Charges de sécurité sociale			PAIE-03	20260331	"=IMPORTRANGE(""x"",""y"")"	1200,00	0,00			20260331		
+OD	Opérations diverses	000013	20260331	421	Personnel - rémunérations dues			PAIE-03	20260331	"=IMPORTRANGE(""x"",""y"")"	0,00	3000,00			20260331		
+OD	Opérations diverses	000013	20260331	431	Sécurité sociale			PAIE-03	20260331	"=IMPORTRANGE(""x"",""y"")"	0,00	1200,00			20260331		
+AC	Achats	000052	20260415	606100	Fournitures non stockables			FA-9152	20260415	Achat fournitures avril	150,00	0,00			20260415		
+AC	Achats	000052	20260415	44566	TVA déductible sur ABS			FA-9152	20260415	Achat fournitures avril	30,00	0,00			20260415		
+AC	Achats	000052	20260415	401	Fournisseurs	0078	Bureau Fictif SAS	FA-9152	20260415	Achat fournitures avril	0,00	180,00			20260415		
+OD	Opérations diverses	000014	20260430	641000	Rémunérations du personnel			PAIE-04	20260430	Salaires avril	3000,00	0,00			20260430		
+OD	Opérations diverses	000014	20260430	645000	Charges de sécurité sociale			PAIE-04	20260430	Salaires avril	1200,00	0,00			20260430		
+OD	Opérations diverses	000014	20260430	421	Personnel - rémunérations dues			PAIE-04	20260430	Salaires avril	0,00	3000,00			20260430		
+OD	Opérations diverses	000014	20260430	431	Sécurité sociale			PAIE-04	20260430	Salaires avril	0,00	1200,00			20260430		

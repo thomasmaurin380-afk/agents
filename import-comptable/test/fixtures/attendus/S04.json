@@ -1,0 +1,31 @@
+{
+  "id": "S04",
+  "description": "FICTIF — Chevauchement de périodes : base S01 (janvier–mars) puis FEC mars–avril, périmètre 2026-03-01 → 2026-04-30 ; une ligne entièrement vide insérée.",
+  "client": "client-CLI-TEST.json",
+  "profil": "profils/FEC_GENERIQUE.json",
+  "fichier": "scenarios/S04/123456789FEC20260430.txt",
+  "perimetre": { "exercice_id": "2026", "du": "2026-03-01", "au": "2026-04-30" },
+  "base": [ { "fichier": "scenarios/S01/123456789FEC20260331.txt", "profil": "profils/FEC_GENERIQUE.json", "perimetre": { "exercice_id": "2026", "du": "2026-01-01", "au": "2026-03-31" } } ],
+  "attendu": {
+    "rejete": false,
+    "compteurs_lignes": { "lues": 18, "importees": 17, "rejetees": 0, "vides": 1, "doublons_ignores": 0 },
+    "totaux": { "debit_cts": 1130500, "credit_cts": 1130500 },
+    "statuts": { "NOUVELLE": 2, "INCHANGEE": 4, "MODIFIEE": 0, "ABSENTE": 0, "COLLISION": 0, "DOUBLON_INTRA": 0 },
+    "ecritures": {
+      "AC|PROV-17": { "statut": "INCHANGEE", "brouillard": true },
+      "BQ|000211": { "statut": "INCHANGEE" },
+      "BQ|000212": { "statut": "INCHANGEE" },
+      "OD|000013": { "statut": "INCHANGEE" },
+      "AC|000052": { "statut": "NOUVELLE", "nb_lignes": 3 },
+      "OD|000014": { "statut": "NOUVELLE", "nb_lignes": 4 }
+    },
+    "hors_comparaison": ["VT|000120", "VT|000121", "VT|000122", "VT|000123", "AC|000044", "BQ|000208", "AC|000045", "BQ|000209", "BQ|000210", "OD|000012"],
+    "anomalies": [],
+    "infos": [ { "code": "SEC_NEUTRALISE", "nb_lignes": 4 } ],
+    "variations_soldes": {
+      "40100000": -18000, "42100000": -300000, "43100000": -120000, "44566000": 3000,
+      "60610000": 15000, "64100000": 300000, "64500000": 120000
+    },
+    "notes": "Les 10 écritures de janvier–février de la base sont hors périmètre : jamais ABSENTE, jamais comparées, inchangées dans l'actif. Seules les 4 écritures de mars de la base sont comparées. La ligne vide est l'enregistrement n° 5 (entre BQ 000211 et BQ 000212) : comptée dans 'vides' et dans 'lues' (REC_LIGNES : 18 = 17 + 0 + 1 + 0). Aucune VOL_SUPPR_MASSE (0 ABSENTE). SEC_NEUTRALISE : 4 lignes de OD|000013."
+  }
+}

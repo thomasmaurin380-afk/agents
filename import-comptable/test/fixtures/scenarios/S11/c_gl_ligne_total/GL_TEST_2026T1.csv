@@ -1,0 +1,38 @@
+Compte;Libellé compte;Date;Journal;N° écriture;Pièce;Libellé;Débit;Crédit;Lettrage
+401;Fournisseurs;20/01/2026;AC;000044;FA-7781;@Achat fournitures bureau;;300,00;
+401;Fournisseurs;10/02/2026;AC;000045;FA-9045;Achat marchandises février;;600,00;0
+401;Fournisseurs;15/02/2026;BQ;000209;RB-0215;Règlement Bureau Fictif;300,00;;
+401;Fournisseurs;05/03/2026;AC;PROV-17;FA-1717;Achat petit matériel;;300,00;
+Total compte 401;;;;;;;300,00;1 200,00;
+4081;Fournisseurs - factures non parvenues;28/02/2026;OD;000012;OD-0228;Honoraires à recevoir février;;300,00;
+411;Clients;08/01/2026;VT;000120;F2026-001;=1+1 Facture Dupont Fictif;600,00;;AA
+411;Clients;12/01/2026;VT;000121;F2026-002;Prestation de conseil — été;2 400,00;;
+411;Clients;14/01/2026;VT;000122;F2026-003;+Facture complémentaire janvier;1 800,00;;
+411;Clients;15/01/2026;VT;000123;F2026-004;Facture Dupont janvier;1 200,00;;
+411;Clients;31/01/2026;BQ;000208;RB-0131;Règlement Dupont F2026-001;;600,00;AA
+411;Clients;20/02/2026;BQ;000210;RB-0220;Règlement facture Dupont;;1 200,00;0
+411;Clients;10/03/2026;BQ;000212;RB-0310;Virement Élan Conseil;;2 400,00;
+421;Personnel - rémunérations dues;31/03/2026;OD;000013;PAIE-03;"=IMPORTRANGE(""x"",""y"")";;3 000,00;
+431;Sécurité sociale;31/03/2026;OD;000013;PAIE-03;"=IMPORTRANGE(""x"",""y"")";;1 200,00;
+44566;TVA déductible sur ABS;20/01/2026;AC;000044;FA-7781;@Achat fournitures bureau;50,00;;
+44566;TVA déductible sur ABS;10/02/2026;AC;000045;FA-9045;Achat marchandises février;100,00;;
+44571;TVA collectée;08/01/2026;VT;000120;F2026-001;=1+1 Facture Dupont Fictif;;100,00;
+44571;TVA collectée;12/01/2026;VT;000121;F2026-002;Prestation de conseil — été;;400,00;
+44571;TVA collectée;14/01/2026;VT;000122;F2026-003;+Facture complémentaire janvier;;300,00;
+44571;TVA collectée;15/01/2026;VT;000123;F2026-004;Facture Dupont janvier;;200,00;
+512;Banque;31/01/2026;BQ;000208;RB-0131;Règlement Dupont F2026-001;600,00;;
+512;Banque;15/02/2026;BQ;000209;RB-0215;Règlement Bureau Fictif;;300,00;
+512;Banque;20/02/2026;BQ;000210;RB-0220;Règlement facture Dupont;1 200,00;;
+512;Banque;05/03/2026;BQ;000211;RB-0305;Frais bancaires mars;25,00-;;
+512;Banque;10/03/2026;BQ;000212;RB-0310;Virement Élan Conseil;2 400,00;;
+606100;Fournitures non stockables;20/01/2026;AC;000044;FA-7781;@Achat fournitures bureau;250,00;;
+606100;Fournitures non stockables;05/03/2026;AC;PROV-17;FA-1717;Achat petit matériel;300,00;;
+607;Achats de marchandises;10/02/2026;AC;000045;FA-9045;Achat marchandises février;500,00;;
+6226;Honoraires;28/02/2026;OD;000012;OD-0228;Honoraires à recevoir février;300,00;;
+627800;Frais bancaires;05/03/2026;BQ;000211;RB-0305;Frais bancaires mars;;(25,00);
+641000;Rémunérations du personnel;31/03/2026;OD;000013;PAIE-03;"=IMPORTRANGE(""x"",""y"")";3 000,00;;
+645000;Charges de sécurité sociale;31/03/2026;OD;000013;PAIE-03;"=IMPORTRANGE(""x"",""y"")";1 200,00;;
+706000;Prestations de services;08/01/2026;VT;000120;F2026-001;=1+1 Facture Dupont Fictif;;500,00;
+706000;Prestations de services;12/01/2026;VT;000121;F2026-002;Prestation de conseil — été;;2 000,00;
+706000;Prestations de services;14/01/2026;VT;000122;F2026-003;+Facture complémentaire janvier;;1 500,00;
+706000;Prestations de services;15/01/2026;VT;000123;F2026-004;Facture Dupont janvier;;1 000,00;
