@@ -6,28 +6,89 @@ reposant sur un moteur financier unique (SIG, KPI, trésorerie) et un reporting 
 
 ## État
 
-Phase 0 — architecture et définition du MVP **livrées, en attente de validation**.
-Aucun code applicatif n'est encore développé.
+| Phase | Statut |
+|---|---|
+| 0 — Architecture et MVP | ✅ validée |
+| 1 — Fondations (auth, multi-tenant, RLS, deux espaces, démo) | ✅ livrée — voir `docs/roadmap.md` |
+| 2 — Onboarding et imports | à venir |
+
+Aucune donnée financière n'est encore importable : tous les indicateurs s'affichent
+« Données insuffisantes », avec la source manquante. Aucune valeur n'est estimée.
+
+## Stack
+
+Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind CSS 4 · composants style shadcn/ui ·
+PostgreSQL (Supabase, région Paris) · Drizzle ORM · Supabase Auth (TOTP) · Zod · decimal.js ·
+Vitest · Playwright. Détails et justifications : `docs/architecture.md`, `docs/decisions.md`.
+
+## Démarrage local
+
+Prérequis : Node.js 22, Docker.
+
+### Option A — Supabase CLI (recommandé sur votre poste)
+
+```bash
+npm ci
+npx supabase start                 # PostgreSQL + Auth + Storage en local
+cp .env.example .env.local         # renseigner les clés affichées par « supabase start »
+#   DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
+npm run db:migrate
+npm run db:seed:demo               # données fictives réinitialisables
+npm run dev                        # http://127.0.0.1:3000
+```
+
+### Option B — pile de test minimale (PostgreSQL Supabase + Auth uniquement)
+
+```bash
+npm ci
+npm run stack:up                   # docker/compose.test.yml
+npm run dev:gateway &              # routage /auth/v1 (remplace la passerelle Supabase)
+cp .env.test .env.local            # valeurs de TEST uniquement ; adapter APP_URL=http://127.0.0.1:3000
+npm run db:migrate && npm run db:seed:demo
+npm run dev
+```
+
+### Comptes de démonstration
+
+Mot de passe commun : `DemoDaf-2026-Pilotage` (local uniquement ; seed refusé en production).
+
+| Compte | Profil |
+|---|---|
+| `daf.admin@demo.invalid` | Administrateur DAF (2FA demandée à la 1re connexion) |
+| `daf.analyste@demo.invalid` | Collaborateur DAF, affecté à 2 entreprises sur 3 |
+| `dirigeant.services@demo.invalid` | Dirigeant — société de services |
+| `dirigeante.commerce@demo.invalid` | Dirigeante — entreprise commerciale (exercice décalé) |
+| `dirigeant.artisan@demo.invalid` | Dirigeant — entreprise artisanale |
+
+## Scripts
+
+| Commande | Rôle |
+|---|---|
+| `npm run typecheck` | Types Next.js générés + `tsc` strict |
+| `npm run lint` | ESLint, dont les règles de frontières entre modules |
+| `npm test` | Tests unitaires (domaine) |
+| `npm run test:integration` | RLS et services sur une base PostgreSQL dédiée `daf_it` (recréée) |
+| `npm run test:e2e` | Playwright sur le build de production (nécessite `stack:up` + `build`) |
+| `npm run build` | Build de production (aucun secret requis) |
+| `npm run db:migrate` | Applique `db/migrations` (tout PostgreSQL ≥ 16) |
+| `npm run db:seed:demo` | Crée / réinitialise la démonstration |
+
+Nouvelle migration : modifier `db/schema/*`, puis `npx drizzle-kit generate --name <nom>`
+(ou `--custom` pour du SQL : RLS, fonctions). **Une migration publiée n'est jamais modifiée.**
+Toute nouvelle table métier : `company_id`, RLS activée, privilèges accordés explicitement à `app_runtime`.
 
 ## Documentation
 
 | Document | Contenu |
 |---|---|
-| [`docs/architecture.md`](docs/architecture.md) | Cartographie des deux interfaces, architecture technique, modules, multi-tenant, flux de données, chemin critique |
-| [`docs/data-model.md`](docs/data-model.md) | Modèle de données initial |
-| [`docs/permissions.md`](docs/permissions.md) | Rôles et matrice de permissions |
-| [`docs/mvp.md`](docs/mvp.md) | Périmètre et critères d'acceptation du MVP |
-| [`docs/roadmap.md`](docs/roadmap.md) | Phases, critères, tests, risques, avancement |
-| [`docs/decisions.md`](docs/decisions.md) | Décisions structurantes (dont celles à valider) |
-
-Documents prévus lors des phases concernées : `financial-rules.md`, `kpi-catalog.md`,
-`sig-rules.md`, `automation-rules.md`, `reporting.md`, `.env.example`.
+| `docs/architecture.md` | Interfaces, stack, modules, multi-tenant, flux de données |
+| `docs/data-model.md` | Modèle de données (✅ = tables existantes) |
+| `docs/permissions.md` | Rôles, matrice, application en base |
+| `docs/mvp.md` | Parcours prioritaire et critères d'acceptation du MVP |
+| `docs/roadmap.md` | Phases, avancement, résultats de tests |
+| `docs/decisions.md` | Décisions structurantes |
+| `docs/hosting.md` | Localisation des données, sauvegardes, checklist de mise en production |
 
 ## Agents Claude Code du projet
 
-`.claude/agents/` : `architecte`, `directeur-operations`, `expert-tresorerie`,
-`ingenieur-outils-financiers`.
-
-## Démarrage
-
-Les instructions d'installation seront ajoutées en Phase 1.
+`.claude/agents/` : `architecte`, `directeur-operations`, `expert-tresorerie`, `ingenieur-outils-financiers`.

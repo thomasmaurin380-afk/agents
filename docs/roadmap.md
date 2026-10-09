@@ -1,14 +1,14 @@
 # Roadmap
 
-> Statut : **proposition v0.1 — en attente de validation**.
+> Statut : **validée le 2026-10-09**.
 > Le MVP (`docs/mvp.md`) = phases 1 à 5, plus une tranche réduite des phases 6 et 8.
 
 ## Avancement
 
 | Phase | Intitulé | Statut |
 |---|---|---|
-| 0 | Analyse d'architecture et définition du MVP | ✅ livrée (à valider) |
-| 1 | Architecture et fondations | ⏳ en attente de validation des décisions D-01 à D-04 |
+| 0 | Analyse d'architecture et définition du MVP | ✅ validée |
+| 1 | Architecture et fondations | ✅ livrée le 2026-10-09 (en attente de votre recette) |
 | 2 | Onboarding et collecte | — |
 | 3 | Moteur financier et SIG | — |
 | 4 | Dashboard et KPI | — |
@@ -30,11 +30,13 @@
   DAF et client, PostgreSQL + Drizzle + migrations, auth (connexion, invitation, 2FA DAF), cabinet,
   entreprises, membres, `TenantContext`, `authorize()`, RLS, journal d'audit, seed de démonstration
   (structure : 3 entreprises, utilisateurs DAF et clients), CI.
-- **Fichiers principaux** : `app/(auth)`, `app/daf/layout.tsx`, `app/client/[companyId]/layout.tsx`,
-  `lib/db.ts`, `lib/auth.ts`, `db/schema/{identity,tenancy,audit}.ts`, `db/rls/*.sql`,
-  `services/tenancy/*`, `repositories/companies.ts`, `domain/money`, `tests/security/*`,
-  `docker-compose.yml`, `.env.example`, `.github/workflows/ci.yml`.
-- **Dépendances** : décisions D-01 (hébergement), D-02 (auth), D-03 (ORM), D-05 (montants).
+- **Fichiers principaux (réels)** : `app/(auth)`, `app/mfa`, `app/invitation/[token]`, `app/daf/**`,
+  `app/client/**`, `proxy.ts`, `lib/auth/*` (seul point de dépendance à Supabase), `lib/db/{client,tenant}.ts`,
+  `db/schema/{identity,tenancy,audit}.ts`, `db/migrations/{0000_init,0001_rls}.sql`, `services/*`,
+  `repositories/*`, `domain/{money,company,permissions,indicators,shared}`, `tests/{unit,integration,e2e}`,
+  `docker/compose.test.yml`, `.env.example`, `.github/workflows/ci.yml`.
+- **Dépendances** : D-01 (Supabase), D-02 (Supabase Auth), D-03 (Drizzle), D-05, D-12 à D-15.
+- **Hors périmètre Phase 1** : stockage de fichiers, exercices et plan de comptes (Phase 2), toute donnée financière.
 - **Critères d'acceptation** : un DAF voit le portefeuille ; un dirigeant ne voit que son entreprise ;
   accès direct à l'URL d'une autre entreprise ⇒ 404/403 + audit ; RLS bloque une requête SQL non
   scopée ; CI verte.
@@ -44,10 +46,40 @@
   testé) ; disponibilité/licence Efferd non vérifiée (⇒ composants shadcn standard en repli).
 - **Livrable** : application déployable localement, deux espaces, isolation testée.
 
+### Résultat Phase 1 (2026-10-09)
+
+Livré : connexion, 2FA TOTP obligatoire pour le cabinet, invitations par lien à usage unique (clients
+et collaborateurs), cabinet / entreprises / rôles, RLS PostgreSQL + contrôle applicatif + audit
+append-only, espace DAF (portefeuille, création et fiche entreprise, affectations, équipe), portail
+client (accueil, DAF référent, « Données insuffisantes »), aperçu client depuis l'espace DAF,
+thème clair/sombre, responsive, démo réinitialisable (3 entreprises, 5 comptes), CI.
+
+Tests exécutés (environnement de développement) :
+
+| Suite | Résultat |
+|---|---|
+| `npm run typecheck` | ✅ |
+| `npm run lint` (dont frontières de modules) | ✅ |
+| `npm test` — unitaires | ✅ 23/23 |
+| `npm run test:integration` — Supabase PostgreSQL 17 | ✅ 49/49 |
+| `npm run test:integration` — PostgreSQL 16 standard (portabilité) | ✅ 49/49 |
+| `npm run build` (sans secret) | ✅ |
+| `npm run test:e2e` — Playwright, build de production | ✅ 9/9 |
+
+Défauts trouvés et corrigés par les tests : `INSERT … RETURNING` incompatible avec la politique de
+lecture des entreprises (identifiant désormais généré côté application) ; ambiguïté de colonnes dans
+`accept_invitation` ; formulaires vidés après une erreur de validation.
+
+Limites connues : la CI GitHub n'a pas encore tourné (premier push) ; composants Efferd non vérifiés
+(domaine inaccessible) — composants maison au style shadcn/ui ; pas d'envoi d'e-mail (D-14) ;
+en-tête CSP limité à `frame-ancestors`/`form-action` (CSP complète avec nonce : Phase 11) ;
+pas de limitation applicative du nombre de tentatives de connexion au-delà de celle de Supabase Auth.
+
 ## Phase 2 — Onboarding et collecte
 
 - **Objectif** : données financières importables, persistantes, traçables.
-- **Fonctionnalités** : création de dossier entreprise (exercices, devise, plan de comptes) ;
+- **Fonctionnalités** : complétion du dossier entreprise (exercices, plan de comptes) ; `StorageProvider` ;
+  correspondance des **comptes** (plan de comptes entreprise → PCG) sauvegardée par entreprise ;
   moteur d'import générique (téléversement → analyse → colonnes → correspondance → prévisualisation
   → contrôles → doublons → validation → enregistrement → rapport) ; parseurs CSV, XLSX, FEC ;
   balance générale ; transactions bancaires ; modèles de correspondance ; conservation du brut.
@@ -87,7 +119,7 @@
   décaissements, trésorerie, répartition des charges), portefeuille DAF enrichi, accueil client.
 - **Fichiers** : `domain/kpi/*`, `services/kpi/*`, `features/{kpi,dashboard,portfolio}/*`,
   `components/{kpi-card,charts}/*`, `docs/kpi-catalog.md`.
-- **Critères** : chaque KPI affiche valeur, période, comparaison, définition, formule, provenance,
+- **Critères** : sources partielles ⇒ « Données insuffisantes » + source manquante ; chaque KPI affiche valeur, période, comparaison, définition, formule, provenance,
   date d'actualisation ; DAF et client affichent les mêmes montants.
 - **Tests** : unitaires par KPI (dont division par zéro, données manquantes) ; E2E cohérence DAF/client.
 - **Risques** : surcharge visuelle côté client ⇒ maquette validée avant développement.
@@ -101,6 +133,8 @@
   sources et limites, mode instantané/validé, versions figées, historique, journal des téléchargements.
 - **Fichiers** : `reports/{templates,render,pdf}/*`, `jobs/render-report.ts`,
   `services/reporting/*`, `features/reporting/*`, `docs/reporting.md`.
+- **Rapports instantanés client** : génération en libre-service, bandeau « non validé par votre DAF »,
+  couverture distincte ; rapports validés figés avec mention du validateur et de la date.
 - **Critères** : aucune donnée interne dans le PDF (test d'injection de marqueurs) ; montants
   identiques à l'écran ; version publiée immuable (hash vérifié).
 - **Tests** : rendu (nombre de pages, sommaire), contenu (extraction texte du PDF), permissions.

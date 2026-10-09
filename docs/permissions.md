@@ -1,6 +1,7 @@
 # Rôles et permissions
 
-> Statut : **proposition v0.1 — en attente de validation**.
+> Statut : **v1.0 — appliquée en Phase 1**. Source de vérité du code : `domain/permissions/matrix.ts`
+> (testée par `tests/unit/permissions.test.ts`).
 
 ## Rôles
 
@@ -45,4 +46,20 @@
 3. Un refus est journalisé (`audit_log.outcome = denied`).
 4. Les rapports et exports passent par les mêmes contrôles que l'affichage.
 5. Les modules visibles côté client dépendent à la fois du rôle et des prestations souscrites
-   (`companies.settings.enabled_modules`).
+   (`companies.enabled_modules`).
+
+## Application en base (Phase 1)
+
+| Table | Lecture | Écriture |
+|---|---|---|
+| `firms` | membres du cabinet ; clients d'une entreprise du cabinet | admin du cabinet (nom, SIREN) |
+| `users` | soi ; collègues du cabinet ; clients des entreprises suivies ; DAF de ses entreprises | soi (nom uniquement) |
+| `firm_members` | soi ; membres du même cabinet | admin du cabinet |
+| `companies` | `can_access_company` (admin, collaborateur affecté, client d'une entreprise non archivée) | admin du cabinet ; `firm_id` non modifiable |
+| `company_members` | soi ; personnel ayant accès | admin du cabinet |
+| `company_advisors` | soi ; personnel ayant accès | admin ; uniquement des membres du même cabinet |
+| `invitations` | admin du cabinet | admin (création, révocation) ; acceptation via `app.accept_invitation` |
+| `audit_log` | admin du cabinet ; personnel de l'entreprise | insertion au nom de soi-même ; jamais de modification ni suppression |
+
+Un utilisateur désactivé (`users.disabled_at`) perd immédiatement tout accès. Un refus d'accès
+applicatif est journalisé (`outcome = denied`) et rendu comme une page 404.

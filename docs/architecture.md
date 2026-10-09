@@ -1,6 +1,6 @@
 # Architecture — Plateforme DAF externalisé
 
-> Statut : **proposition v0.1 — en attente de validation** (voir `docs/decisions.md`).
+> Statut : **v1.0 validée le 2026-10-09** (voir `docs/decisions.md`).
 > Date : 2026-10-09.
 
 ## 1. État actuel vérifié
@@ -82,11 +82,11 @@ différemment ; seule la *visibilité* change (filtre de publication + permissio
 | UI | Next.js (App Router), React, TypeScript strict, Tailwind, shadcn/ui, Recharts | Imposé par le cahier des charges ; écosystème stable. |
 | Validation | Zod à chaque frontière (formulaires, Server Actions, imports, API) | Une seule source de schémas. |
 | Accès données | **Drizzle ORM** + migrations SQL versionnées (`drizzle-kit`) | SQL explicite, typage fort, migrations lisibles, pas de moteur binaire. |
-| Base | **PostgreSQL ≥ 16**, hébergé en UE | `numeric` exact, contraintes, RLS, JSONB pour les données brutes. |
+| Base | **PostgreSQL** Supabase, région Paris `eu-west-3` (D-01) ; schéma `app` non exposé (D-13) | `numeric` exact, contraintes, RLS, JSONB ; portable (aucune dépendance à `auth.*`). |
 | Isolation | Scoping applicatif obligatoire **+** Row Level Security PostgreSQL | Défense en profondeur (voir § 5). |
-| Auth | **Better Auth** (sessions en base, 2FA TOTP) — ou Supabase Auth selon décision D-02 | Auto-hébergeable, données d'identité dans notre base. |
+| Auth | **Supabase Auth** via `@supabase/ssr`, encapsulé dans `lib/auth/` ; TOTP obligatoire pour le cabinet (D-02, D-15) | Service géré ; remplaçable sans toucher au reste du code. |
 | Montants | `numeric(18,2)` en base, **decimal.js** en TypeScript, jamais de `number` flottant | Fiabilité absolue des calculs. |
-| Fichiers | Stockage objet compatible S3 (UE), accès par URL signées courtes | Documents, imports bruts, PDF figés. |
+| Fichiers | Supabase Storage derrière une interface `StorageProvider` (Phase 2), URL signées courtes | Documents, imports bruts, PDF figés ; remplaçable par tout stockage S3. |
 | Tâches longues | **pg-boss** (file de tâches dans PostgreSQL) + processus `worker` | Pas de Redis ; jobs durables, retries, planification cron. |
 | PDF | Rendu HTML/React côté serveur → **Chromium headless (Playwright)** dans le worker | Réutilise composants et graphiques ; A4, pagination, sommaire. |
 | Imports | `papaparse` (CSV), lecteur XLSX à arbitrer (voir D-07), parseur FEC maison | FEC = format normé (art. A47 A-1 LPF), parseur dédié testé. |
@@ -154,12 +154,20 @@ Trois barrières indépendantes :
 2. **Repository** : toutes les fonctions exigent un `TenantContext` et filtrent par `company_id`.
    Aucune fonction « findAll » non scopée n'existe (règle de revue + test).
 3. **PostgreSQL RLS** : l'application se connecte avec un rôle **non propriétaire** des tables ;
-   chaque transaction exécute `set_config('app.user_id', …, true)` ; les politiques vérifient
+   chaque transaction exécute `set local role app_runtime` puis `set_config('app.user_id', …, true)`
+   (portée limitée à la transaction, compatible avec un pooler en mode transaction) ; les politiques vérifient
    l'appartenance via une fonction `app.can_access_company(company_id)`.
    Les migrations utilisent un rôle distinct.
 
 Jobs et exports : le worker reçoit `{ companyId, requestedBy }`, reconstruit un `TenantContext`
 et passe par les mêmes services. Pas de « mode admin » implicite.
+
+Contrainte observée en Phase 1 : sous RLS, `INSERT … RETURNING` échoue si la politique de lecture
+dépend d'une fonction qui relit la table (la ligne n'est pas encore visible dans l'instruction).
+Les repositories génèrent donc l'identifiant côté application et n'utilisent pas `RETURNING` dans ce cas.
+
+Le rôle `postgres` de Supabase possède `BYPASSRLS` : sans `SET LOCAL ROLE app_runtime`, la RLS
+serait silencieusement ignorée. `withUser()` est donc le seul point d'accès des services à la base.
 
 Tests obligatoires (Phase 1) : pour chaque repository, un utilisateur de l'entreprise A ne peut
 ni lire, ni modifier, ni exporter une donnée de l'entreprise B — testé au niveau service **et**
