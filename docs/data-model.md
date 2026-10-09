@@ -1,11 +1,12 @@
 # Modèle de données initial
 
-> Statut : **proposition v0.1 — en attente de validation**. Couvre le MVP ; les entités des phases
-> ultérieures sont listées en fin de document sans détail.
+> Statut : **v1.0 validée le 2026-10-09**. Les tables marquées ✅ existent (migrations Phase 1) ;
+> les autres sont la cible des phases suivantes. Toutes les tables applicatives sont dans le schéma
+> PostgreSQL `app` (D-13).
 
 ## Conventions
 
-- PostgreSQL ≥ 16. Clés primaires `uuid` (v7, ordonnées dans le temps).
+- PostgreSQL ≥ 16. Clés primaires `uuid` (`gen_random_uuid()`).
 - **Toute table métier porte `company_id uuid not null`** (FK `companies`), indexée, soumise à RLS.
 - Montants : `numeric(18,2)` ; taux et quantités : `numeric(18,6)`. Jamais de `float`/`real`.
 - Devise : `char(3)` ISO 4217, défaut `EUR`. Aucune agrégation entre devises différentes.
@@ -19,29 +20,32 @@
 ## 1. Identité et multi-tenant
 
 ```
-firms                      cabinet DAF (prépare le SaaS : plusieurs cabinets possibles)
-  id, name, siren?, settings jsonb
+✅ firms                   cabinet DAF (prépare le SaaS : plusieurs cabinets possibles)
+  id, name, siren?, is_demo
 
-users                      id, email unique, name, email_verified, two_factor_enabled, …
-sessions / accounts / verifications   (gérées par la bibliothèque d'auth)
+✅ users                   profil applicatif ; id = identifiant du compte d'authentification
+  id, email unique, full_name, is_demo, disabled_at
+  (comptes, mots de passe, sessions et facteurs 2FA : gérés par Supabase Auth, schéma `auth`,
+   sans clé étrangère depuis `app` pour rester portable — D-01)
 
-firm_members               user_id, firm_id, role ∈ {firm_admin, firm_analyst}
+✅ firm_members            user_id, firm_id, role ∈ {firm_admin, firm_analyst}
                            unique(user_id, firm_id)
 
-companies                  entreprise cliente
-  id, firm_id, legal_name, trade_name, siren, legal_form, naf_code, sector,
-  currency default 'EUR', fiscal_year_start_month smallint (1–12),
-  status ∈ {onboarding, active, paused, archived},
-  lead_advisor_id → users, data_version bigint default 0, logo_file_id?
+✅ companies               entreprise cliente
+  id, firm_id, legal_name, trade_name, siren (9 chiffres, clé de Luhn), legal_form, naf_code, sector,
+  currency default 'EUR' (check = 'EUR' au MVP), fiscal_year_start_month smallint (1–12),
+  status ∈ {onboarding, active, paused, archived}, enabled_modules text[],
+  lead_advisor_id → users, data_version bigint default 0, logo_file_id? (Phase 2)
 
-company_members            user_id, company_id,
+✅ company_members         user_id, company_id,
                            role ∈ {client_owner, client_member, client_readonly}
                            (accès client à une entreprise)
 
-company_advisors           user_id, company_id      (affectation d'un collaborateur DAF
+✅ company_advisors        user_id, company_id      (affectation d'un collaborateur DAF
                                                      à une entreprise ; firm_admin voit tout)
 
-invitations                email, company_id?, firm_id, role, token_hash, expires_at, accepted_at
+✅ invitations             email, firm_id, company_id?, role, token_hash (SHA-256), expires_at,
+                           accepted_at, accepted_by, revoked_at
 ```
 
 Fonction RLS : `app.can_access_company(company_id)` = vrai si l'utilisateur courant est
@@ -218,7 +222,7 @@ document_requests          company_id, title, description, due_date,
 ## 9. Audit
 
 ```
-audit_log                  id bigserial, at timestamptz, actor_user_id?, actor_kind
+✅ audit_log               id bigserial, at timestamptz, actor_user_id?, actor_kind
                            ∈ {user, job, system}, firm_id?, company_id?, action,
                            object_type, object_id, outcome ∈ {success, denied, failure},
                            details jsonb (jamais de secret, jamais de contenu de document),
@@ -226,9 +230,34 @@ audit_log                  id bigserial, at timestamptz, actor_user_id?, actor_k
                            -- append-only : révocation UPDATE/DELETE pour le rôle applicatif
 ```
 
-## 10. Entités des phases ultérieures (non détaillées)
+## 10. Budgets (Phase 7 — modèle fixé dès maintenant, D-08)
 
-Budgets (`budgets`, `budget_versions`, `budget_lines`), prévisions et scénarios, factures
+```
+budgets                    company_id, fiscal_year_id, name, scope ∈ {company, activity,
+                           project, cost_center}, scope_ref?, currency
+                           unique(company_id, fiscal_year_id, name)
+
+budget_versions            budget_id, company_id, version_no, kind ∈ {initial, revised,
+                           reforecast}, label, based_on_version_id?, status ∈ {draft,
+                           validated, archived}, validated_by?, validated_at?,
+                           cutoff_date? (reforecast : réalisé jusqu'à cette date)
+                           -- une version validée est figée ; une révision crée une nouvelle version
+
+budget_lines               budget_version_id, company_id, target_type ∈ {sig_rubric, account,
+                           account_prefix, cash_category, custom}, target_ref,
+                           period_month date (1er du mois) | null pour une ligne annuelle,
+                           amount numeric(18,2), allocation_method ∈ {manual, flat, seasonal,
+                           prior_year}, comment
+                           -- annuel = somme des mois ; ligne annuelle non ventilée autorisée
+                           -- (ventilation calculée et matérialisée à la validation)
+```
+
+Le réalisé est lu dans le moteur SIG (même rubriques, même référentiel versionné), ce qui garantit la
+comparabilité budget / réalisé.
+
+## 11. Entités des phases ultérieures (non détaillées)
+
+Prévisions et scénarios, factures
 clients/fournisseurs, paiements et affectations, rapprochements bancaires, tiers (clients,
 fournisseurs), centres de coûts et axes analytiques, règles d'automatisation et exécutions,
 alertes, missions/modèles/tâches, rendez-vous, business plans, simulations d'emprunt.

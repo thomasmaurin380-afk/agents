@@ -1,6 +1,6 @@
 # Définition du MVP
 
-> Statut : **proposition v0.1 — en attente de validation**.
+> Statut : **validé le 2026-10-09** (v1.0).
 
 ## Objectif
 
@@ -11,13 +11,43 @@ Permettre d'accompagner **un premier client réel** en mission de *pilotage fina
 > valide un rapport, je le publie ; le dirigeant consulte son portail et télécharge ses PDF à tout
 > moment.
 
+## Parcours prioritaire (fil conducteur de toutes les phases du MVP)
+
+| Étape | Parcours | Phase |
+|---|---|---|
+| 1 | Créer une entreprise cliente | 1 (fiche) + 2 (exercices, plan de comptes) |
+| 2 | Importer ses données comptables (balance CSV/XLSX, FEC, banque CSV/XLSX) | 2 |
+| 3 | Vérifier et catégoriser les données (correspondances colonnes + comptes, contrôles) | 2 – 3 |
+| 4 | Calculer automatiquement les SIG | 3 |
+| 5 | Calculer les KPI | 4 |
+| 6 | Consulter les tableaux de bord DAF et client | 4 |
+| 7 | Générer un rapport PDF à la demande (DAF **et client**) | 5 |
+| 8 | Ajouter l'analyse et les recommandations du DAF | 5 – 5b |
+| 9 | Publier un rapport validé dans l'espace client | 5 |
+| 10 | Suivre les actions décidées avec le dirigeant | 5b |
+
+Le MVP est atteint lorsque ce parcours est réalisable de bout en bout sur une entreprise réelle.
+
+## Règles transverses validées
+
+- **Indépendance logicielle** : aucune dépendance à un logiciel comptable ; correspondances de colonnes
+  et de comptes sauvegardées par entreprise.
+- **Sources partielles** : le portail fonctionne même si une source manque ; chaque indicateur non
+  calculable affiche « Données insuffisantes » et la source manquante.
+- **Rapports instantanés client** : le client génère lui-même, sans intervention du DAF, un PDF à partir
+  des seules données auxquelles il a accès. Ce PDF porte un bandeau et une mention explicites
+  « Rapport instantané — non validé par votre DAF », une couleur de couverture différente, la date
+  d'actualisation et le statut des données. Les rapports validés portent la mention « Rapport validé par
+  [DAF] le [date] » et sont des versions figées.
+- **Budget** : hors MVP, mais modèle de données prévu dès le départ.
+
 ## Périmètre inclus
 
 | # | Bloc | Contenu MVP | Hors MVP (plus tard) |
 |---|---|---|---|
 | 1 | Fondations | Auth (email + mot de passe + 2FA DAF), invitations, cabinet, entreprises, rôles, RLS, audit | SSO, facturation SaaS |
 | 2 | Espaces | Espace DAF (portefeuille simple + fiche entreprise) ; portail client | Personnalisation avancée des menus |
-| 3 | Imports | CSV/XLSX + FEC ; balance générale ; transactions bancaires ; modèles de correspondance ; prévisualisation ; doublons ; rapport d'import | Grand livre hors FEC, factures, budgets, imports récurrents automatiques, connecteurs bancaires |
+| 3 | Imports | Balances CSV/XLSX, FEC, transactions bancaires CSV/XLSX ; correspondances de colonnes et de comptes sauvegardées par entreprise ; prévisualisation ; doublons ; rapport d'import | Grand livre hors FEC, factures, budgets, imports récurrents automatiques, connecteurs bancaires |
 | 4 | Comptabilité | Exercices (y c. décalés), plan de comptes, balances mensuelles/cumulées, statut provisoire/définitif | Analytique |
 | 5 | SIG | Référentiel PCG versionné, mapping par préfixe + surcharges entreprise, 9 soldes, N/N-1, mensuel/cumulé, drill-down comptes, contrôles (comptes non affectés, réconciliation résultat), validation, publication | Comparaison budget, retraitements complexes |
 | 6 | KPI | ~12 KPI du catalogue (CA, croissance, marge, VA, EBE, taux d'EBE, RE, RN, trésorerie disponible, flux nets, DSO si données, poids des charges) ; objectifs ; visibilité client ; « Données insuffisantes » | Formules personnalisées, KPI financiers de bilan avancés |
@@ -35,9 +65,10 @@ Permettre d'accompagner **un premier client réel** en mission de *pilotage fina
 3. Réimporter le même fichier ne crée aucun doublon.
 4. Un client de l'entreprise A ne peut accéder à aucune donnée de B (tests service + SQL brut).
 5. Aucun commentaire interne, note privée ou document interne n'apparaît dans le portail ni dans un PDF.
-6. Un dirigeant génère un PDF instantané en < 30 s et télécharge un rapport validé publié.
+6. Un dirigeant génère lui-même un PDF instantané (< 30 s), clairement marqué « non validé », et télécharge un rapport validé publié.
 7. L'espace DAF et le portail affichent les mêmes montants pour la même période.
 8. `typecheck`, `lint`, tests unitaires/intégration/E2E et `build` passent en CI.
+9. Une entreprise sans balance importée affiche « Données insuffisantes » pour les SIG/KPI concernés, sans erreur ni valeur inventée.
 
 ## Ce que le MVP n'est pas
 
