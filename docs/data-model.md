@@ -70,6 +70,9 @@ Fonction RLS : `app.can_access_company(company_id)` = vrai si l'utilisateur cour
                            -- réappliqué automatiquement à un fichier de même en-tête
 ```
 
+✅ storage_cleanup_queue (migration 0004) : fichiers à effacer du stockage après suppression d'un import
+                           (company_id, storage_key, status pending/done/skipped, attempts, last_error)
+
 Dédoublonnage bancaire : `natural_key_hash` = SHA-256(compte, date, montant, libellé normalisé,
 référence, rang d'occurrence dans le fichier). Deux opérations identiques le même jour restent
 distinctes ; un réimport (même en autre format, ex. CSV puis XLSX) n'enregistre que les nouvelles.
@@ -140,7 +143,7 @@ sig_snapshots              company_id, fiscal_year_id, period_start, period_end,
                            en clair, IBAN complet chiffré si nécessaire), currency,
                            reference_balance numeric, reference_balance_date date
 
-✅ bank_transactions       company_id, bank_account_id, booking_date, value_date?,
+✅ bank_transactions       (0004 : flow_direction inflow/outflow/to_review, review_reason, category_code) company_id, bank_account_id, booking_date, value_date?,
                            amount numeric(18,2) (signé), currency, label_raw, label_normalized,
                            counterparty?, reference?, category_id?,
                            categorization_status ∈ {auto_validated, to_review, manual, blocked},

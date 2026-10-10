@@ -120,4 +120,32 @@ test.describe.serial("Phase 2 — imports comptables et bancaires", () => {
     await page.goto(`/daf/c/${companyId}/data`);
     await expect(page).toHaveURL(/\/client/);
   });
+
+  test("suppression définitive d'un import enregistré : confirmation SUPPRIMER, sources mises à jour", async ({ page }) => {
+    await loginStaff(page, USERS.admin);
+    await page.goto(`/daf/c/${companyId}/data`);
+    await expect(page.getByTestId("data-sources")).toContainText("FEC");
+    await page.getByRole("link", { name: "Supprimer l'import atelier-numerique-FEC-2025.txt" }).click();
+    const dialog = page.getByTestId("delete-import-dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText("Atelier Numérique");
+    await expect(page.getByTestId("delete-volumes")).toContainText("lignes d'écritures du FEC");
+    const submit = dialog.getByRole("button", { name: "Supprimer définitivement" });
+    await expect(submit).toBeDisabled();
+    await dialog.getByLabel(/Pour confirmer, saisissez/).fill("SUPPRIMER");
+    await submit.click();
+    await expect(page.getByTestId("deletion-success")).toContainText("atelier-numerique-FEC-2025.txt");
+    await expect(page.getByTestId("imports-table")).not.toContainText("atelier-numerique-FEC-2025.txt");
+    // La balance reste disponible ; le FEC ne l'est plus.
+    await expect(page.getByTestId("data-sources").locator("li", { hasText: "FEC" }).getByLabel("Manquante")).toBeVisible();
+    await expect(page.getByTestId("data-sources").locator("li", { hasText: "Balance comptable courante" }).getByLabel("Disponible")).toBeVisible();
+  });
+
+  test("un collaborateur DAF ne voit pas l'action de suppression", async ({ page }) => {
+    await loginStaff(page, USERS.analyst);
+    await page.goto(`/daf/c/${companyId}/data`);
+    await expect(page.getByTestId("imports-table")).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Supprimer l'import/ })).toHaveCount(0);
+  });
 });
+

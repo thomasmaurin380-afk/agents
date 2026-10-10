@@ -49,10 +49,19 @@ export const bankTransactions = app.table(
     sourceImportId: uuid("source_import_id").notNull().references(() => importFiles.id),
     sourceRow: integer("source_row").notNull(),
     naturalKeyHash: text("natural_key_hash").notNull(),
+    /**
+     * Sens de l'opération, déduit du montant à l'import : encaissement (> 0), décaissement (< 0),
+     * ou à vérifier (montant nul, signe incohérent avec la colonne source). Ce n'est PAS une catégorie.
+     */
+    flowDirection: text("flow_direction").notNull().default("to_review"),
+    reviewReason: text("review_reason"),
+    /** Catégorie de trésorerie (phase 5b, règles explicites) — vide tant qu'aucune règle ne s'applique. */
+    categoryCode: text("category_code"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     unique("bank_transactions_natural_key").on(t.companyId, t.bankAccountId, t.naturalKeyHash),
+    check("bank_transactions_flow_direction", sql`${t.flowDirection} in ('inflow', 'outflow', 'to_review')`),
     index("bank_transactions_account_date_idx").on(t.bankAccountId, t.bookingDate),
   ],
 );

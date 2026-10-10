@@ -9,6 +9,8 @@ export interface StorageProvider {
   /** Écrit un objet ; idempotent pour une même clé et un même contenu. */
   put(key: string, bytes: Uint8Array, contentType: string): Promise<void>;
   get(key: string): Promise<Uint8Array>;
+  /** Supprime un objet ; sans erreur si l'objet n'existe déjà plus. */
+  delete(key: string): Promise<void>;
 }
 
 let override: StorageProvider | null = null;
@@ -34,5 +36,11 @@ export class MemoryStorage implements StorageProvider {
     const v = this.objects.get(key);
     if (!v) throw new Error(`Objet introuvable : ${key}`);
     return v;
+  }
+  /** Tests : clés dont la suppression doit échouer (simulation d'une panne du stockage). */
+  failDeletes = new Set<string>();
+  async delete(key: string) {
+    if (this.failDeletes.has(key)) throw new Error("Stockage indisponible (simulation)");
+    this.objects.delete(key);
   }
 }

@@ -125,6 +125,21 @@ rattachement ; compteur d'opérations bancaires toujours à 0 (colonne non quali
 sous-requête) ; validation de 100 000 lignes en 41 s ramenée à 10 s (politiques RLS évaluées une fois
 par instruction, insertion en masse des écritures).
 
+### Fiabilisation Phase 2 (2026-10-10)
+
+Livré : suppression définitive d'un import enregistré (balance, FEC, relevé) avec fenêtre de confirmation
+(volumes, conséquences, saisie de SUPPRIMER), réservée à l'administrateur DAF, atomique et journalisée
+(D-18, D-19) ; libellés distincts Annuler / Supprimer / Remplacer ; statuts expliqués (« Enregistré » ≠
+validation métier) ; parcours en étapes ; anomalies regroupées (bloquantes, avertissements, doublons)
+avec ligne, colonne et résultat attendu ; modèles de colonnes revérifiés avant réutilisation ; sens des
+opérations bancaires (encaissement / décaissement / à vérifier), sans catégorie inventée ; signalement des
+opérations connues absentes d'un nouveau relevé ; panneau des sources disponibles pour les SIG et KPI.
+
+Migration à appliquer : `0004_import_deletion.sql` (workflow « Migrations Supabase Demo »).
+
+Reporté : réimport automatique après blocage d'une suppression bancaire ; suppression d'un import annulé
+(fichier conservé) ; catégorisation des opérations (phase 5b) ; file de tâches pour les très gros imports (D-16).
+
 ## Phase 3 — Moteur financier et SIG
 
 - **Objectif** : SIG fiables et justifiés à partir de données de référence.

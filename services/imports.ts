@@ -4,10 +4,12 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { classifyAccount } from "@/domain/imports/accounts";
 import { formatAmountFr } from "@/domain/imports/amounts";
-import { analyzeBank, type BankAnalysis, type BankMapping } from "@/domain/imports/bank";
+import { analyzeBank, FLOW_DIRECTION_LABELS, type BankAnalysis, type BankMapping } from "@/domain/imports/bank";
 import { analyzeFec, type FecAnalysis } from "@/domain/imports/fec";
 import { BANK_FIELDS, IMPORT_KIND_LABELS, suggestColumns, TRIAL_BALANCE_FIELDS, type ImportKind } from "@/domain/imports/fields";
+import { withColumns } from "@/domain/imports/issue-help";
 import { countByCode, hasBlockingErrors, warning, type ImportIssue } from "@/domain/imports/issues";
+import { isMappingCompatible } from "@/domain/imports/mapping";
 import { detectHeaderRow, headerSignature, headersAt, cellText, type RawTable } from "@/domain/imports/table";
 import { analyzeTrialBalance, type TrialBalanceAnalysis, type TrialBalanceMapping } from "@/domain/imports/trial-balance";
 import { withUser, type RuntimeTx } from "@/lib/db/tenant";
@@ -15,15 +17,17 @@ import { AccessDeniedError, BusinessRuleError, ValidationError } from "@/lib/err
 import { MAX_IMPORT_BYTES, readTable, UnreadableFileError } from "@/lib/imports/read-table";
 import { getStorage } from "@/lib/storage";
 import {
-  existingAccounts, fillMissingAccountLabels, findCurrentTrialBalance, insertAccountingEntries, insertAccounts,
-  insertTrialBalance, insertTrialBalanceLines, listMappingRules, retireTrialBalance,
+  availableSources, existingAccounts, fillMissingAccountLabels, findCurrentTrialBalance, insertAccountingEntries, insertAccounts,
+  insertTrialBalance, insertTrialBalanceLines, listMappingRules, listTrialBalances, retireTrialBalance,
 } from "@/repositories/accounting";
 import { insertAudit } from "@/repositories/audit";
-import { existingTransactionHashes, findBankAccount, insertBankTransactions, listBankAccounts } from "@/repositories/bank-accounts";
+import {
+  existingTransactionHashes, findBankAccount, insertBankTransactions, listBankAccounts, transactionHashesInRange,
+} from "@/repositories/bank-accounts";
 import { findFiscalYear, listFiscalYears } from "@/repositories/fiscal-years";
 import {
   findCommittedBySha, findCurrentFec, findImportFile, findTemplate, insertImportFile, insertImportRows,
-  listImportFiles, updateImportFile, upsertTemplate, type ImportFileRow,
+  listImportFiles, pendingStorageCleanups, updateImportFile, upsertTemplate, type ImportFileRow,
 } from "@/repositories/imports";
 import type { Actor } from "./actor";
 import { authorizeCompany } from "./authorize";
@@ -96,7 +100,9 @@ export async function uploadImport(actor: Actor, companyId: string, input: Uploa
         `Ce fichier a déjà été importé (« ${already.originalName} »). Un même fichier ne peut pas être enregistré deux fois.`,
       );
     }
-    const storageKey = `${companyId}/imports/${sha256}`;
+    // Clé propre à l'import : un objet stocké n'est jamais partagé entre deux imports, ce qui rend
+    // sa suppression sûre (les anciennes clés « entreprise/imports/empreinte » restent gérées).
+    const storageKey = `${companyId}/imports/${id}/${sha256}`;
     await getStorage().put(storageKey, file.bytes, file.type || "application/octet-stream");
     await insertImportFile(
       tx,
@@ -192,17 +198,31 @@ async function prepare(tx: RuntimeTx, companyId: string, loaded: Loaded, siren: 
   let mapping = file.mapping as TrialBalanceMapping | BankMapping | null;
   let mappingSource: PreparedImport["mappingSource"] = mapping ? "saved" : "suggested";
   if (file.kind === "fec") mappingSource = "fixed";
-  else if (!mapping) {
+  let templateIssue: ImportIssue | null = null;
+  if (file.kind !== "fec" && !mapping) {
     const suggestion = suggestMapping(file.kind, table)!;
-    const template = await findTemplate(tx, companyId, file.kind, headerSignature(headersAt(table.rows, suggestion.headerRow)));
-    mapping = (template?.mapping as typeof suggestion | undefined) ?? suggestion;
-    if (template) mappingSource = "template";
+    const detectedHeaders = headersAt(table.rows, suggestion.headerRow);
+    const template = await findTemplate(tx, companyId, file.kind, headerSignature(detectedHeaders));
+    // Même en-tête, mais position éventuellement différente (lignes de titre) : on garde la ligne détectée.
+    const candidate = template ? { ...(template.mapping as typeof suggestion), headerRow: suggestion.headerRow } : null;
+    if (candidate && isMappingCompatible(file.kind, candidate, detectedHeaders.length)) {
+      mapping = candidate;
+      mappingSource = "template";
+    } else {
+      mapping = suggestion;
+      if (template) {
+        templateIssue = warning("template_incompatible", "Le modèle mémorisé pour ce format ne s'applique plus à ce fichier : la correspondance a été proposée de nouveau.");
+      }
+    }
   }
   const headerRow = mapping?.headerRow ?? 0;
   const headers = headersAt(table.rows, headerRow);
   const rawPreview = table.rows.slice(headerRow + 1, headerRow + 1 + 8).map((r) => r.map(cellText));
   let supersedes: PreparedImport["supersedes"] = null;
   let duplicates = 0;
+  // Anomalies enrichies de la colonne concernée ; avertissement si un modèle mémorisé a été écarté.
+  const finalize = (issues: ImportIssue[], columns?: Record<string, number | null | undefined>) =>
+    withColumns(templateIssue ? [templateIssue, ...issues] : issues, headers, columns);
 
   if (file.kind === "trial_balance") {
     const a = analyzeTrialBalance(table, mapping as TrialBalanceMapping);
@@ -212,7 +232,7 @@ async function prepare(tx: RuntimeTx, companyId: string, loaded: Loaded, siren: 
       a.issues.push(warning("supersedes", `Une balance au ${file.periodEnd} existe déjà pour cet exercice : elle sera remplacée (et conservée dans l'historique).`));
     }
     return {
-      kind: file.kind, mapping, mappingSource, headers, rawPreview, issues: a.issues, blocking: hasBlockingErrors(a.issues),
+      kind: file.kind, mapping, mappingSource, headers, rawPreview, issues: finalize(a.issues, mapping?.columns), blocking: hasBlockingErrors(a.issues),
       summary: {
         "Lignes de comptes": a.lines.length, "Lignes ignorées": a.ignoredRows.length,
         "Total soldes débiteurs": a.totals.closingDebit, "Total soldes créditeurs": a.totals.closingCredit,
@@ -235,7 +255,7 @@ async function prepare(tx: RuntimeTx, companyId: string, loaded: Loaded, siren: 
     }
     return {
       kind: file.kind, mapping: null, mappingSource, headers, rawPreview: table.rows.slice(1, 9).map((r) => r.map(cellText)),
-      issues: a.issues, blocking: hasBlockingErrors(a.issues),
+      issues: finalize(a.issues), blocking: hasBlockingErrors(a.issues),
       summary: {
         "Lignes d'écritures": a.lines.length, Écritures: a.entryCount, "Total débit": a.totals.debit, "Total crédit": a.totals.credit,
         "Première date": a.period.first, "Dernière date": a.period.last, "Lignes non validées": a.unvalidatedLines,
@@ -257,16 +277,30 @@ async function prepare(tx: RuntimeTx, companyId: string, loaded: Loaded, siren: 
       a.issues.push(warning("nothing_new", "Toutes les opérations de ce fichier sont déjà enregistrées : aucune nouvelle donnée."));
     }
   }
+  // Opérations déjà enregistrées sur la période du fichier mais absentes de celui-ci : signalées,
+  // jamais supprimées automatiquement (correction ou annulation côté banque à vérifier).
+  if (a.totals.first && a.totals.last) {
+    const inFile = new Set(hashes);
+    const missing = (await transactionHashesInRange(tx, companyId, file.bankAccountId!, a.totals.first, a.totals.last)).filter((h) => !inFile.has(h));
+    if (missing.length > 0) {
+      a.issues.push(
+        warning("missing_known", `${missing.length} opération(s) déjà enregistrée(s) entre le ${a.totals.first} et le ${a.totals.last} ne figurent pas dans ce fichier : elles sont conservées.`),
+      );
+    }
+  }
   return {
-    kind: file.kind, mapping, mappingSource, headers, rawPreview, issues: a.issues, blocking: hasBlockingErrors(a.issues),
+    kind: file.kind, mapping, mappingSource, headers, rawPreview, issues: finalize(a.issues, mapping?.columns), blocking: hasBlockingErrors(a.issues),
     summary: {
       Opérations: a.lines.length, "Nouvelles opérations": a.lines.length - duplicates, Doublons: duplicates,
+      "Encaissements (nombre)": a.totals.inflowCount, "Décaissements (nombre)": a.totals.outflowCount,
+      "Sens à vérifier": a.totals.toReviewCount,
       Encaissements: a.totals.inflows, Décaissements: a.totals.outflows, "Flux net": a.totals.net,
       "Première date": a.totals.first, "Dernière date": a.totals.last,
       "Contrôle du solde": a.runningBalance.status === "consistent" ? `cohérent (solde final ${formatAmountFr(a.runningBalance.closing!)})` : a.runningBalance.status === "inconsistent" ? "incohérent" : "non disponible",
     },
     previewLines: a.lines.slice(0, PREVIEW_ROWS).map((l, i) => ({
-      Ligne: l.sourceRow, Date: l.bookingDate, Libellé: l.label, Montant: l.amount, Doublon: duplicateHashes.has(hashes[i]) ? "oui" : "",
+      Ligne: l.sourceRow, Date: l.bookingDate, Libellé: l.label, Montant: l.amount,
+      Sens: FLOW_DIRECTION_LABELS[l.direction], Doublon: duplicateHashes.has(hashes[i]) ? "oui" : "",
     })),
     supersedes, duplicates, analysis: { ...a, hashes, duplicateHashes },
   };
@@ -399,6 +433,7 @@ export async function commitImport(actor: Actor, companyId: string, importId: st
         companyId, bankAccountId: file.bankAccountId!, bookingDate: l.bookingDate, valueDate: l.valueDate, amount: l.amount,
         labelRaw: l.label, labelNormalized: l.labelNormalized, reference: l.reference, balanceAfter: l.balanceAfter,
         sourceImportId: file.id, sourceRow: l.sourceRow, naturalKeyHash: h,
+        flowDirection: l.direction, reviewReason: l.reviewReason,
       })));
       counts.lignesEnregistrees = inserted;
       counts.doublons = a.lines.length - inserted;
@@ -462,12 +497,20 @@ const sqlBump = (companyId: string) => sql`select app.bump_data_version(${compan
 export async function getDataOverview(actor: Actor, companyId: string) {
   return withUser(actor.userId, async (tx) => {
     const access = await authorizeCompany(tx, actor, companyId, "accounting_data", "read");
-    const [fiscalYears, bankAccounts, imports] = await Promise.all([
+    const [fiscalYears, bankAccounts, imports, sources, balances, pending] = await Promise.all([
       listFiscalYears(tx, companyId),
       listBankAccounts(tx, companyId),
       listImportFiles(tx, companyId),
+      availableSources(tx, companyId),
+      listTrialBalances(tx, companyId),
+      access.role === "firm_admin" || access.role === "firm_analyst" ? pendingStorageCleanups(tx, companyId, 1000) : Promise.resolve([]),
     ]);
-    return { ...access, fiscalYears, bankAccounts, imports };
+    const current = balances.filter((b) => b.isCurrent).sort((a, b) => b.periodEnd.localeCompare(a.periodEnd));
+    return {
+      ...access, fiscalYears, bankAccounts, imports, sources,
+      latestBalance: current[0] ? { periodEnd: current[0].periodEnd, dataStatus: current[0].dataStatus } : null,
+      pendingStorageCleanups: pending.length,
+    };
   });
 }
 

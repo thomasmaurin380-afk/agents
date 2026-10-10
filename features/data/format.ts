@@ -14,11 +14,28 @@ export function displayValue(v: unknown): string {
 }
 
 export const IMPORT_STATUS_LABELS = {
-  uploaded: "À vérifier",
-  mapped: "À valider",
+  uploaded: "Reçu — à contrôler",
+  mapped: "Correspondance enregistrée — à valider",
   committed: "Enregistré",
   superseded: "Remplacé",
   cancelled: "Annulé",
+} as const;
+
+/**
+ * Sens des statuts. « Enregistré » = import techniquement validé (données contrôlées et stockées) ;
+ * ce n'est PAS une validation métier par le DAF, qui portera sur les SIG et les rapports.
+ */
+export const IMPORT_STATUS_HELP = {
+  uploaded: "Fichier reçu et conservé ; rien n'est encore enregistré dans les données.",
+  mapped: "Correspondance des colonnes enregistrée ; les contrôles sont recalculés, rien n'est encore enregistré.",
+  committed: "Données contrôlées et enregistrées (validation technique de l'import, pas une validation métier).",
+  superseded: "Remplacé par une version plus récente ; conservé dans l'historique, il n'est plus utilisé.",
+  cancelled: "Abandonné avant enregistrement ; aucune donnée n'a été enregistrée.",
+} as const;
+
+export const DATA_STATUS_LABELS = {
+  provisional: "Situation provisoire",
+  final: "Comptes définitifs",
 } as const;
 
 export const IMPORT_STATUS_VARIANTS = {

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { bigserial, bigint, date, index, integer, jsonb, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { bigserial, bigint, check, date, index, integer, jsonb, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { app } from "./_schema";
 import { users } from "./identity";
 import { companies } from "./tenancy";
@@ -73,4 +73,28 @@ export const columnMappingTemplates = app.table(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique("column_mapping_templates_key").on(t.companyId, t.kind, t.headerSignature)],
+);
+
+/**
+ * Suppressions de fichiers en attente dans le stockage. Alimentée dans la même transaction que la
+ * suppression d'un import (aucun fichier ne peut devenir orphelin silencieusement), puis traitée
+ * après validation ; un échec est conservé (tentatives, dernière erreur) et rejoué ultérieurement.
+ */
+export const storageCleanupQueue = app.table(
+  "storage_cleanup_queue",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    companyId: uuid("company_id").notNull().references(() => companies.id),
+    storageKey: text("storage_key").notNull(),
+    importFileId: uuid("import_file_id"),
+    status: text("status").notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    lastError: text("last_error"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("storage_cleanup_queue_pending_idx").on(t.companyId, t.status),
+    check("storage_cleanup_queue_status", sql`${t.status} in ('pending', 'done', 'skipped')`),
+  ],
 );

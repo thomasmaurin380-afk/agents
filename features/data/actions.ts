@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { errorToFormState, formValues, type FormState } from "@/lib/form-state";
 import { requireStaff } from "@/lib/guards";
 import { createBankAccount, createFiscalYear, mapAccount } from "@/services/company-data";
+import { deleteImport, processStorageCleanup } from "@/services/import-deletion";
 import { cancelImport, commitImport, saveMapping, uploadImport } from "@/services/imports";
 
 export async function createFiscalYearAction(companyId: string, _prev: FormState, formData: FormData): Promise<FormState> {
@@ -110,4 +111,27 @@ export async function mapAccountAction(companyId: string, _prev: FormState, form
   } catch (e) {
     return errorToFormState(e, formValues(formData));
   }
+}
+
+export async function deleteImportAction(companyId: string, importId: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  const actor = await requireStaff();
+  let outcome: Awaited<ReturnType<typeof deleteImport>>;
+  try {
+    outcome = await deleteImport(actor, companyId, importId, {
+      confirmation: String(formData.get("confirmation") ?? ""),
+      reactivatePrevious: formData.get("reactivatePrevious") === "on",
+    });
+  } catch (e) {
+    return errorToFormState(e);
+  }
+  revalidatePath(`/daf/c/${companyId}`, "layout");
+  revalidatePath(`/client/${companyId}`, "layout");
+  const q = new URLSearchParams({ supprime: outcome.fileName, stockage: outcome.storage.pending > 0 ? "en-attente" : "ok" });
+  redirect(`/daf/c/${companyId}/data?${q}`);
+}
+
+export async function retryStorageCleanupAction(companyId: string): Promise<void> {
+  const actor = await requireStaff();
+  await processStorageCleanup(actor, companyId);
+  revalidatePath(`/daf/c/${companyId}/data`);
 }

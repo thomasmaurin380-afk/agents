@@ -65,6 +65,13 @@ Mot de passe commun : `DemoDaf-2026-Pilotage` (local uniquement ; seed refusé e
 | `dirigeante.commerce@demo.invalid` | Dirigeante — entreprise commerciale (exercice décalé) |
 | `dirigeant.artisan@demo.invalid` | Dirigeant — entreprise artisanale |
 
+## Migrations à appliquer après un déploiement
+
+Les migrations ne sont jamais lancées automatiquement sur la base hébergée. Après le push :
+GitHub → Actions → « Migrations Supabase Demo » → *Run workflow* sur `claude/happy-heisenberg-9gena5`,
+saisir `MIGRER_DEMO`. Dernière migration : `0004_import_deletion.sql` (suppression sécurisée des imports,
+file de nettoyage du stockage, sens des opérations bancaires avec reprise des données existantes).
+
 ## Scripts
 
 | Commande | Rôle |

@@ -7,6 +7,8 @@ export type ImportIssue = {
   message: string;
   row?: number;
   field?: string;
+  /** Colonne du fichier concernée, ex. « col. 3 « Débit » » (renseignée à partir de la correspondance). */
+  column?: string;
 };
 
 export function error(code: string, message: string, row?: number, field?: string): ImportIssue {

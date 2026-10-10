@@ -22,6 +22,8 @@ Statuts : `proposée` · `validée` · `rejetée` · `remplacée`.
 | D-15 | 2FA (TOTP) obligatoire pour les utilisateurs du cabinet | **validée** (2026-10-09) |
 | D-16 | Imports traités de façon synchrone (pas encore de file de tâches) | appliquée en Phase 2 |
 | D-17 | Conservation du brut : fichier original + lignes en anomalie, pas de copie ligne à ligne | appliquée en Phase 2 |
+| D-18 | Suppression définitive d'un import : fonction SQL unique, atomique, réservée à l'administrateur DAF | appliquée (migration 0004) |
+| D-19 | Une clé de stockage par import ; suppression des fichiers via une file de nettoyage | appliquée (migration 0004) |
 
 Paramètres généraux validés : devise **EUR**, langue **français**, référentiel **PCG français versionné**,
 multi-entreprises, deux interfaces (DAF / client), moteur financier partagé, sécurité et traçabilité prioritaires.
@@ -119,3 +121,27 @@ import d'origine. `import_rows` ne stocke que les lignes en anomalie, exclues ou
 doublons (avec leur contenu brut et les messages), au lieu de dupliquer tout le fichier en base.
 Les données importées ne sont ni modifiables ni supprimables par l'application : une correction
 passe par un nouvel import qui remplace explicitement le précédent (historique conservé).
+
+## D-18 — Suppression définitive d'un import
+
+- Le rôle applicatif n'a toujours **aucun** droit DELETE sur les données financières. La seule voie
+  est `app.delete_import(company_id, import_id, réactiver_précédente)` : SECURITY DEFINER, contrôle
+  `is_company_admin`, ciblage par entreprise ET import, une seule transaction, audit `import.delete`
+  (volumes, sans montant). Côté service : rôle `firm_admin`, 2FA vérifiée, saisie de « SUPPRIMER ».
+- Plan de comptes : un compte découvert par l'import est rattaché à l'import le plus ancien qui
+  l'utilise encore ; sinon il est conservé s'il a été rattaché manuellement (sans source), supprimé
+  dans les autres cas. Les règles de rattachement et les modèles de colonnes ne sont jamais supprimés.
+- Versions : une version plus récente est rattachée à la précédente ; la suppression de la version
+  courante ne réactive la précédente que sur demande explicite.
+- Blocage : un relevé bancaire ne peut pas être supprimé si un import plus récent du même compte a
+  ignoré des opérations comme doublons de celles-ci (il faut supprimer d'abord l'import le plus récent).
+- Annulation (« Annuler l'import ») et remplacement d'une version restent distincts de la suppression.
+
+## D-19 — Stockage des fichiers importés
+
+Clé `entreprise/imports/<import>/<empreinte>` : un objet n'est plus partagé entre deux imports.
+Les anciennes clés `entreprise/imports/<empreinte>` (possiblement partagées) restent gérées : le fichier
+n'est planifié pour suppression que si plus aucun enregistrement ne le référence, et la référence est
+revérifiée juste avant l'effacement. La planification est écrite dans la même transaction que la
+suppression SQL (`storage_cleanup_queue`) ; un échec est conservé (tentatives, erreur), journalisé et
+relançable depuis la page « Données comptables ».

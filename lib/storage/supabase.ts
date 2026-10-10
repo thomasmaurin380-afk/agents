@@ -38,5 +38,11 @@ export function createSupabaseStorage(): StorageProvider {
       if (error || !data) throw new Error(`Fichier introuvable dans le stockage : ${key}`);
       return new Uint8Array(await data.arrayBuffer());
     },
+    async delete(key) {
+      await ensureBucket();
+      // `remove` ne signale pas d'erreur pour un objet déjà absent.
+      const { error } = await client.storage.from(BUCKET).remove([key]);
+      if (error) throw new Error(`Échec de la suppression du fichier : ${error.message}`);
+    },
   };
 }

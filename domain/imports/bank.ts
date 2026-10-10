@@ -12,8 +12,20 @@ export type BankMapping = {
   columns: Partial<Record<"date" | "value_date" | "label" | "amount" | "debit" | "credit" | "reference" | "balance", number | null>>;
 };
 
+/** Sens d'une opération : ce n'est pas une catégorie (la catégorisation relève de règles explicites). */
+export type FlowDirection = "inflow" | "outflow" | "to_review";
+
+export const FLOW_DIRECTION_LABELS: Record<FlowDirection, string> = {
+  inflow: "Encaissement",
+  outflow: "Décaissement",
+  to_review: "À vérifier",
+};
+
 export type BankLine = {
   sourceRow: number;
+  direction: FlowDirection;
+  /** Motif lorsque le sens doit être vérifié (montant nul, signe incohérent avec sa colonne). */
+  reviewReason: string | null;
   bookingDate: string;
   valueDate: string | null;
   amount: string;
@@ -28,7 +40,10 @@ export type BankLine = {
 export type BankAnalysis = {
   lines: BankLine[];
   issues: ImportIssue[];
-  totals: { inflows: string; outflows: string; net: string; first: string | null; last: string | null };
+  totals: {
+    inflows: string; outflows: string; net: string; first: string | null; last: string | null;
+    inflowCount: number; outflowCount: number; toReviewCount: number;
+  };
   runningBalance: { status: "consistent" | "inconsistent" | "not_available"; closing: string | null; closingDate: string | null };
 };
 
@@ -49,7 +64,7 @@ export function analyzeBank(table: RawTable, mapping: BankMapping): BankAnalysis
   const lines: BankLine[] = [];
   const base: BankAnalysis = {
     lines, issues,
-    totals: { inflows: "0.00", outflows: "0.00", net: "0.00", first: null, last: null },
+    totals: { inflows: "0.00", outflows: "0.00", net: "0.00", first: null, last: null, inflowCount: 0, outflowCount: 0, toReviewCount: 0 },
     runningBalance: { status: "not_available", closing: null, closingDate: null },
   };
   const mErr = bankMappingErrors(mapping);
@@ -74,6 +89,7 @@ export function analyzeBank(table: RawTable, mapping: BankMapping): BankAnalysis
     if (label === "") rowIssues.push(warning("missing_label", "Libellé vide", row.rowNumber, "label"));
 
     let amount: string | null = null;
+    let reviewReason: string | null = null;
     if (mapping.amountMode === "signed") {
       const a = reader.amount(row, c.amount);
       if (!a.ok) rowIssues.push(error("invalid_amount", a.reason, row.rowNumber, "amount"));
@@ -87,6 +103,12 @@ export function analyzeBank(table: RawTable, mapping: BankMapping): BankAnalysis
       if (d.ok && cr.ok) {
         const dv = d.value && toCents(d.value) !== 0n ? d.value.replace(/^-/, "") : null;
         const cv = cr.value && toCents(cr.value) !== 0n ? cr.value.replace(/^-/, "") : null;
+        // Un montant négatif dans une colonne Débit ou Crédit contredit le sens de la colonne :
+        // on applique la convention de la colonne mais l'opération est signalée à vérifier.
+        if ((dv && d.value!.startsWith("-")) || (cv && cr.value!.startsWith("-"))) {
+          reviewReason = `Montant négatif dans la colonne ${dv ? "Débit" : "Crédit"} : sens à confirmer`;
+          rowIssues.push(warning("sign_mismatch", reviewReason, row.rowNumber, dv ? "debit" : "credit"));
+        }
         if (dv && cv) rowIssues.push(error("both_sides", "Montant à la fois au débit et au crédit", row.rowNumber));
         else if (dv) amount = `-${dv}`;
         else if (cv) amount = cv;
@@ -94,7 +116,10 @@ export function analyzeBank(table: RawTable, mapping: BankMapping): BankAnalysis
         else rowIssues.push(error("missing_amount", "Montant manquant (débit et crédit vides)", row.rowNumber));
       }
     }
-    if (amount != null && toCents(amount) === 0n) rowIssues.push(warning("zero_amount", "Opération de montant nul", row.rowNumber));
+    if (amount != null && toCents(amount) === 0n) {
+      reviewReason = "Montant nul";
+      rowIssues.push(warning("zero_amount", "Opération de montant nul : sens à vérifier", row.rowNumber));
+    }
 
     let balanceAfter: string | null = null;
     if (c.balance != null) {
@@ -111,8 +136,11 @@ export function analyzeBank(table: RawTable, mapping: BankMapping): BankAnalysis
     const keyBase = `${date.ok ? date.value : ""}|${amount}|${labelNormalized}|${reference ?? ""}`;
     const n = (occurrences.get(keyBase) ?? 0) + 1;
     occurrences.set(keyBase, n);
+    const cents = toCents(amount);
     lines.push({
       sourceRow: row.rowNumber,
+      direction: reviewReason ? "to_review" : cents > 0n ? "inflow" : "outflow",
+      reviewReason,
       bookingDate: (date as { value: string }).value,
       valueDate: valueDate.ok ? valueDate.value : null,
       amount,
@@ -134,6 +162,9 @@ export function analyzeBank(table: RawTable, mapping: BankMapping): BankAnalysis
     net: fromCents(toCents(inflows) + toCents(outflows)),
     first: dates[0] ?? null,
     last: dates.at(-1) ?? null,
+    inflowCount: lines.filter((l) => l.direction === "inflow").length,
+    outflowCount: lines.filter((l) => l.direction === "outflow").length,
+    toReviewCount: lines.filter((l) => l.direction === "to_review").length,
   };
   base.runningBalance = checkRunningBalance(lines, issues);
   return base;

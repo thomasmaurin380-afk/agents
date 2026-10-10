@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
 import { bankAccounts, bankTransactions } from "@/db/schema";
 import type { RuntimeTx } from "@/lib/db/tenant";
 
@@ -64,4 +64,20 @@ export async function insertBankTransactions(tx: RuntimeTx, rows: (typeof bankTr
     inserted += res.length;
   }
   return inserted;
+}
+
+/** Empreintes des opérations déjà enregistrées pour ce compte entre deux dates (incluses). */
+export async function transactionHashesInRange(tx: RuntimeTx, companyId: string, bankAccountId: string, from: string, to: string) {
+  const rows = await tx
+    .select({ h: bankTransactions.naturalKeyHash })
+    .from(bankTransactions)
+    .where(
+      and(
+        eq(bankTransactions.companyId, companyId),
+        eq(bankTransactions.bankAccountId, bankAccountId),
+        gte(bankTransactions.bookingDate, from),
+        lte(bankTransactions.bookingDate, to),
+      ),
+    );
+  return rows.map((r) => r.h);
 }

@@ -9,11 +9,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BANK_FIELDS, TRIAL_BALANCE_FIELDS } from "@/domain/imports/fields";
 import type { ImportIssue } from "@/domain/imports/issues";
 import { cancelImportAction } from "@/features/data/actions";
-import { displayValue, IMPORT_STATUS_LABELS, IMPORT_STATUS_VARIANTS } from "@/features/data/format";
+import { DeleteImportDialog } from "@/features/data/delete-import-dialog";
+import { toDeletionView } from "@/features/data/deletion-view";
+import { DATA_STATUS_LABELS, displayValue, IMPORT_STATUS_HELP, IMPORT_STATUS_LABELS, IMPORT_STATUS_VARIANTS } from "@/features/data/format";
+import { ImportSteps } from "@/features/data/import-steps";
 import { CommitForm, MappingForm } from "@/features/data/import-workspace";
 import { IssueList } from "@/features/data/issues";
 import { KeyValues } from "@/features/data/key-values";
 import { orNotFound, requireStaff } from "@/lib/guards";
+import { getDeletionPreview } from "@/services/import-deletion";
 import { getImportWorkspace } from "@/services/imports";
 
 export const metadata: Metadata = { title: "Import" };
@@ -28,8 +32,9 @@ type Report = {
   issueCount: number;
 };
 
-export default async function ImportPage({ params }: PageProps<"/daf/c/[companyId]/imports/[importId]">) {
+export default async function ImportPage({ params, searchParams }: PageProps<"/daf/c/[companyId]/imports/[importId]">) {
   const { companyId, importId } = await params;
+  const { supprimer } = await searchParams;
   const actor = await requireStaff();
   const ws = await orNotFound(getImportWorkspace(actor, companyId, importId));
   const f = ws.file;
@@ -38,9 +43,11 @@ export default async function ImportPage({ params }: PageProps<"/daf/c/[companyI
     ws.kindLabel,
     ws.fiscalYear ? ws.fiscalYear.label : null,
     f.periodEnd ? `arrêté au ${displayValue(f.periodEnd)}` : null,
-    f.dataStatus === "final" ? "définitive" : f.dataStatus === "provisional" ? "provisoire" : null,
+    f.dataStatus === "final" || f.dataStatus === "provisional" ? DATA_STATUS_LABELS[f.dataStatus] : null,
     ws.bankAccount ? `${ws.bankAccount.label} — ${ws.bankAccount.bankName}` : null,
   ].filter(Boolean).join(" · ");
+  const deletable = f.status === "committed" || f.status === "superseded";
+  const deletionView = deletable ? toDeletionView(await getDeletionPreview(actor, companyId, importId)) : null;
 
   return (
     <>
@@ -52,8 +59,10 @@ export default async function ImportPage({ params }: PageProps<"/daf/c/[companyI
             {context}
           </span>
         }
-        actions={<Link href={`${base}/data`} className={buttonVariants({ variant: "outline" })}>Retour aux données</Link>}
+        actions={<Link href={`${base}/data`} className={buttonVariants({ variant: "outline" })}>Retour à l&apos;historique</Link>}
       />
+      <p className="-mt-4 mb-4 text-sm text-muted-foreground" data-testid="import-status-help">{IMPORT_STATUS_HELP[f.status]}</p>
+      <ImportSteps status={f.status} kind={f.kind} />
 
       {ws.prepared ? (
         <div className="grid gap-6">
@@ -74,7 +83,7 @@ export default async function ImportPage({ params }: PageProps<"/daf/c/[companyI
                 <CardTitle>Correspondance des colonnes</CardTitle>
                 <CardDescription>
                   {ws.prepared.mappingSource === "template"
-                    ? "Modèle mémorisé pour ce format de fichier appliqué automatiquement."
+                    ? "Modèle mémorisé pour ce format de fichier appliqué automatiquement : vous pouvez le modifier avant l'enregistrement."
                     : ws.prepared.mappingSource === "saved"
                       ? "Correspondance enregistrée pour cet import."
                       : "Correspondance proposée d'après les en-têtes : vérifiez-la."}
@@ -144,14 +153,31 @@ export default async function ImportPage({ params }: PageProps<"/daf/c/[companyI
                 supersedes={ws.prepared.supersedes?.label ?? null}
                 canSaveTemplate={ws.prepared.kind !== "fec"}
               />
-              <form action={cancelImportAction.bind(null, companyId, importId)}>
-                <Button type="submit" variant="ghost">Annuler cet import</Button>
+              <form action={cancelImportAction.bind(null, companyId, importId)} className="text-right">
+                <Button type="submit" variant="outline">Annuler l&apos;import</Button>
+                <p className="mt-1 max-w-64 text-xs text-muted-foreground">Rien n&apos;a encore été enregistré : le fichier est simplement abandonné.</p>
               </form>
             </CardContent>
           </Card>
         </div>
       ) : (
-        <ImportReport report={f.report as Report | null} status={f.status} />
+        <div className="grid gap-6">
+          <ImportReport report={f.report as Report | null} status={f.status} />
+          {deletionView ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Import effectué par erreur ?</CardTitle>
+                <CardDescription>
+                  La suppression définitive retire les données enregistrées par ce fichier, après confirmation.
+                  Pour corriger une balance ou un FEC, vous pouvez aussi importer une version corrigée, qui remplacera celle-ci.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DeleteImportDialog companyId={companyId} importId={importId} view={deletionView} defaultOpen={supprimer === "1"} />
+              </CardContent>
+            </Card>
+          ) : null}
+        </div>
       )}
     </>
   );
