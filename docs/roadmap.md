@@ -9,8 +9,8 @@
 |---|---|---|
 | 0 | Analyse d'architecture et définition du MVP | ✅ validée |
 | 1 | Architecture et fondations | ✅ validée |
-| 2 | Onboarding et collecte | ✅ livrée le 2026-10-09 (en attente de votre recette) |
-| 3 | Moteur financier et SIG | — |
+| 2 | Onboarding et collecte | ✅ livrée le 2026-10-09, fiabilisée le 2026-10-10 |
+| 3 | Moteur financier et SIG | ✅ livrée le 2026-10-10 (hypothèses du référentiel à valider) |
 | 4 | Dashboard et KPI | — |
 | 5 | Rapports PDF | — |
 | 5b | Tranche MVP : trésorerie simple + recommandations/actions/documents | — |
@@ -147,8 +147,8 @@ Reporté : réimport automatique après blocage d'une suppression bancaire ; sup
   plus long, surcharges entreprise justifiées, calcul des 9 soldes et rubriques intermédiaires,
   mensuel / cumulé / N-N-1, détection des comptes non affectés et périodes incomplètes,
   réconciliation avec le résultat comptable, drill-down, validation et gel (`sig_snapshots`).
-- **Fichiers** : `domain/sig/{rules,compute,checks}.ts`, `db/seed/sig-rule-sets/*`,
-  `services/sig/*`, `features/sig/*`, `docs/sig-rules.md`, `docs/financial-rules.md`.
+- **Fichiers** : `domain/sig/{types,rules,compute,checks,periods,report}.ts`, `repositories/sig.ts`,
+  `services/sig.ts`, `features/sig/*`, `docs/sig-rules.md`, `docs/financial-rules.md`.
 - **Dépendances** : Phase 2.
 - **Critères** : écart 0,00 € avec le jeu de référence manuel ; tout compte de classes 6/7 non
   affecté ⇒ anomalie bloquante ; même entrée ⇒ même sortie (déterminisme).
@@ -156,6 +156,27 @@ Reporté : réimport automatique après blocage d'une suppression bancaire ; sup
   d'une seule période, comptes créditeurs en classe 6, tests de propriétés (Σ rubriques = résultat).
 - **Risques** : interprétation des règles PCG ⇒ **validation du référentiel par vous** avant gel.
 - **Livrable** : tableau SIG N/N-1 validable et publiable.
+
+### Résultat Phase 3 (2026-10-10)
+
+Livré : référentiels `PCG-2024` / `PCG-2025` versionnés dans le code avec empreinte, hypothèses et
+validation par l'administrateur du cabinet (`/daf/sig-rules`) ; moteur pur en centimes (8 soldes,
+sous-totaux, détail par compte, rapprochement indépendant) ; sources balance ou FEC (jamais
+additionnées, banque exclue), choix explicite justifié, contrôle croisé ; périodes exercice / cumul /
+mois, exercices décalés, N-1 ; contrôles bloquants et avertissements ; exceptions de classement par
+entreprise, historisées ; versions figées immuables, publication réservée à l'administrateur,
+obsolescence par empreinte ; écran DAF (sélecteurs, tableau N/N-1/écarts/% CA, détail, écritures FEC,
+contrôles, classement, historique) ; portail client « Mes SIG » (publié uniquement).
+Docs : `docs/sig-rules.md`, `docs/financial-rules.md`. Jeu AZUR CONSEIL SA reconstitué :
+`demo-files/azur-conseil/` (`scripts/demo/generate-azur.ts`).
+
+Écarts au plan : référentiels dans le code (pas de tables `sig_rule_sets`/`sig_rubrics`, D-20) ;
+8 soldes et non 9 (plus-values de cession reportées) ; pas de cache applicatif (inutile à ce volume).
+
+Migrations à appliquer : `0005_phase3_sig.sql`, `0006_phase3_sig_security.sql`.
+
+À valider par vous : hypothèses H-1 à H-5, H-2024-1, H-2025-0 à H-2025-5 (`docs/sig-rules.md` § 4).
+Reporté : 9e solde (cessions), export / PDF des SIG (Phase 5), exceptions déléguées aux collaborateurs.
 
 ## Phase 4 — Dashboard et KPI
 

@@ -24,6 +24,9 @@ Statuts : `proposée` · `validée` · `rejetée` · `remplacée`.
 | D-17 | Conservation du brut : fichier original + lignes en anomalie, pas de copie ligne à ligne | appliquée en Phase 2 |
 | D-18 | Suppression définitive d'un import : fonction SQL unique, atomique, réservée à l'administrateur DAF | appliquée (migration 0004) |
 | D-19 | Une clé de stockage par import ; suppression des fichiers via une file de nettoyage | appliquée (migration 0004) |
+| D-20 | Référentiels SIG versionnés dans le code (empreinte), validés par le cabinet en base | appliquée (Phase 3) |
+| D-21 | SIG : une seule source par calcul, balance prioritaire, FEC en contrôle croisé | appliquée (Phase 3) |
+| D-22 | Versions figées des SIG immuables ; obsolescence par empreinte des données | appliquée (migrations 0005-0006) |
 
 Paramètres généraux validés : devise **EUR**, langue **français**, référentiel **PCG français versionné**,
 multi-entreprises, deux interfaces (DAF / client), moteur financier partagé, sécurité et traçabilité prioritaires.
@@ -145,3 +148,29 @@ n'est planifié pour suppression que si plus aucun enregistrement ne le référe
 revérifiée juste avant l'effacement. La planification est écrite dans la même transaction que la
 suppression SQL (`storage_cleanup_queue`) ; un échec est conservé (tentatives, erreur), journalisé et
 relançable depuis la page « Données comptables ».
+
+## D-20 — Référentiels SIG dans le code
+
+Le modèle initial prévoyait des tables `sig_rule_sets` / `sig_rubrics` / `sig_account_rules`. Les
+règles sont normatives (PCG), communes à tous les cabinets et doivent être testées : elles sont
+versionnées dans `domain/sig/rules.ts`, avec une empreinte SHA-256. La base ne stocke que la
+**validation** d'une empreinte par l'administrateur du cabinet (`sig_rule_set_approvals`), exigée
+pour publier, et les **exceptions** propres à chaque entreprise (`sig_account_overrides`). Modifier
+une règle = nouvelle version, nouvelle empreinte, nouvelle validation ; les versions figées
+antérieures deviennent obsolètes.
+
+## D-21 — Source des SIG
+
+Balance et FEC ne sont jamais additionnés. En automatique, la balance arrêtée à la date de fin de
+période est retenue (elle intègre les écritures d'inventaire) ; le FEC, s'il existe, sert de contrôle
+croisé (tout écart bloque). Le DAF peut retenir l'autre source avec une justification, tracée dans la
+version figée et le journal d'audit. Mois isolé à partir de balances : différence de deux balances
+courantes du même exercice, jamais une reconstitution arbitraire.
+
+## D-22 — Versions figées
+
+`sig_snapshots` est immuable (trigger, y compris pour le propriétaire) sauf le passage validé →
+publié, lui-même conditionné en base à la validation du référentiel. Une version devient
+« obsolète » si l'empreinte des données (N et N-1) ou du référentiel change ; elle reste consultable
+mais ne peut plus être publiée. La réinitialisation de la démonstration (jamais en production)
+suspend temporairement ces gardes.

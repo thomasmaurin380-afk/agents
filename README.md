@@ -11,10 +11,14 @@ reposant sur un moteur financier unique (SIG, KPI, trésorerie) et un reporting 
 | 0 — Architecture et MVP | ✅ validée |
 | 1 — Fondations (auth, multi-tenant, RLS, deux espaces, démo) | ✅ validée |
 | 2 — Imports comptables et bancaires (balance, FEC, relevés) | ✅ livrée — voir `docs/roadmap.md` |
-| 3 — Moteur financier et SIG | à venir |
+| 3 — Moteur financier et SIG | ✅ livrée — hypothèses du référentiel à valider (`docs/sig-rules.md`) |
 
-Les balances, FEC et relevés bancaires sont importables et contrôlés ; les indicateurs seront
-calculés en phase 3-4. D'ici là, aucune valeur n'est affichée ni estimée.
+Les balances, FEC et relevés bancaires sont importables et contrôlés. Les SIG sont calculés,
+contrôlés, validés (versions figées) et publiés au client ; les KPI arrivent en phase 4. Aucune
+valeur n'est estimée en l'absence de données.
+
+Jeu de recette SIG « AZUR CONSEIL SA » (reconstitué, fictif) : `demo-files/azur-conseil/`
+(balance, FEC, relevé), régénérable avec `npx tsx scripts/demo/generate-azur.ts`. Résultat attendu : 12 354,00 €.
 
 Fichiers de démonstration fictifs et cohérents (FEC 2025, balance au 31/12/2025, relevés CSV et XLSX) :
 `demo-files/`, régénérables avec `npx tsx scripts/demo/generate-files.ts`. Parcours : fiche
@@ -69,8 +73,9 @@ Mot de passe commun : `DemoDaf-2026-Pilotage` (local uniquement ; seed refusé e
 
 Les migrations ne sont jamais lancées automatiquement sur la base hébergée. Après le push :
 GitHub → Actions → « Migrations Supabase Demo » → *Run workflow* sur `claude/happy-heisenberg-9gena5`,
-saisir `MIGRER_DEMO`. Dernière migration : `0004_import_deletion.sql` (suppression sécurisée des imports,
-file de nettoyage du stockage, sens des opérations bancaires avec reprise des données existantes).
+saisir `MIGRER_DEMO`. Dernières migrations : `0005_phase3_sig.sql` (tables des SIG : exceptions,
+validation des référentiels, versions figées) et `0006_phase3_sig_security.sql` (immutabilité, RLS,
+empreinte des données). Elles ne modifient aucune donnée existante.
 
 ## Scripts
 
@@ -99,6 +104,8 @@ Toute nouvelle table métier : `company_id`, RLS activée, privilèges accordés
 | `docs/mvp.md` | Parcours prioritaire et critères d'acceptation du MVP |
 | `docs/roadmap.md` | Phases, avancement, résultats de tests |
 | `docs/decisions.md` | Décisions structurantes |
+| `docs/sig-rules.md` | Référentiels SIG (PCG 2024 / 2025), formules, hypothèses à valider |
+| `docs/financial-rules.md` | Sources, signes, périodes, contrôles, cycle de validation des SIG |
 | `docs/hosting.md` | Localisation des données, sauvegardes, checklist de mise en production |
 
 ## Agents Claude Code du projet

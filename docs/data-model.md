@@ -109,32 +109,34 @@ distinctes ; un réimport (même en autre format, ex. CSV puis XLSX) n'enregistr
 Si un FEC est importé, la balance est **dérivée** des écritures (pas saisie en double), et la
 provenance l'indique.
 
-## 4. Mapping et SIG
+## 4. Mapping et SIG — ✅ Phase 3
+
+Les règles communes (lignes, formules, préfixes, hypothèses) sont **versionnées dans le code**
+(`domain/sig/rules.ts`, D-20) : seules les décisions et les résultats sont en base.
 
 ```
-sig_rule_sets              firm_id, code (ex. « PCG-2025 »), label,
-                           valid_from_fiscal_year_start date, valid_to?, status ∈ {draft, active}
-                           -- versions du référentiel cabinet
+sig_account_overrides ✅   company_id, rule_set_code, account_number, pcg_account, proposed_line,
+                           line, justification (≥ 5 car.), created_by/at, replaced_by/at
+                           -- exception d'entreprise ; une seule active par (entreprise, référentiel,
+                           -- compte) ; jamais modifiée ni supprimée (trigger), seulement remplacée
 
-sig_rubrics                rule_set_id, code (ex. VENTES_MARCHANDISES, ACHATS_MARCHANDISES,
-                           VAR_STOCK_MARCH, PRODUCTION_VENDUE, …), label, display_order,
-                           parent_code?, kind ∈ {line, subtotal}
+sig_rule_set_approvals ✅  firm_id, rule_set_code, rule_set_version, rules_hash, approved_by/at
+                           -- validation du référentiel (et de ses hypothèses) par l'admin du cabinet
 
-sig_account_rules          rule_set_id, account_prefix varchar(20), rubric_code,
-                           sign ∈ {+1, -1}, priority, comment
-                           -- correspondance par préfixe le plus long
-
-company_sig_overrides      company_id, rule_set_id, account_number|account_prefix,
-                           rubric_code, reason text, approved_by, approved_at
-                           -- retraitements / spécificités documentés par entreprise
-
-sig_snapshots              company_id, fiscal_year_id, period_start, period_end,
-                           rule_set_id, trial_balance_ids uuid[], data_version,
-                           result jsonb (rubriques, comptes, montants),
-                           checks jsonb, status ∈ {computed, validated, published},
-                           validated_by?, published_at?
-                           -- figé une fois validé
+sig_snapshots ✅           company_id, fiscal_year_id, period_kind ∈ {fiscal_year, ytd, month},
+                           period_month, period_start/end, source ∈ {trial_balance, fec},
+                           source_choice ∈ {auto, explicit}, source_justification, source_refs jsonb,
+                           rule_set_code/version, rules_hash, engine_version, data_fingerprint,
+                           data_version, content jsonb (tableau, détail, contrôles, N-1),
+                           content_hash, status ∈ {validated, published}, validated_by/at,
+                           published_by/at
+                           -- immuable sauf « validé → publié » (trigger + contrôle du référentiel)
 ```
+
+Fonction `app.sig_data_fingerprint(entreprise, exercice)` (SECURITY DEFINER, accès vérifié) :
+condensé des balances et FEC courants, des rattachements PCG des comptes 6/7 et des exceptions
+actives ; sert à détecter les versions obsolètes. RLS : exceptions et approbations réservées au
+cabinet ; versions figées lisibles par le personnel, par le client **uniquement si publiées**.
 
 ## 5. Trésorerie
 

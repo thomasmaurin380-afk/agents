@@ -19,6 +19,7 @@ export type NavIcon =
 export function dafGlobalNav(isAdmin: boolean): NavItem[] {
   return [
     { label: "Portefeuille clients", href: "/daf/portfolio", icon: "portfolio" },
+    { label: "Référentiel SIG", href: "/daf/sig-rules", icon: "settings" },
     { label: "Missions", plannedPhase: "8", icon: "missions" },
     ...(isAdmin ? [{ label: "Équipe du cabinet", href: "/daf/team", icon: "team" as const }] : []),
   ];
@@ -30,7 +31,7 @@ export function dafCompanyNav(companyId: string): NavItem[] {
     { label: "Fiche entreprise", href: base, icon: "company" },
     { label: "Tableau de bord", plannedPhase: "4", icon: "dashboard" },
     { label: "KPI", plannedPhase: "4", icon: "kpi" },
-    { label: "SIG", plannedPhase: "3", icon: "sig" },
+    { label: "SIG", href: `${base}/sig`, icon: "sig" },
     { label: "Données comptables", href: `${base}/data`, icon: "accounting" },
     { label: "Trésorerie", plannedPhase: "5b", icon: "treasury" },
     { label: "Budgets", plannedPhase: "7", icon: "budget" },
@@ -49,7 +50,7 @@ export function clientNav(companyId: string): NavItem[] {
   return [
     { label: "Tableau de bord", href: base, icon: "dashboard" },
     { label: "Mes KPI", plannedPhase: "4", icon: "kpi" },
-    { label: "Mes SIG", plannedPhase: "3", icon: "sig" },
+    { label: "Mes SIG", href: `${base}/sig`, icon: "sig" },
     { label: "Ma trésorerie", plannedPhase: "5b", icon: "treasury" },
     { label: "Mon budget", plannedPhase: "7", icon: "budget" },
     { label: "Mes rapports", plannedPhase: "5", icon: "reports" },

@@ -63,3 +63,11 @@
 
 Un utilisateur désactivé (`users.disabled_at`) perd immédiatement tout accès. Un refus d'accès
 applicatif est journalisé (`outcome = denied`) et rendu comme une page 404.
+
+## Application en base (Phase 3 — SIG)
+
+| Table | Lecture | Écriture |
+|---|---|---|
+| `sig_account_overrides` | personnel du cabinet ayant accès à l'entreprise | administrateur du cabinet (création, remplacement) ; jamais de modification ni de suppression |
+| `sig_rule_set_approvals` | membres du cabinet | administrateur du cabinet |
+| `sig_snapshots` | personnel ayant accès ; clients : **versions publiées uniquement** | insertion par le personnel (statut « validé ») ; publication par l'administrateur, si le référentiel est validé ; immuable sinon |

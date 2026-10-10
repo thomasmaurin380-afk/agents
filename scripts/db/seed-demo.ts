@@ -105,6 +105,17 @@ async function reset() {
                           where cm.user_id = u.id and not (c.firm_id = any(${firmIds})))
           and not exists (select 1 from app.firm_members fm where fm.user_id = u.id and not (fm.firm_id = any(${firmIds})))`;
       userIds = exclusive.map((e) => e.id as string);
+      // Données de la phase 3 : versions figées et exceptions sont immuables par trigger ; la
+      // réinitialisation de la démonstration (jamais en production) suspend ces gardes le temps
+      // de la transaction, en tant que propriétaire des tables.
+      await tx`alter table app.sig_snapshots disable trigger sig_snapshots_guard`;
+      await tx`alter table app.sig_account_overrides disable trigger sig_account_overrides_guard`;
+      await tx`delete from app.sig_snapshots where company_id = any(${companyIds})`;
+      await tx`delete from app.sig_account_overrides where company_id = any(${companyIds})`;
+      await tx`delete from app.sig_rule_set_approvals where firm_id = any(${firmIds})`;
+      await tx`alter table app.sig_snapshots enable trigger sig_snapshots_guard`;
+      await tx`alter table app.sig_account_overrides enable trigger sig_account_overrides_guard`;
+      await tx`delete from app.storage_cleanup_queue where company_id = any(${companyIds})`;
       // Données de la phase 2 (ordre imposé par les clés étrangères).
       for (const table of [
         "bank_transactions", "accounting_entries", "trial_balance_lines", "import_rows", "chart_of_accounts",
