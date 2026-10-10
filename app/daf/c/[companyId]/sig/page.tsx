@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input, Label, Select } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fiscalMonths } from "@/domain/sig/periods";
-import { fmtDateTime, PERIOD_KIND_LABELS, SNAPSHOT_STATUS, SOURCE_KIND_LABELS } from "@/features/sig/format";
+import { euro, fmtDateTime, PERIOD_KIND_LABELS, SNAPSHOT_STATUS, SOURCE_KIND_LABELS } from "@/features/sig/format";
 import { OverrideForm, ValidateSigForm } from "@/features/sig/forms";
 import { ChecksPanel, SigTable } from "@/features/sig/sig-table";
 import { orNotFound, requireStaff } from "@/lib/guards";
@@ -43,6 +43,7 @@ export default async function SigPage({ params, searchParams }: PageProps<"/daf/
     );
   }
   const fy = r.fiscalYear;
+  const lineLabel = (code: string | null) => (code ? r.ruleSet.lines.find((l) => l.code === code)?.label ?? code : "—");
   const months = fiscalMonths(fy);
   const hidden: Record<string, string> = {
     fiscalYearId: fy.id, period: r.period.kind, ...(r.period.month ? { month: String(r.period.month) } : {}),
@@ -139,10 +140,10 @@ export default async function SigPage({ params, searchParams }: PageProps<"/daf/
               {r.unresolved.filter((u) => u.reason !== "no_pcg").length ? (
                 isAdmin ? (
                   <div className="space-y-3">
-                    <p className="text-sm font-medium">Classer les comptes (exception propre à cette entreprise, justifiée et historisée)</p>
+                    <p className="text-sm font-medium">Comptes à classer — votre décision devient une exception propre à cette entreprise, justifiée et historisée</p>
                     {r.unresolved.filter((u) => u.reason !== "no_pcg").map((u) => (
-                      <div key={u.account}>
-                        <p className="text-sm"><span className="font-mono">{u.account}</span> {u.label} — PCG {u.pcgAccount}{u.note ? ` — ${u.note}` : ""}</p>
+                      <div key={u.account} data-testid={`decision-${u.account}`}>
+                        <AccountDecision u={u} lineLabel={lineLabel} />
                         <OverrideForm companyId={companyId} ruleSetCode={r.ruleSet.code} account={u.account} proposal={u.proposal} lines={r.ruleSet.lines.map((l) => ({ code: l.code, label: l.label }))} />
                       </div>
                     ))}
@@ -211,15 +212,15 @@ export default async function SigPage({ params, searchParams }: PageProps<"/daf/
           <CardContent>
             <Table>
               <TableHeader>
-                <TableRow><TableHead>Compte</TableHead><TableHead>Référentiel</TableHead><TableHead>Proposée</TableHead><TableHead>Retenue</TableHead><TableHead>Justification</TableHead><TableHead>Auteur</TableHead><TableHead>État</TableHead></TableRow>
+                <TableRow><TableHead>Compte</TableHead><TableHead>Référentiel</TableHead><TableHead>Rubrique proposée</TableHead><TableHead>Rubrique retenue</TableHead><TableHead>Justification</TableHead><TableHead>Auteur</TableHead><TableHead>État</TableHead></TableRow>
               </TableHeader>
               <TableBody>
                 {ws.overrides.map((o) => (
                   <TableRow key={o.id}>
                     <TableCell className="font-mono">{o.account} <span className="text-muted-foreground">({o.pcgAccount})</span></TableCell>
                     <TableCell>{o.ruleSetCode}</TableCell>
-                    <TableCell>{o.proposedLine ?? "—"}</TableCell>
-                    <TableCell>{o.line}</TableCell>
+                    <TableCell>{o.proposedLine ? lineLabel(o.proposedLine) : "—"}</TableCell>
+                    <TableCell>{lineLabel(o.line)}</TableCell>
                     <TableCell>{o.justification}</TableCell>
                     <TableCell>{o.createdBy} — {fmtDateTime(o.createdAt)}</TableCell>
                     <TableCell>{o.replacedAt ? `Remplacée le ${fmtDateTime(o.replacedAt)}` : <Badge variant="success">Active</Badge>}</TableCell>
@@ -231,5 +232,38 @@ export default async function SigPage({ params, searchParams }: PageProps<"/daf/
         </Card>
       ) : null}
     </>
+  );
+}
+
+const DECISION_STATUS = {
+  review: { label: "À confirmer", variant: "warning" },
+  transitional: { label: "Transitoire — à réimputer", variant: "warning" },
+  removed: { label: "Incompatible avec le référentiel", variant: "destructive" },
+  unassigned: { label: "Sans règle", variant: "destructive" },
+  no_pcg: { label: "Sans rattachement PCG", variant: "destructive" },
+} as const;
+
+/** Ce que le DAF doit savoir pour décider : statut, montant, proposition, source de la règle, impact. */
+function AccountDecision({ u, lineLabel }: {
+  u: { account: string; label: string; pcgAccount: string | null; net: bigint; reason: keyof typeof DECISION_STATUS; proposal: string | null; note: string | null; basis: "pcg" | "cabinet" | null; reference: string | null };
+  lineLabel: (code: string | null) => string;
+}) {
+  const st = DECISION_STATUS[u.reason];
+  const isProduct = (u.pcgAccount ?? u.account).startsWith("7");
+  const amount = isProduct ? -u.net : u.net;
+  const cents = (c: bigint) => `${c < 0n ? "-" : ""}${(c < 0n ? -c : c) / 100n}.${((c < 0n ? -c : c) % 100n).toString().padStart(2, "0")}`;
+  return (
+    <div className="space-y-1 text-sm">
+      <p className="flex flex-wrap items-center gap-2">
+        <span className="font-mono">{u.account}</span> {u.label} <span className="text-muted-foreground">(PCG {u.pcgAccount ?? "—"})</span>
+        <Badge variant={st.variant}>{st.label}</Badge>
+      </p>
+      <p className="text-muted-foreground">
+        {isProduct ? "Produit" : "Charge"} de {euro(cents(amount))} sur la période, non intégré aux SIG tant qu&apos;il n&apos;est pas classé.
+        {u.proposal ? <> Rubrique proposée : <strong className="text-foreground">{lineLabel(u.proposal)}</strong>.</> : " Aucune rubrique proposée."}
+      </p>
+      {u.note ? <p className="text-muted-foreground">Pourquoi : {u.note}</p> : null}
+      {u.reference ? <p className="text-xs text-muted-foreground">Source : {u.basis === "cabinet" ? "convention de présentation du cabinet" : "règle PCG"} — {u.reference}</p> : null}
+    </div>
   );
 }

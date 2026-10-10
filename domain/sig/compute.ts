@@ -1,4 +1,4 @@
-import { lineNature, resolveAccount, type Resolution } from "./rules";
+import { lineNature, MERCHANDISE_PREFIXES, resolveAccount, type Resolution } from "./rules";
 import type {
   AccountBalance, AggregateDef, Contribution, LineCode, Override, RowCode, RuleSet, SigRow,
 } from "./types";
@@ -15,9 +15,12 @@ export type UnresolvedAccount = {
   label: string;
   pcgAccount: string | null;
   net: bigint;
-  reason: "no_pcg" | "review" | "removed" | "unassigned";
+  reason: "no_pcg" | "review" | "transitional" | "removed" | "unassigned";
   proposal: LineCode | null;
   note: string | null;
+  /** Source de la règle : lecture du PCG ou convention du cabinet, avec sa référence. */
+  basis: "pcg" | "cabinet" | null;
+  reference: string | null;
 };
 
 export type SigComputation = {
@@ -28,7 +31,12 @@ export type SigComputation = {
   plAccountCount: number;
   /** Rapprochement : résultat issu des SIG vs −Σ(débit − crédit) des classes 6 et 7, sans règle. */
   reconciliation: { sigResult: bigint; accountingResult: bigint; gap: bigint };
-  overridesUsed: { account: string; overrideId: string; line: LineCode; justification: string }[];
+  overridesUsed: { account: string; overrideId: string; line: LineCode; justification: string; ruleStatus: string | null }[];
+  /**
+   * Contrôle interne du moteur : chaque compte de gestion est compté exactement une fois (ligne ou
+   * compte non classé), et le résultat issu des formules égale la somme signée des lignes.
+   */
+  integrity: { ok: boolean; detail: string | null };
 };
 
 /** Classe comptable d'un compte : celle de son rattachement PCG, à défaut son premier chiffre. */
@@ -50,23 +58,27 @@ export function computeSig(rs: RuleSet, balances: readonly AccountBalance[], ove
   let plAccountCount = 0;
 
   const sorted = [...balances].sort((a, b) => (a.account < b.account ? -1 : a.account > b.account ? 1 : 0));
+  const ctx = {
+    merchandiseActivity: sorted.some((b) => isProfitAndLoss(b) && b.net !== 0n && b.pcgAccount != null
+      && MERCHANDISE_PREFIXES.some((p) => b.pcgAccount!.startsWith(p))),
+  };
   for (const b of sorted) {
     if (!isProfitAndLoss(b)) continue;
     accountingResult -= b.net;
     if (b.net === 0n && !b.debit && !b.credit) continue;
     plAccountCount++;
     if (!b.pcgAccount) {
-      unresolved.push({ account: b.account, label: b.label, pcgAccount: null, net: b.net, reason: "no_pcg", proposal: null, note: null });
+      unresolved.push({ account: b.account, label: b.label, pcgAccount: null, net: b.net, reason: "no_pcg", proposal: null, note: null, basis: null, reference: null });
       continue;
     }
     const ov = byAccount.get(b.account);
-    const res: Resolution = resolveAccount(rs, b.pcgAccount, ov);
+    const res: Resolution = resolveAccount(rs, b.pcgAccount, ov, ctx);
     if (res.status === "rule" || res.status === "override") {
       const nature = lineNature(rs, res.line);
       const via: Contribution["via"] = res.status === "rule"
-        ? { kind: "rule", prefix: res.rule.prefix, reference: res.rule.reference }
+        ? { kind: "rule", prefix: res.rule.prefix, reference: res.rule.reference, basis: res.rule.basis, note: res.autoNote ?? res.rule.note ?? null }
         : { kind: "override", overrideId: res.overrideId, justification: res.justification };
-      if (res.status === "override") overridesUsed.push({ account: b.account, overrideId: res.overrideId, line: res.line, justification: res.justification });
+      if (res.status === "override") overridesUsed.push({ account: b.account, overrideId: res.overrideId, line: res.line, justification: res.justification, ruleStatus: res.rule?.status ?? null });
       contributions.get(res.line)!.push({
         account: b.account, label: b.label, pcgAccount: b.pcgAccount, via,
         amount: nature === "product" ? -b.net : b.net,
@@ -79,6 +91,8 @@ export function computeSig(rs: RuleSet, balances: readonly AccountBalance[], ove
       reason: res.status,
       proposal: res.status === "unassigned" ? null : res.proposal,
       note: res.status === "unassigned" ? null : res.rule.note ?? null,
+      basis: res.status === "unassigned" ? null : res.rule.basis,
+      reference: res.status === "unassigned" ? null : res.rule.reference,
     });
   }
 
@@ -112,6 +126,17 @@ export function computeSig(rs: RuleSet, balances: readonly AccountBalance[], ove
   });
 
   const sigResult = evaluate("RESULTAT_NET");
+
+  // Contrôle interne : aucune duplication ni perte de compte, formules cohérentes avec les lignes.
+  const seen = new Map<string, number>();
+  for (const list of contributions.values()) for (const c of list) seen.set(c.account, (seen.get(c.account) ?? 0) + 1);
+  for (const u of unresolved) seen.set(u.account, (seen.get(u.account) ?? 0) + 1);
+  const problems: string[] = [];
+  for (const [acc, n] of seen) if (n !== 1) problems.push(`compte ${acc} compté ${n} fois`);
+  if (seen.size !== plAccountCount) problems.push(`${plAccountCount} comptes de gestion, ${seen.size} retrouvés`);
+  const signedLines = rs.lines.reduce((sum, l) => sum + (l.nature === "product" ? 1n : -1n) * values.get(l.code)!, 0n);
+  if (signedLines !== sigResult) problems.push("le résultat des formules diffère de la somme des rubriques");
+
   return {
     ruleSet: { code: rs.code, version: rs.version },
     rows,
@@ -119,6 +144,7 @@ export function computeSig(rs: RuleSet, balances: readonly AccountBalance[], ove
     plAccountCount,
     reconciliation: { sigResult, accountingResult, gap: sigResult - accountingResult },
     overridesUsed,
+    integrity: { ok: problems.length === 0, detail: problems.length ? problems.join(" ; ") : null },
   };
 }
 

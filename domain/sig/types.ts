@@ -35,14 +35,24 @@ export type AggregateDef = { code: SubtotalCode | SoldeCode; label: string; term
  * Règle de rattachement d'un préfixe PCG :
  *  - `certain` : rattachement automatique ;
  *  - `review` : rubrique proposée, intervention du DAF obligatoire (exception d'entreprise) ;
- *  - `removed` : compte supprimé dans ce référentiel ; reclassement obligatoire par le DAF.
+ *  - `transitional` : compte d'attente à réimputer par nature (672/772) : classement par le DAF obligatoire ;
+ *  - `removed` : compte incompatible avec ce référentiel ; reclassement obligatoire par le DAF.
+ * `basis` distingue une lecture directe du PCG d'une convention de présentation du cabinet.
  */
+export type RuleBasis = "pcg" | "cabinet";
+
+/** Condition d'automatisation : la règle `review` devient certaine si la condition est remplie. */
+export type AutoCondition = "no_merchandise_activity";
+
 export type AccountRule = {
   prefix: string;
-  status: "certain" | "review" | "removed";
+  status: "certain" | "review" | "transitional" | "removed";
   line: LineCode | null;
+  basis: RuleBasis;
   reference: string;
   note?: string;
+  /** Rattachement automatique à `line` lorsque la condition est vérifiée sur la période. */
+  autoWhen?: { condition: AutoCondition; note: string };
 };
 
 export type RuleSet = {
@@ -87,7 +97,9 @@ export type Contribution = {
   label: string;
   pcgAccount: string;
   /** Règle appliquée : préfixe PCG, ou exception d'entreprise. */
-  via: { kind: "rule"; prefix: string; reference: string } | { kind: "override"; overrideId: string; justification: string };
+  via:
+    | { kind: "rule"; prefix: string; reference: string; basis: RuleBasis; note: string | null }
+    | { kind: "override"; overrideId: string; justification: string };
   /** Montant signé selon la nature de la ligne (produit : crédit − débit ; charge : débit − crédit). */
   amount: bigint;
   debit: bigint | null;

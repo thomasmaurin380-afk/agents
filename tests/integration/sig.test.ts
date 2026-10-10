@@ -69,6 +69,8 @@ describe("AZUR CONSEIL SA — exercice 2025", () => {
     expect(row(r, "RESULTAT_NET").value).toBe("12354.00");
     expect(row(r, "PRODUCTION_VENDUE").value).toBe("17850.00");
     expect(row(r, "AUTRES_ACHATS_CHARGES_EXTERNES").value).toBe("5496.00");
+    expect(row(r, "CHIFFRE_AFFAIRES").value).toBe("17850.00");
+    expect(row(r, "CONSOMMATIONS_TIERS").value).toBe("5496.00");
     expect(row(r, "VALEUR_AJOUTEE").value).toBe("12354.00");
     expect(row(r, "EBE").value).toBe("12354.00");
     expect(r.content.reconciliation).toEqual({ sigResult: "12354.00", accountingResult: "12354.00", gap: "0.00" });
@@ -197,7 +199,7 @@ describe("Exceptions de classement et obsolescence", () => {
     const r = await report(admin);
     expect(r.blocking).toBe(false);
     expect(row(r, "RESULTAT_NET").value).toBe("12354.00");
-    expect(row(r, "AUTRES_ACHATS_CHARGES_EXTERNES").contributions[0].via).toBe("Exception : Frais accessoires de maintenance");
+    expect(row(r, "AUTRES_ACHATS_CHARGES_EXTERNES").contributions[0].via).toBe("Exception de l'entreprise : Frais accessoires de maintenance");
     expect(codes(r)).toContain("overrides_used:warning");
     const ws = await sig.getSigWorkspace(admin, w.c.c1, { fiscalYearId: fy });
     expect(ws.overrides.map((o) => [o.line, o.replacedAt === null])).toEqual([["AUTRES_ACHATS_CHARGES_EXTERNES", true], ["ACHATS_MATIERES", false]]);
@@ -235,5 +237,31 @@ describe("Exercice décalé, comparaison N / N-1 et changement de référentiel"
     expect(again.content.comparison).toMatchObject({ available: false });
     expect(again.content.rows.find((x) => x.code === "RESULTAT_NET")!.previous).toBeNull();
     expect(again.content.checks.find((x) => x.code === "no_previous")!.title).toBe("Données N-1 indisponibles");
+  });
+});
+
+describe("Changement de référentiel : validations et versions antérieures", () => {
+  it("une validation ou une version figée établie sur une autre empreinte de règles est sans effet / obsolète", async () => {
+    const c = w.c.c1;
+    // Simule l'état laissé par la version 1 du référentiel : validation cabinet + version publiable.
+    await sql`insert into app.sig_rule_set_approvals (firm_id, rule_set_code, rule_set_version, rules_hash, approved_by)
+      values (${w.f1}, 'PCG-2024', 1, ${"a".repeat(64)}, ${w.u.admin1})`;
+    const overview = await sig.getRuleSetsOverview(admin);
+    expect(overview.ruleSets.find((x) => x.ruleSet.code === "PCG-2024")!.approval).toBeNull();
+    expect(overview.ruleSets.find((x) => x.ruleSet.code === "PCG-2024")!.ruleSet.version).toBe(2);
+
+    const r = await report(admin);
+    const [{ id }] = await sql`insert into app.sig_snapshots (company_id, fiscal_year_id, period_kind, period_start, period_end, source,
+        source_choice, source_refs, rule_set_code, rule_set_version, rules_hash, engine_version, data_fingerprint, data_version,
+        content, content_hash, validated_by)
+      values (${c}, ${fy}, 'fiscal_year', '2025-01-01', '2025-12-31', 'trial_balance', 'auto', '{}'::jsonb, 'PCG-2025', 1,
+        ${"b".repeat(64)}, 'sig-engine@1', ${r.fingerprint}, 0, ${sql.json(r.content as never)}, ${r.contentHash}, ${w.u.admin1})
+      returning id`;
+    const s = await sig.getSnapshot(admin, c, id);
+    expect(s.snapshot.obsolete).toBe(true);
+    await expect(sig.publishSig(admin, c, id)).rejects.toMatchObject({ code: "sig_obsolete" });
+    // L'historique reste consultable, rien n'est écrasé.
+    const n = await sql`select count(*)::int as n from app.sig_snapshots where company_id = ${c}`;
+    expect(n[0].n).toBeGreaterThanOrEqual(3);
   });
 });

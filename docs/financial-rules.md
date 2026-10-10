@@ -40,17 +40,32 @@ Les relevés bancaires ne sont **jamais** utilisés pour les SIG (testé).
 ## 3. Contrôles
 
 Bloquants (validation et publication impossibles) : aucune source ; aucun compte de classe 6/7 ;
-compte sans rattachement PCG ; compte de gestion sans rubrique (à confirmer, supprimé par le
-référentiel, sans règle) ; **écart de rapprochement** ; divergence balance/FEC sans choix justifié ;
-écritures de clôture dans le FEC.
+compte sans rattachement PCG ; compte de gestion sans rubrique (à confirmer, incompatible avec le
+référentiel, sans règle) ; comptes transitoires 672 / 772 non classés (message « à vérifier » en
+situation provisoire, « non régularisés à la clôture » sur des comptes définitifs : balance
+« définitive » ou exercice clos) ; **écart de rapprochement** ; **contrôle interne du moteur**
+(chaque compte compté une seule fois, formules = somme signée des rubriques) ; divergence
+balance/FEC sans choix justifié ; écritures de clôture dans le FEC.
+
+Le rapprochement du résultat net ne suffit pas à garantir les soldes intermédiaires : c'est pourquoi
+aucun compte ambigu n'est affecté par défaut (il bloque), chaque rubrique est la somme exacte de
+ses comptes (détail affiché) et un reclassement retire le montant d'une rubrique pour l'ajouter à
+une autre, sans duplication ni perte (testé).
 
 Rapprochement indépendant : le résultat issu des SIG est comparé à −Σ(débit − crédit) de tous les
 comptes de classes 6 et 7, calculé **sans** les règles. L'écart attendu est 0,00 €.
 
 Avertissements (conservés dans la version figée) : données provisoires ou exercice non clos ;
 « Données N-1 indisponibles » ; durées N / N-1 différentes ; référentiels N / N-1 différents ;
-exceptions de classement utilisées ; résultat exceptionnel non nul en 2025 ; référentiel non encore
+exceptions de classement utilisées ; 672 / 772 classés par exception sur des comptes définitifs ;
+résultat exceptionnel non nul en 2025 (contrôle de la nature des 678 / 778) ; référentiel non encore
 validé par le cabinet (affiché, bloque uniquement la publication).
+
+## 3 bis. Signes
+
+Produit : crédit − débit ; charge : débit − crédit. Un remboursement de charges (649 créditeur), un
+avoir fournisseur ou un rabais obtenu diminue la charge de sa rubrique ; un rabais accordé (709x)
+diminue le produit. Aucun remboursement n'est présenté en produit ni dans le chiffre d'affaires.
 
 ## 4. Comparaison N / N-1
 
@@ -78,6 +93,14 @@ validé par le cabinet (affiché, bloque uniquement la publication).
 Le client ne lit que les versions publiées (service **et** RLS) : soldes principaux, CA, comparaison,
 explications simples, date de publication, statut des données. Ni détail par compte, ni justification,
 ni exception, ni version non publiée.
+
+## 5 bis. Changement de référentiel
+
+Toute modification d'une règle, d'une formule ou d'un choix de présentation incrémente la version du
+référentiel et change son empreinte. Conséquences : la validation du cabinet portant sur l'ancienne
+empreinte ne vaut plus (nouvelle validation requise avant toute publication) ; les versions figées
+établies avec l'ancienne empreinte deviennent obsolètes, restent consultables et ne peuvent plus être
+publiées ; une version déjà publiée n'est jamais modifiée (le client voit « données mises à jour »).
 
 ## 6. Performance
 

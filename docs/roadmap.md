@@ -175,7 +175,9 @@ Docs : `docs/sig-rules.md`, `docs/financial-rules.md`. Jeu AZUR CONSEIL SA recon
 
 Migrations à appliquer : `0005_phase3_sig.sql`, `0006_phase3_sig_security.sql`.
 
-À valider par vous : hypothèses H-1 à H-5, H-2024-1, H-2025-0 à H-2025-5 (`docs/sig-rules.md` § 4).
+Corrections du 2026-10-10 (référentiels v2, D-23) : 648, 649, 608/609/6098, 708/7098 à confirmer ;
+74x différenciés ; 672/772 transitoires ; 687/787 confirmés ; contrôle interne du moteur.
+À valider par vous : choix de présentation C-0 à C-5 et C-2024-1 (`docs/sig-rules.md` § 5).
 Reporté : 9e solde (cessions), export / PDF des SIG (Phase 5), exceptions déléguées aux collaborateurs.
 
 ## Phase 4 — Dashboard et KPI

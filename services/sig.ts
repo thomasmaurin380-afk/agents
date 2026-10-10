@@ -167,6 +167,7 @@ async function buildReport(tx: RuntimeTx, companyId: string, firmId: string, raw
     divergence,
     comparison: comparison.available ? { ruleSetCode: comparison.ruleSetCode, months: comparison.period.months, available: true } : null,
     fiscalYearOpen: fy.status === "open",
+    definitive: decision.kind === "trial_balance" ? !loaded.provisional : fy.status !== "open",
   });
   if (comparison.available === false && checks.some((c) => c.code === "no_previous")) {
     const c = checks.find((x) => x.code === "no_previous")!;

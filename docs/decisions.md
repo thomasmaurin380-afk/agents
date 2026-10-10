@@ -27,6 +27,7 @@ Statuts : `proposée` · `validée` · `rejetée` · `remplacée`.
 | D-20 | Référentiels SIG versionnés dans le code (empreinte), validés par le cabinet en base | appliquée (Phase 3) |
 | D-21 | SIG : une seule source par calcul, balance prioritaire, FEC en contrôle croisé | appliquée (Phase 3) |
 | D-22 | Versions figées des SIG immuables ; obsolescence par empreinte des données | appliquée (migrations 0005-0006) |
+| D-23 | Référentiels SIG v2 : statuts « transitoire » et « incompatible », fondement PCG / convention, règle conditionnelle 708/7098 | appliquée (2026-10-10) |
 
 Paramètres généraux validés : devise **EUR**, langue **français**, référentiel **PCG français versionné**,
 multi-entreprises, deux interfaces (DAF / client), moteur financier partagé, sécurité et traçabilité prioritaires.
@@ -174,3 +175,14 @@ publié, lui-même conditionné en base à la validation du référentiel. Une v
 « obsolète » si l'empreinte des données (N et N-1) ou du référentiel change ; elle reste consultable
 mais ne peut plus être publiée. La réinitialisation de la démonstration (jamais en production)
 suspend temporairement ces gardes.
+
+## D-23 — Référentiels SIG v2 (2026-10-10)
+
+Chaque règle porte un fondement (règle PCG ou convention de présentation du cabinet) affiché au DAF
+et au détail des calculs. Les subdivisions que le PCG demande de rattacher « aux postes auxquels
+elles se rapportent » (608, 609, 6098, 648, 649, 708, 7098) ne sont plus classées automatiquement :
+une rubrique est proposée et l'administrateur décide (exception justifiée). Seule exception
+automatisée : 708 / 7098 en production vendue lorsque l'entreprise n'a aucune activité de
+marchandises sur la période (déduction logique, affichée). 672 / 772 deviennent « transitoires ».
+Version des deux référentiels portée à 2 : nouvelle validation du cabinet requise, versions figées v1
+obsolètes. Aucun changement de schéma (pas de migration).

@@ -33,12 +33,15 @@ export type CheckContext = {
   comparison: { ruleSetCode: string; months: number; available: boolean } | null;
   /** Exercice non clos à la date de fin de période (période en cours). */
   fiscalYearOpen: boolean;
+  /** Comptes définitifs (balance « définitive » ou exercice clos) : les comptes transitoires doivent être soldés. */
+  definitive: boolean;
 };
 
 const REASONS: Record<UnresolvedAccount["reason"], string> = {
   no_pcg: "Compte non rattaché au plan comptable général",
   review: "Classement à confirmer",
-  removed: "Compte supprimé par le PCG 2025",
+  transitional: "Compte transitoire à réimputer par nature",
+  removed: "Compte incompatible avec le référentiel",
   unassigned: "Aucune rubrique SIG ne correspond",
 };
 
@@ -63,13 +66,36 @@ export function buildChecks(ctx: CheckContext): SigCheck[] {
       accounts: noPcg.map((u) => ({ account: u.account, label: u.label, amount: u.net })),
     });
   }
-  const toClassify = c.unresolved.filter((u) => u.reason !== "no_pcg");
+  const lineLabel = (code: string | null) => (code ? ctx.ruleSet.lines.find((l) => l.code === code)?.label ?? code : null);
+  const transitional = c.unresolved.filter((u) => u.reason === "transitional");
+  if (transitional.length) {
+    checks.push({
+      code: "transitional_accounts", severity: "blocking",
+      title: ctx.definitive ? "Comptes 672 / 772 non régularisés à la clôture" : "Comptes 672 / 772 à vérifier",
+      explanation: ctx.definitive
+        ? "Ces comptes ne s'utilisent qu'en cours d'exercice et doivent être réimputés par nature à la clôture. Un solde subsiste dans des comptes définitifs : faites corriger la comptabilité, ou classez-les par exception justifiée (les écritures d'origine ne sont jamais modifiées)."
+        : "Situation provisoire : ces comptes d'attente ne sont pas présumés exceptionnels. Indiquez la rubrique correspondant à leur nature réelle (exception justifiée) avant de valider.",
+      accounts: transitional.map((u) => ({ account: u.account, label: u.label, amount: u.net, detail: [REASONS.transitional, u.note].filter(Boolean).join(" — ") })),
+    });
+  }
+  const toClassify = c.unresolved.filter((u) => u.reason !== "no_pcg" && u.reason !== "transitional");
   if (toClassify.length) {
     checks.push({
       code: "account_without_rubric", severity: "blocking",
       title: "Comptes de gestion sans rubrique SIG",
       explanation: "Ces comptes ne sont pas rattachés automatiquement : choisissez leur rubrique et justifiez-la (exception propre à l'entreprise).",
-      accounts: toClassify.map((u) => ({ account: u.account, label: u.label, amount: u.net, detail: [REASONS[u.reason], u.note].filter(Boolean).join(" — ") })),
+      accounts: toClassify.map((u) => ({
+        account: u.account, label: u.label, amount: u.net,
+        detail: [REASONS[u.reason], u.proposal ? `rubrique proposée : ${lineLabel(u.proposal)}` : null, u.note].filter(Boolean).join(" — "),
+      })),
+    });
+  }
+
+  if (!c.integrity.ok) {
+    checks.push({
+      code: "engine_integrity", severity: "blocking",
+      title: "Contrôle interne du calcul en échec",
+      explanation: `Les rubriques ne couvrent pas exactement les comptes de gestion (${c.integrity.detail}). Aucun chiffre ne doit être utilisé.`,
     });
   }
 
@@ -134,16 +160,25 @@ export function buildChecks(ctx: CheckContext): SigCheck[] {
       code: "overrides_used", severity: "warning",
       title: "Exceptions de classement appliquées",
       explanation: "Ces comptes sont classés selon une décision propre à l'entreprise, et non selon le référentiel commun.",
-      accounts: c.overridesUsed.map((o) => ({ account: o.account, label: o.justification, amount: 0n, detail: o.line })),
+      accounts: c.overridesUsed.map((o) => ({ account: o.account, label: o.justification, amount: 0n, detail: `rubrique retenue : ${lineLabel(o.line)}` })),
+    });
+  }
+  const regularised = c.overridesUsed.filter((o) => o.ruleStatus === "transitional");
+  if (ctx.definitive && regularised.length) {
+    checks.push({
+      code: "transitional_reclassified", severity: "warning",
+      title: "Comptes 672 / 772 classés par exception sans réimputation comptable",
+      explanation: "Les comptes définitifs contiennent encore un solde sur ces comptes transitoires ; les SIG les présentent selon la nature retenue par le DAF, sans modifier les écritures.",
+      accounts: regularised.map((o) => ({ account: o.account, label: o.justification, amount: 0n, detail: `rubrique retenue : ${lineLabel(o.line)}` })),
     });
   }
 
-  if (ctx.ruleSet.code === "PCG-2025") {
+  {
     const exc = c.rows.find((r) => r.code === "RESULTAT_EXCEPTIONNEL");
-    if (exc && exc.value !== 0n) {
+    if (ctx.ruleSet.code === "PCG-2025" && exc && exc.value !== 0n) {
       checks.push({
         code: "exceptional_2025", severity: "warning", title: "Résultat exceptionnel non nul (PCG 2025)",
-        explanation: "Depuis 2025, le résultat exceptionnel est réservé aux événements majeurs et inhabituels : vérifiez que les montants de 678/778 le justifient.",
+        explanation: "Depuis 2025, le résultat exceptionnel est réservé aux événements majeurs et inhabituels : vérifiez la nature des montants de 678/778 (687/787 : dotations et reprises exceptionnelles).",
         amount: exc.value,
       });
     }

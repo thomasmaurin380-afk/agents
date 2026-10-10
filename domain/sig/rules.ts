@@ -6,9 +6,9 @@ import type { AccountRule, AggregateDef, LineCode, LineDef, RowCode, RuleSet, Ru
  * les hypothèses doivent être revalidées par le cabinet avant publication.
  *
  * Sources : PCG (règlement ANC n° 2014-03, art. 842-1 « tableau des soldes intermédiaires de
- * gestion » du système développé) ; règlement ANC n° 2022-06 (exercices ouverts à compter du
- * 01/01/2025), qui supprime les transferts de charges, restreint le résultat exceptionnel et
- * retire provisoirement le modèle de SIG du PCG. Voir docs/sig-rules.md.
+ * gestion ») ; règlement ANC n° 2022-06 et recueil ANC 2025 (exercices ouverts à compter du
+ * 01/01/2025). Chaque règle indique son fondement : lecture du PCG ou convention de présentation
+ * du cabinet. Voir docs/sig-rules.md (historique des corrections, choix à approuver).
  */
 
 const P = "product" as const;
@@ -160,14 +160,25 @@ const LAYOUT: RuleSet["layout"] = [
 ];
 
 const REF_SIG = "PCG art. 842-1 (tableau des SIG, système développé)";
-const REF_2022 = "Règlement ANC n° 2022-06";
+const REF_PCG25 = "PCG 2025 (règlement ANC n° 2022-06), plan de comptes";
+const REF_RENVOI = "Recueil ANC des normes françaises (janvier 2025), renvois du tableau du compte de résultat : subdivisions à rattacher aux postes auxquels elles se rapportent";
+const REF_CABINET = "Convention de présentation du cabinet (choix de gestion, non normatif)";
+const DAF = "Classement à confirmer par le DAF";
 
-const certain = (prefix: string, line: LineCode, reference = REF_SIG, note?: string): AccountRule => ({ prefix, status: "certain", line, reference, note });
-const review = (prefix: string, line: LineCode | null, note: string): AccountRule => ({ prefix, status: "review", line, reference: "Classement à confirmer par le DAF", note });
-const removed = (prefix: string, line: LineCode | null, note: string): AccountRule => ({ prefix, status: "removed", line, reference: REF_2022, note });
+type Opts = { note?: string; basis?: AccountRule["basis"]; reference?: string };
+const certain = (prefix: string, line: LineCode, o: Opts = {}): AccountRule => ({ prefix, status: "certain", line, basis: o.basis ?? "pcg", reference: o.reference ?? REF_SIG, note: o.note });
+const convention = (prefix: string, line: LineCode, note: string): AccountRule => ({ prefix, status: "certain", line, basis: "cabinet", reference: REF_CABINET, note });
+const review = (prefix: string, line: LineCode | null, note: string, o: Omit<Opts, "note"> = {}): AccountRule => ({ prefix, status: "review", line, basis: o.basis ?? "pcg", reference: o.reference ?? DAF, note });
+const transitional = (prefix: string, line: LineCode, note: string): AccountRule => ({ prefix, status: "transitional", line, basis: "pcg", reference: "PCG : compte utilisable en cours d'exercice seulement, à réimputer par nature à la clôture", note });
+const removed = (prefix: string, line: LineCode | null, note: string): AccountRule => ({ prefix, status: "removed", line, basis: "pcg", reference: REF_PCG25, note });
+const NO_MERCH = {
+  condition: "no_merchandise_activity" as const,
+  note: "Aucune vente ni achat de marchandises (707, 607, 6037, 6097, 7097) sur la période : le produit annexe ne peut se rapporter qu'à la production vendue.",
+};
 
 /** Règles communes aux deux référentiels (classes 6 et 7). */
 const COMMON: AccountRule[] = [
+  // 60 — Achats
   review("60", "AUTRES_ACHATS_CHARGES_EXTERNES", "Compte 60 sans subdivision : nature d'achat indéterminée."),
   certain("601", "ACHATS_MATIERES"),
   certain("602", "ACHATS_MATIERES"),
@@ -179,37 +190,38 @@ const COMMON: AccountRule[] = [
   certain("605", "AUTRES_ACHATS_CHARGES_EXTERNES"),
   certain("606", "AUTRES_ACHATS_CHARGES_EXTERNES"),
   certain("607", "ACHATS_MARCHANDISES"),
-  review("608", "AUTRES_ACHATS_CHARGES_EXTERNES", "Frais accessoires d'achat non ventilés : à rattacher à la catégorie d'achats concernée."),
-  certain("6081", "ACHATS_MATIERES"),
-  certain("6082", "ACHATS_MATIERES"),
-  certain("6084", "AUTRES_ACHATS_CHARGES_EXTERNES"),
-  certain("6085", "AUTRES_ACHATS_CHARGES_EXTERNES"),
-  certain("6086", "AUTRES_ACHATS_CHARGES_EXTERNES"),
-  certain("6087", "ACHATS_MARCHANDISES"),
-  review("609", "AUTRES_ACHATS_CHARGES_EXTERNES", "Rabais, remises et ristournes obtenus non ventilés : à rattacher à la catégorie d'achats concernée."),
+  review("608", "AUTRES_ACHATS_CHARGES_EXTERNES", "Frais accessoires d'achat : à rattacher aux achats auxquels ils se rapportent (marchandises, matières ou autres achats).", { reference: REF_RENVOI }),
+  review("609", "AUTRES_ACHATS_CHARGES_EXTERNES", "Rabais, remises et ristournes obtenus non ventilés : à rattacher aux achats concernés.", { reference: REF_RENVOI }),
   certain("6091", "ACHATS_MATIERES"),
   certain("6092", "ACHATS_MATIERES"),
   certain("6094", "AUTRES_ACHATS_CHARGES_EXTERNES"),
   certain("6095", "AUTRES_ACHATS_CHARGES_EXTERNES"),
   certain("6096", "AUTRES_ACHATS_CHARGES_EXTERNES"),
   certain("6097", "ACHATS_MARCHANDISES"),
-  certain("6098", "AUTRES_ACHATS_CHARGES_EXTERNES"),
+  review("6098", "AUTRES_ACHATS_CHARGES_EXTERNES", "Rabais, remises et ristournes non affectés : à rattacher aux achats auxquels ils se rapportent.", { reference: REF_RENVOI }),
+  // 61-62 — Services extérieurs
   certain("61", "AUTRES_ACHATS_CHARGES_EXTERNES"),
-  certain("62", "AUTRES_ACHATS_CHARGES_EXTERNES", REF_SIG, "Y compris 621 « Personnel extérieur à l'entreprise » (charge externe)."),
+  certain("62", "AUTRES_ACHATS_CHARGES_EXTERNES"),
+  certain("621", "AUTRES_ACHATS_CHARGES_EXTERNES", { note: "Personnel extérieur à l'entreprise : charge externe selon le PCG (et non charge de personnel)." }),
+  // 63-64 — Impôts, personnel
   certain("63", "IMPOTS_TAXES"),
-  review("64", "SALAIRES_TRAITEMENTS", "Compte 64 non subdivisé : salaires (641/644/648) ou charges sociales (645/646/647) ?"),
+  review("64", "SALAIRES_TRAITEMENTS", "Compte 64 non subdivisé : salaires (641/644) ou charges sociales (645/646/647) ?"),
   certain("641", "SALAIRES_TRAITEMENTS"),
   certain("644", "SALAIRES_TRAITEMENTS"),
   certain("645", "CHARGES_SOCIALES"),
   certain("646", "CHARGES_SOCIALES"),
   certain("647", "CHARGES_SOCIALES"),
-  certain("648", "SALAIRES_TRAITEMENTS"),
+  review("648", "SALAIRES_TRAITEMENTS", "Autres charges de personnel : à rattacher aux salaires ou aux charges sociales selon leur nature.", { reference: REF_RENVOI }),
+  review("649", "SALAIRES_TRAITEMENTS", "Remboursements de charges de personnel : viennent en diminution des salaires ou des charges sociales remboursés (jamais en produit).", { reference: REF_RENVOI }),
+  // 65-66
   certain("65", "AUTRES_CHARGES"),
   certain("655", "QUOTE_PART_PERTE"),
   certain("66", "CHARGES_FINANCIERES"),
+  // 68-69
   review("68", null, "Compte 68 non subdivisé : dotation d'exploitation (681), financière (686) ou exceptionnelle (687) ?"),
   certain("681", "DOTATIONS_EXPLOITATION"),
   certain("686", "CHARGES_FINANCIERES"),
+  certain("687", "CHARGES_EXCEPTIONNELLES"),
   review("689", null, "Engagements sur ressources affectées (entités à but non lucratif) : hors modèle SIG général."),
   review("69", null, "Compte 69 non subdivisé : participation (691) ou impôt (695 à 699) ?"),
   certain("691", "PARTICIPATION"),
@@ -217,7 +229,8 @@ const COMMON: AccountRule[] = [
   certain("696", "IMPOTS_BENEFICES"),
   certain("697", "IMPOTS_BENEFICES"),
   certain("698", "IMPOTS_BENEFICES"),
-  certain("699", "IMPOTS_BENEFICES", REF_SIG, "Produit (report en arrière des déficits) : vient en diminution de l'impôt."),
+  certain("699", "IMPOTS_BENEFICES", { note: "Produit (report en arrière des déficits) : vient en diminution de l'impôt." }),
+  // 70 — Ventes
   review("70", "PRODUCTION_VENDUE", "Compte 70 non subdivisé : ventes de marchandises (707) ou production vendue ?"),
   certain("701", "PRODUCTION_VENDUE"),
   certain("702", "PRODUCTION_VENDUE"),
@@ -226,7 +239,7 @@ const COMMON: AccountRule[] = [
   certain("705", "PRODUCTION_VENDUE"),
   certain("706", "PRODUCTION_VENDUE"),
   certain("707", "VENTES_MARCHANDISES"),
-  certain("708", "PRODUCTION_VENDUE", REF_SIG, "Produits des activités annexes : production vendue."),
+  { ...review("708", "PRODUCTION_VENDUE", "Produits des activités annexes : à rattacher aux ventes de marchandises ou à la production vendue selon l'activité concernée.", { reference: REF_RENVOI }), autoWhen: NO_MERCH },
   review("709", "PRODUCTION_VENDUE", "Rabais accordés non ventilés : sur ventes de marchandises (7097) ou sur production ?"),
   certain("7091", "PRODUCTION_VENDUE"),
   certain("7092", "PRODUCTION_VENDUE"),
@@ -234,59 +247,60 @@ const COMMON: AccountRule[] = [
   certain("7095", "PRODUCTION_VENDUE"),
   certain("7096", "PRODUCTION_VENDUE"),
   certain("7097", "VENTES_MARCHANDISES"),
-  certain("7098", "PRODUCTION_VENDUE"),
-  certain("71", "PRODUCTION_STOCKEE", REF_SIG, "Variation des stocks d'en-cours et de produits (713x)."),
+  { ...review("7098", "PRODUCTION_VENDUE", "Rabais sur produits des activités annexes : suivent le classement des produits annexes (708) auxquels ils se rapportent.", { reference: REF_RENVOI }), autoWhen: NO_MERCH },
+  certain("71", "PRODUCTION_STOCKEE", { note: "Variation des stocks d'en-cours et de produits (713x)." }),
   certain("72", "PRODUCTION_IMMOBILISEE"),
-  certain("74", "SUBVENTIONS_EXPLOITATION"),
+  // 75-78
   certain("75", "AUTRES_PRODUITS"),
   certain("755", "QUOTE_PART_BENEFICE"),
   certain("76", "PRODUITS_FINANCIERS"),
   review("78", null, "Compte 78 non subdivisé : reprise d'exploitation (781), financière (786) ou exceptionnelle (787) ?"),
   certain("781", "REPRISES_EXPLOITATION"),
   certain("786", "PRODUITS_FINANCIERS"),
+  certain("787", "PRODUITS_EXCEPTIONNELS"),
 ];
 
 const PCG_2024_RULES: AccountRule[] = [
   ...COMMON,
   certain("67", "CHARGES_EXCEPTIONNELLES"),
-  certain("687", "CHARGES_EXCEPTIONNELLES"),
+  transitional("672", "CHARGES_EXCEPTIONNELLES", "Charges sur exercices antérieurs : à réimputer par nature."),
+  certain("74", "SUBVENTIONS_EXPLOITATION"),
   certain("77", "PRODUITS_EXCEPTIONNELS"),
-  certain("787", "PRODUITS_EXCEPTIONNELS"),
+  transitional("772", "PRODUITS_EXCEPTIONNELS", "Produits sur exercices antérieurs : à réimputer par nature."),
   review("79", null, "Compte 79 non subdivisé : transfert de charges d'exploitation (791), financières (796) ou exceptionnelles (797) ?"),
-  certain("791", "REPRISES_EXPLOITATION", REF_SIG, "Transferts de charges d'exploitation : présentés avec les reprises."),
+  convention("791", "REPRISES_EXPLOITATION", "Transferts de charges d'exploitation : présentés avec les reprises, après l'EBE [C-2024-1]."),
   certain("796", "PRODUITS_FINANCIERS"),
   certain("797", "PRODUITS_EXCEPTIONNELS"),
 ];
 
 const PCG_2025_RULES: AccountRule[] = [
   ...COMMON,
-  certain("657", "AUTRES_CHARGES", REF_2022, "Valeur comptable des immobilisations incorporelles et corporelles cédées (ex-675) : désormais en exploitation [H-2025-2]."),
-  certain("658", "AUTRES_CHARGES", REF_2022, "Dont pénalités et amendes (6581/6582, ex-6711/6712) [H-2025-2]."),
-  certain("747", "AUTRES_PRODUITS", REF_2022, "Quote-part des subventions d'investissement virée au résultat (ex-777) : produit d'exploitation présenté après l'EBE [H-2025-3]."),
-  certain("757", "AUTRES_PRODUITS", REF_2022, "Produits de cession d'immobilisations incorporelles et corporelles (ex-775) [H-2025-2]."),
-  removed("67", "CHARGES_EXCEPTIONNELLES", "Ce compte 67 n'existe plus pour les exercices ouverts depuis le 01/01/2025 (seuls 672 et 678 subsistent) : reclassement à décider par le DAF."),
-  certain("672", "CHARGES_EXCEPTIONNELLES", REF_2022, "Charges sur exercices antérieurs (à solder en fin d'exercice)."),
-  certain("678", "CHARGES_EXCEPTIONNELLES", REF_2022, "Autres charges exceptionnelles : uniquement les événements majeurs et inhabituels [H-2025-1]."),
-  certain("687", "CHARGES_EXCEPTIONNELLES", REF_2022, "Dotations exceptionnelles — maintien à confirmer [H-2025-4]."),
-  removed("77", "PRODUITS_EXCEPTIONNELS", "Ce compte 77 n'existe plus pour les exercices ouverts depuis le 01/01/2025 (seuls 772 et 778 subsistent) : reclassement à décider par le DAF."),
-  certain("772", "PRODUITS_EXCEPTIONNELS", REF_2022, "Produits sur exercices antérieurs (à solder en fin d'exercice)."),
-  certain("778", "PRODUITS_EXCEPTIONNELS", REF_2022, "Autres produits exceptionnels : uniquement les événements majeurs et inhabituels [H-2025-1]."),
-  certain("787", "PRODUITS_EXCEPTIONNELS", REF_2022, "Reprises exceptionnelles — maintien à confirmer [H-2025-4]."),
-  removed("79", null, "Les transferts de charges (791, 796, 797) sont supprimés : les opérations doivent être reclassées par nature."),
+  certain("657", "AUTRES_CHARGES", { reference: REF_PCG25, note: "Valeurs comptables des immobilisations cédées (ex-675) : charge d'exploitation (classe 65), présentée avec les autres charges [C-3]." }),
+  certain("658", "AUTRES_CHARGES", { reference: REF_PCG25, note: "Dont pénalités et amendes (6581/6582, ex-6711/6712)." }),
+  removed("67", "CHARGES_EXCEPTIONNELLES", "Compte 67 incompatible avec le PCG 2025 (seuls 672, 678 et 687 subsistent) : reclassement par le DAF."),
+  transitional("672", "CHARGES_EXCEPTIONNELLES", "Charges sur exercices antérieurs : à réimputer par nature."),
+  certain("678", "CHARGES_EXCEPTIONNELLES", { reference: REF_PCG25, note: "Autres charges exceptionnelles : réservées aux événements majeurs et inhabituels (contrôle de nature signalé)." }),
+  review("74", "SUBVENTIONS_EXPLOITATION", "Compte 74 non subdivisé : subvention d'exploitation (741), d'équilibre (742) ou quote-part de subvention d'investissement (747) ?"),
+  certain("741", "SUBVENTIONS_EXPLOITATION", { reference: REF_PCG25 }),
+  review("742", "AUTRES_PRODUITS", "Subvention d'équilibre (ex-7715) : compense un déficit global sans mesurer la performance d'exploitation. Proposition : après l'EBE ; à confirmer pour chaque entreprise [C-1].", { basis: "cabinet", reference: REF_CABINET }),
+  convention("747", "AUTRES_PRODUITS", "Quote-part des subventions d'investissement virée au résultat (ex-777) : produit d'exploitation (classe 74) présenté après l'EBE, en regard des dotations aux amortissements [C-2]."),
+  certain("757", "AUTRES_PRODUITS", { reference: REF_PCG25, note: "Produits des cessions d'immobilisations (ex-775) : produit d'exploitation (classe 75), présenté avec les autres produits [C-3]." }),
+  removed("77", "PRODUITS_EXCEPTIONNELS", "Compte 77 incompatible avec le PCG 2025 (seuls 772, 778 et 787 subsistent) : reclassement par le DAF."),
+  transitional("772", "PRODUITS_EXCEPTIONNELS", "Produits sur exercices antérieurs : à réimputer par nature."),
+  certain("778", "PRODUITS_EXCEPTIONNELS", { reference: REF_PCG25, note: "Autres produits exceptionnels : réservés aux événements majeurs et inhabituels (contrôle de nature signalé)." }),
+  removed("79", null, "Transferts de charges (791, 796, 797) supprimés : les opérations doivent être enregistrées par nature (ex. 649, 7587)."),
 ];
 
-const HYPOTHESES_COMMON = [
-  { id: "H-1", text: "Le compte 621 « Personnel extérieur » est classé en consommations de tiers (charges externes), et non en charges de personnel." },
-  { id: "H-2", text: "Le compte 708 « Produits des activités annexes » est inclus dans la production vendue et donc dans le chiffre d'affaires." },
-  { id: "H-3", text: "Le compte 648 « Autres charges de personnel » est classé en salaires et traitements ; 645 à 647 en charges sociales." },
-  { id: "H-4", text: "Le compte 699 « Produits – report en arrière des déficits » vient en diminution des impôts sur les bénéfices." },
-  { id: "H-5", text: "Les comptes de stocks (603x) et de production stockée (713) sont pris pour leur solde, positif ou négatif, sans retraitement." },
+/** Choix de présentation du cabinet soumis à validation (les règles PCG certaines n'en font pas partie). */
+const CHOICES_COMMON = [
+  { id: "C-4", text: "708 et 7098 sont rattachés automatiquement à la production vendue uniquement si l'entreprise n'a aucune activité de marchandises sur la période ; sinon le DAF les ventile." },
+  { id: "C-5", text: "Propositions par défaut pour les comptes à confirmer : 648 et 649 vers les salaires, 608, 609 et 6098 vers les autres achats ; le DAF peut retenir une autre rubrique, avec justification." },
 ];
 
 export const RULE_SETS: Record<RuleSetCode, RuleSet> = {
   "PCG-2024": {
     code: "PCG-2024",
-    version: 1,
+    version: 2,
     label: "PCG avant règlement ANC 2022-06 (exercices ouverts avant le 01/01/2025)",
     appliesFrom: null,
     appliesBefore: "2025-01-01",
@@ -295,13 +309,13 @@ export const RULE_SETS: Record<RuleSetCode, RuleSet> = {
     layout: LAYOUT,
     rules: PCG_2024_RULES,
     hypotheses: [
-      ...HYPOTHESES_COMMON,
-      { id: "H-2024-1", text: "Les transferts de charges d'exploitation (791) sont présentés avec les reprises, après l'EBE ; 796 en produits financiers ; 797 en produits exceptionnels." },
+      ...CHOICES_COMMON,
+      { id: "C-2024-1", text: "Les transferts de charges d'exploitation (791) sont présentés avec les reprises, après l'EBE ; 796 en produits financiers ; 797 en produits exceptionnels." },
     ],
   },
   "PCG-2025": {
     code: "PCG-2025",
-    version: 1,
+    version: 2,
     label: "PCG modifié par le règlement ANC 2022-06 (exercices ouverts à compter du 01/01/2025)",
     appliesFrom: "2025-01-01",
     appliesBefore: null,
@@ -310,13 +324,11 @@ export const RULE_SETS: Record<RuleSetCode, RuleSet> = {
     layout: LAYOUT,
     rules: PCG_2025_RULES,
     hypotheses: [
-      ...HYPOTHESES_COMMON,
-      { id: "H-2025-0", text: "Le règlement 2022-06 retire le modèle de tableau des SIG du PCG : la présentation traditionnelle est conservée et adaptée au nouveau plan de comptes." },
-      { id: "H-2025-1", text: "Le résultat exceptionnel ne comprend que 672, 678, 687, 772, 778 et 787 ; tout autre compte 67/77 est bloquant et doit être reclassé par le DAF." },
-      { id: "H-2025-2", text: "Les cessions d'immobilisations incorporelles et corporelles (657/757) et les pénalités (658) sont présentées en autres charges / autres produits, après l'EBE." },
-      { id: "H-2025-3", text: "La quote-part des subventions d'investissement virée au résultat (747) est présentée en autres produits, après l'EBE, et non avec les subventions d'exploitation." },
-      { id: "H-2025-4", text: "Le maintien des comptes 687 / 787 (dotations et reprises exceptionnelles) est retenu, sous réserve de confirmation sur le texte officiel." },
-      { id: "H-2025-5", text: "Tout compte 79 est bloquant (transferts de charges supprimés)." },
+      ...CHOICES_COMMON,
+      { id: "C-0", text: "Le tableau des SIG est présenté selon la structure traditionnelle (huit soldes), adaptée au plan de comptes 2025." },
+      { id: "C-1", text: "742 Subventions d'équilibre : proposé après l'EBE (autres produits), à confirmer pour chaque entreprise ; le DAF peut le rattacher aux subventions d'exploitation." },
+      { id: "C-2", text: "747 Quote-part des subventions d'investissement virée au résultat : présentée après l'EBE (autres produits), et non avec les subventions d'exploitation." },
+      { id: "C-3", text: "657 / 757 (cessions d'immobilisations) restent dans le résultat d'exploitation, avec les autres charges et produits, comme le prévoit leur classe ; aucun solde « plus ou moins-values de cession » n'est isolé." },
     ],
   },
 };
@@ -330,11 +342,15 @@ export function lineNature(rs: RuleSet, code: LineCode) {
   return rs.lines.find((l) => l.code === code)!.nature;
 }
 
+/** Contexte de la période utile aux règles conditionnelles. */
+export type ResolutionContext = { merchandiseActivity: boolean };
+
+export const MERCHANDISE_PREFIXES = ["707", "607", "6037", "6097", "7097"];
+
 export type Resolution =
-  | { status: "rule"; line: LineCode; rule: AccountRule }
+  | { status: "rule"; line: LineCode; rule: AccountRule; autoNote: string | null }
   | { status: "override"; line: LineCode; overrideId: string; justification: string; rule: AccountRule | null }
-  | { status: "review"; proposal: LineCode | null; rule: AccountRule }
-  | { status: "removed"; proposal: LineCode | null; rule: AccountRule }
+  | { status: "review" | "transitional" | "removed"; proposal: LineCode | null; rule: AccountRule }
   | { status: "unassigned" };
 
 /** Règle la plus spécifique (préfixe le plus long) pour un compte PCG. */
@@ -351,13 +367,16 @@ export function resolveAccount(
   rs: RuleSet,
   pcgAccount: string,
   override?: { id: string; line: LineCode; justification: string },
+  ctx: ResolutionContext = { merchandiseActivity: true },
 ): Resolution {
   const rule = matchRule(rs, pcgAccount);
   if (override) return { status: "override", line: override.line, overrideId: override.id, justification: override.justification, rule };
   if (!rule) return { status: "unassigned" };
-  if (rule.status === "certain" && rule.line) return { status: "rule", line: rule.line, rule };
-  if (rule.status === "removed") return { status: "removed", proposal: rule.line, rule };
-  return { status: "review", proposal: rule.line, rule };
+  if (rule.status === "certain" && rule.line) return { status: "rule", line: rule.line, rule, autoNote: null };
+  if (rule.status === "review" && rule.line && rule.autoWhen?.condition === "no_merchandise_activity" && !ctx.merchandiseActivity) {
+    return { status: "rule", line: rule.line, rule, autoNote: rule.autoWhen.note };
+  }
+  return { status: rule.status === "certain" ? "review" : rule.status, proposal: rule.line, rule };
 }
 
-export const ENGINE_VERSION = "sig-engine@1";
+export const ENGINE_VERSION = "sig-engine@2";

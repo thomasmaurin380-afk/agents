@@ -73,7 +73,7 @@ export type SnapshotContent = {
     code: string; label: string; kind: "line" | "subtotal" | "solde"; level: number; value: string; previous: string | null;
     definition: string | null; clientExplanation: string | null;
     contributions: {
-      account: string; label: string; pcgAccount: string; via: string; overrideId: string | null; amount: string;
+      account: string; label: string; pcgAccount: string; via: string; basis?: "pcg" | "cabinet" | "company"; overrideId: string | null; amount: string;
       debit: string | null; credit: string | null; importId: string; fileName: string | null; rows: number[] | null; entries: number | null;
       minus: { importId: string; fileName: string | null; rows: number[] | null } | null;
     }[];
@@ -100,7 +100,10 @@ export function serializeRows(rs: RuleSet, n: SigComputation, previous: SigCompu
     clientExplanation: agg.get(r.code)?.clientExplanation ?? null,
     contributions: r.contributions.map((c) => ({
       account: c.account, label: c.label, pcgAccount: c.pcgAccount,
-      via: c.via.kind === "rule" ? `Règle ${c.via.prefix} — ${c.via.reference}` : `Exception : ${c.via.justification}`,
+      via: c.via.kind === "rule"
+        ? `${c.via.basis === "cabinet" ? "Convention du cabinet" : "Règle PCG"} ${c.via.prefix}${c.via.note ? ` — ${c.via.note}` : ""}`
+        : `Exception de l'entreprise : ${c.via.justification}`,
+      basis: c.via.kind === "rule" ? c.via.basis : "company",
       overrideId: c.via.kind === "override" ? c.via.overrideId : null,
       amount: centsToDecimal(c.amount),
       debit: c.debit == null ? null : centsToDecimal(c.debit), credit: c.credit == null ? null : centsToDecimal(c.credit),

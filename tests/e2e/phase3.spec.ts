@@ -43,7 +43,7 @@ test.describe.serial("Phase 3 — SIG", () => {
     await expect(page.getByTestId("sig-EBE")).toHaveText("12 354,00 €");
     await expect(page.getByTestId("sig-reconciliation")).toContainText("écart 0.00 €");
     await page.locator('[data-row="PRODUCTION_VENDUE"] summary').click();
-    await expect(page.getByTestId("contrib-706000")).toContainText("Règle 706");
+    await expect(page.getByTestId("contrib-706000")).toContainText("Règle PCG 706");
     await expect(page.getByTestId("contrib-706000")).toContainText("02_BALANCE_2025_valide.csv — ligne 5");
     await expect(page.getByTestId("sig-checks")).toContainText("Données N-1 indisponibles");
     await expect(page.getByTestId("sig-checks")).not.toContainText("Bloquant");
@@ -71,7 +71,7 @@ test.describe.serial("Phase 3 — SIG", () => {
     await expect(page.getByTestId("sig-form-status")).toContainText("n'a pas encore été validé par le cabinet");
 
     await page.goto("/daf/sig-rules");
-    await expect(page.getByTestId("ruleset-PCG-2025")).toContainText("H-2025-1");
+    await expect(page.getByTestId("ruleset-PCG-2025")).toContainText("C-1");
     await page.getByTestId("approve-PCG-2025").click();
     await expect(page.getByTestId("ruleset-PCG-2025")).toContainText("Validé le");
 
@@ -88,7 +88,7 @@ test.describe.serial("Phase 3 — SIG", () => {
     await expect(page.getByTestId("client-kpi-RESULTAT_NET")).toContainText("12 354,00 €");
     await expect(page.getByTestId("sig-table")).toBeVisible();
     await expect(page.locator("summary")).toHaveCount(0);
-    await expect(page.getByText("Règle 706")).toHaveCount(0);
+    await expect(page.getByText("Règle PCG 706")).toHaveCount(0);
     await page.goto(snapshotUrl);
     await expect(page).not.toHaveURL(/\/sig\/v\//);
 

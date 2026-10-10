@@ -123,19 +123,21 @@ describe("Scénarios de référence (valeurs calculées à la main)", () => {
     expect(r.reconciliation).toEqual({ sigResult: 6_280_000n, accountingResult: 6_280_000n, gap: 0n });
   });
 
-  it("mêmes comptes en PCG 2025 : 671/675/771/775 sont bloquants, l'écart n'est jamais comblé", () => {
+  it("mêmes comptes en PCG 2025 : 671/675/771/775 incompatibles, 740 à confirmer ; l'écart n'est jamais comblé", () => {
     const r = computeSig(PCG25, production, []);
     expect(r.unresolved.map((u) => [u.account, u.reason])).toEqual([
-      ["671000", "removed"], ["675000", "removed"], ["771000", "removed"], ["775000", "removed"],
+      ["671000", "removed"], ["675000", "removed"], ["740000", "review"], ["771000", "removed"], ["775000", "removed"],
     ]);
-    expect(value(r, "RESULTAT_NET")).toBe(6_080_000n);
-    expect(r.reconciliation.gap).toBe(-200_000n);
+    // 62 800 − 2 000 (résultat exceptionnel non repris) − 3 000 (subvention non classée) = 57 800
+    expect(value(r, "RESULTAT_NET")).toBe(5_780_000n);
+    expect(r.reconciliation.gap).toBe(-500_000n);
+    expect(r.integrity.ok).toBe(true);
   });
 
-  it("PCG 2025 : cessions en exploitation (657/757), 678/778 en exceptionnel, 747 en autres produits", () => {
+  it("PCG 2025 : cessions en exploitation (657/757), 678/778 en exceptionnel, 741 en EBE, 747 en autres produits", () => {
     const r = computeSig(PCG25, [
       bal("706000", "0", "10000"), bal("657000", "1000", "0"), bal("757000", "0", "1500"),
-      bal("778000", "0", "2000"), bal("678000", "500", "0"), bal("747000", "0", "800"), bal("740000", "0", "200"),
+      bal("778000", "0", "2000"), bal("678000", "500", "0"), bal("747000", "0", "800"), bal("741000", "0", "200"),
     ], []);
     expect(value(r, "AUTRES_CHARGES")).toBe(100_000n);
     expect(value(r, "AUTRES_PRODUITS")).toBe(230_000n);
@@ -230,7 +232,7 @@ describe("Contrôles", () => {
   const ctx = (over: Partial<CheckContext>): CheckContext => ({
     ruleSet: PCG25, period: resolvePeriod({ id: "f", label: "2025", startDate: "2025-01-01", endDate: "2025-12-31" }, "fiscal_year", null)!,
     computation: r, source: { kind: "trial_balance", provisional: false, coveredUntil: "2025-12-31", closingEntries: [] },
-    divergence: null, comparison: { ruleSetCode: "PCG-2025", months: 12, available: true }, fiscalYearOpen: false, ...over,
+    divergence: null, comparison: { ruleSetCode: "PCG-2025", months: 12, available: true }, fiscalYearOpen: false, definitive: true, ...over,
   });
   const codes = (c: ReturnType<typeof buildChecks>) => c.map((x) => `${x.code}:${x.severity}`);
 

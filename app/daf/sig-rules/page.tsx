@@ -11,7 +11,8 @@ import { getRuleSetsOverview } from "@/services/sig";
 
 export const metadata: Metadata = { title: "Référentiel SIG" };
 
-const STATUS = { certain: "Automatique", review: "À confirmer par le DAF", removed: "Supprimé (reclassement)" } as const;
+const STATUS = { certain: "Automatique", review: "À confirmer par le DAF", transitional: "Transitoire (à réimputer)", removed: "Incompatible (reclassement)" } as const;
+const BASIS = { pcg: "Règle PCG", cabinet: "Convention du cabinet" } as const;
 
 export default async function SigRulesPage() {
   const actor = await requireStaff();
@@ -37,7 +38,7 @@ export default async function SigRulesPage() {
               </CardHeader>
               <CardContent className="space-y-5">
                 <div>
-                  <p className="mb-2 text-sm font-medium">Hypothèses soumises à validation</p>
+                  <p className="mb-2 text-sm font-medium">Choix de présentation du cabinet soumis à validation</p>
                   <ul className="list-disc space-y-1 pl-5 text-sm">
                     {rs.hypotheses.map((h) => <li key={h.id}><span className="font-mono text-xs">{h.id}</span> {h.text}</li>)}
                   </ul>
@@ -49,13 +50,14 @@ export default async function SigRulesPage() {
                 <details>
                   <summary className="cursor-pointer text-sm font-medium">Règles par préfixe PCG ({rs.rules.length}) — la plus spécifique s&apos;applique</summary>
                   <Table className="mt-2">
-                    <TableHeader><TableRow><TableHead>Préfixe</TableHead><TableHead>Rubrique</TableHead><TableHead>Statut</TableHead><TableHead>Référence / justification</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Préfixe</TableHead><TableHead>Rubrique</TableHead><TableHead>Statut</TableHead><TableHead>Fondement</TableHead><TableHead>Référence / justification</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {[...rs.rules].sort((a, b) => a.prefix.localeCompare(b.prefix)).map((r) => (
                         <TableRow key={r.prefix}>
                           <TableCell className="font-mono">{r.prefix}</TableCell>
                           <TableCell>{r.line ? label.get(r.line) : "—"}</TableCell>
-                          <TableCell>{STATUS[r.status]}</TableCell>
+                          <TableCell>{STATUS[r.status]}{r.autoWhen ? " (automatique sans activité de marchandises)" : ""}</TableCell>
+                          <TableCell>{BASIS[r.basis]}</TableCell>
                           <TableCell className="text-xs">{r.reference}{r.note ? ` — ${r.note}` : ""}</TableCell>
                         </TableRow>
                       ))}
