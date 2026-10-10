@@ -1,0 +1,47 @@
+
+name: Migrations Supabase Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Saisir MIGRER_DEMO pour confirmer"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migration-supabase-demo
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    if: ${{ github.event.inputs.confirmation == 'MIGRER_DEMO' && github.ref == 'refs/heads/claude/happy-heisenberg-9gena5' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Vérifier la configuration
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::DATABASE_URL manquant"
+            exit 1
+          fi
+
+      - name: Appliquer les migrations
+        run: npm run db:migrate
