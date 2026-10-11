@@ -104,6 +104,7 @@ Toute nouvelle table métier : `company_id`, RLS activée, privilèges accordés
 | `docs/mvp.md` | Parcours prioritaire et critères d'acceptation du MVP |
 | `docs/roadmap.md` | Phases, avancement, résultats de tests |
 | `docs/decisions.md` | Décisions structurantes |
+| `docs/design-system.md` | Design system V1 (palette, tokens, composants, règles responsive et accessibilité) |
 | `docs/sig-rules.md` | Référentiels SIG (PCG 2024 / 2025), formules, hypothèses à valider |
 | `docs/financial-rules.md` | Sources, signes, périodes, contrôles, cycle de validation des SIG |
 | `docs/hosting.md` | Localisation des données, sauvegardes, checklist de mise en production |

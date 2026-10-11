@@ -18,7 +18,7 @@ export default async function NewCompanyPage() {
         description="Étape 1 du parcours : créer le dossier. Exercices et plan de comptes seront complétés lors de l'import (phase 2)."
       />
       <Card className="max-w-3xl">
-        <CardContent className="pt-5">
+        <CardContent>
           <CompanyForm action={createCompanyAction} staff={staff} submitLabel="Créer l'entreprise" />
         </CardContent>
       </Card>

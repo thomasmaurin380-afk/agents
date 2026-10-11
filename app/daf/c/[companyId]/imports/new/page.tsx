@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ImportSteps } from "@/features/data/import-steps";
 import { PageHeader } from "@/components/layout/app-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { UploadForm } from "@/features/data/forms";
@@ -14,9 +15,10 @@ export default async function NewImportPage({ params, searchParams }: PageProps<
   const d = await orNotFound(getDataOverview(actor, companyId));
   return (
     <>
-      <PageHeader title="Nouvel import" description="Étape 1 : téléverser le fichier. Il sera analysé et contrôlé avant tout enregistrement." />
+      <PageHeader eyebrow="Données" title="Nouvel import" description="Étape 1 : téléverser le fichier. Il sera analysé et contrôlé avant tout enregistrement." />
+      <ImportSteps status="new" kind="" />
       <Card className="max-w-3xl">
-        <CardContent className="pt-5">
+        <CardContent>
           <UploadForm
             companyId={companyId}
             defaultKind={typeof kind === "string" ? kind : "trial_balance"}

@@ -1,10 +1,12 @@
-import { Plus } from "lucide-react";
+import { Building2, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Stat } from "@/components/ui/stat";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { COMPANY_STATUS_LABELS, COMPANY_STATUS_VARIANTS } from "@/features/companies/labels";
 import { requireStaff } from "@/lib/guards";
@@ -24,12 +26,13 @@ export default async function PortfolioPage() {
     { label: "Entreprises suivies", value: companies.filter((c) => c.status !== "archived").length },
     { label: "Actives", value: count("active") },
     { label: "En intégration", value: count("onboarding") },
-    { label: "Sans données importées", value: withoutData, hint: "Imports disponibles en phase 2" },
+    { label: "Sans données importées", value: withoutData, hint: "Aucun import comptable ou bancaire enregistré" },
   ];
 
   return (
     <>
       <PageHeader
+        eyebrow="Cabinet"
         title="Portefeuille clients"
         description="Vue d'ensemble des entreprises que vous accompagnez."
         actions={
@@ -40,28 +43,22 @@ export default async function PortfolioPage() {
           ) : null
         }
       />
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((s) => (
-          <Card key={s.label}>
-            <CardHeader>
-              <CardDescription>{s.label}</CardDescription>
-              <CardTitle className="text-3xl tabular-nums">{s.value}</CardTitle>
-            </CardHeader>
-            {s.hint ? <CardContent className="text-xs text-muted-foreground">{s.hint}</CardContent> : null}
-          </Card>
-        ))}
+      <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        {stats.map((s) => <Stat key={s.label} label={s.label} value={s.value} hint={s.hint} />)}
       </div>
       <Card>
         <CardHeader>
           <CardTitle>Entreprises</CardTitle>
           <CardDescription>
-            Alertes, trésorerie et reportings apparaîtront ici dès que les données seront importées
-            (phases 2 à 5). Aucun indicateur n&apos;est affiché sans données sources.
+            Les indicateurs de suivi (trésorerie, alertes, reportings) s&apos;ajouteront à cette vue au fil
+            des prochaines phases. Aucun indicateur n&apos;est affiché sans données sources.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0 pb-2 sm:px-0">
           {companies.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">Aucune entreprise pour le moment.</p>
+            <EmptyState className="mx-5 mb-4 sm:mx-6" icon={Building2} title="Aucune entreprise pour le moment">
+              {isAdmin ? "Créez la première fiche entreprise pour commencer l'accompagnement." : "Aucune entreprise ne vous est encore affectée."}
+            </EmptyState>
           ) : (
             <Table data-testid="portfolio-table">
               <TableHeader>
@@ -77,10 +74,17 @@ export default async function PortfolioPage() {
                 {companies.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell>
-                      <Link href={`/daf/c/${c.id}`} className="font-medium hover:underline">
-                        {c.tradeName ?? c.legalName}
-                      </Link>
-                      {c.tradeName ? <p className="text-xs text-muted-foreground">{c.legalName}</p> : null}
+                      <div className="flex items-center gap-3">
+                        <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-lg bg-surface-2 text-xs font-semibold text-muted-foreground">
+                          {(c.tradeName ?? c.legalName).slice(0, 2).toUpperCase()}
+                        </span>
+                        <div className="min-w-0">
+                          <Link href={`/daf/c/${c.id}`} className="font-medium text-foreground hover:text-primary hover:underline underline-offset-4">
+                            {c.tradeName ?? c.legalName}
+                          </Link>
+                          {c.tradeName ? <p className="truncate text-xs text-muted-foreground">{c.legalName}</p> : null}
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{c.sector ?? "—"}</TableCell>
                     <TableCell>{c.leadAdvisorName ?? <span className="text-muted-foreground">Non attribué</span>}</TableCell>

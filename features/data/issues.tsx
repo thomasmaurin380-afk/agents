@@ -10,14 +10,14 @@ const SECTIONS: { key: IssueCategory; title: string; badge: "destructive" | "war
 ];
 
 function Icon({ category }: { category: IssueCategory }) {
-  if (category === "error") return <CircleAlert className="mt-0.5 size-4 shrink-0 text-destructive" aria-label="Erreur bloquante" />;
+  if (category === "error") return <CircleAlert className="mt-0.5 size-4 shrink-0 text-destructive-text" aria-label="Erreur bloquante" />;
   if (category === "duplicate") return <Copy className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-label="Doublon" />;
   return <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-label="Avertissement" />;
 }
 
 /** Anomalies regroupées (bloquantes, avertissements, doublons), avec ligne, colonne et résultat attendu. */
 export function IssueList({ issues, total }: { issues: ImportIssue[]; total: number }) {
-  if (issues.length === 0) return <p className="text-sm text-success">Aucune anomalie détectée.</p>;
+  if (issues.length === 0) return <p className="text-sm text-success-text">Aucune anomalie détectée.</p>;
   return (
     <div className="space-y-4" data-testid="issue-list">
       {total > issues.length ? (

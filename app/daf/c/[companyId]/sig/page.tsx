@@ -53,33 +53,34 @@ export default async function SigPage({ params, searchParams }: PageProps<"/daf/
   return (
     <>
       <PageHeader
+        eyebrow="Analyse financière"
         title="Soldes intermédiaires de gestion"
         description={`${ws.access.company.tradeName ?? ws.access.company.legalName} — ${r.period.label}`}
         actions={<Link href="/daf/sig-rules" className={buttonVariants({ variant: "outline" })}>Référentiel SIG</Link>}
       />
 
       <Card className="mb-6">
-        <CardContent className="pt-6">
-          <form method="get" className="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-6" data-testid="sig-selector">
-            <div className="space-y-1.5">
+        <CardContent>
+          <form method="get" className="grid items-end gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-12" data-testid="sig-selector">
+            <div className="space-y-1.5 xl:col-span-3">
               <Label htmlFor="exercice">Exercice</Label>
               <Select id="exercice" name="exercice" defaultValue={fy.id}>
                 {ws.years.map((y) => <option key={y.id} value={y.id}>{y.label}</option>)}
               </Select>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 xl:col-span-3">
               <Label htmlFor="periode">Période</Label>
               <Select id="periode" name="periode" defaultValue={r.period.kind}>
                 {Object.entries(PERIOD_KIND_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
               </Select>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 xl:col-span-3">
               <Label htmlFor="mois">Mois (cumul ou isolé)</Label>
               <Select id="mois" name="mois" defaultValue={String(r.period.month ?? months.length)}>
                 {months.map((m) => <option key={m.month} value={m.month}>{m.label}</option>)}
               </Select>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 xl:col-span-3">
               <Label htmlFor="source">Source</Label>
               <Select id="source" name="source" defaultValue={q.source}>
                 <option value="auto">Automatique</option>
@@ -87,13 +88,13 @@ export default async function SigPage({ params, searchParams }: PageProps<"/daf/
                 <option value="fec">FEC</option>
               </Select>
             </div>
-            <div className="space-y-1.5 lg:col-span-1">
+            <div className="space-y-1.5 sm:col-span-2 lg:col-span-3 xl:col-span-9">
               <Label htmlFor="justification">Justification du choix</Label>
-              <Input id="justification" name="justification" defaultValue={q.justification ?? ""} placeholder="Si les deux sources existent" />
+              <Input id="justification" name="justification" defaultValue={q.justification ?? ""} placeholder="Requise si balance et FEC existent" />
             </div>
-            <Button type="submit" variant="outline">Calculer</Button>
+            <Button type="submit" className="w-full xl:col-span-3">Calculer</Button>
           </form>
-          <p className="mt-3 text-xs text-muted-foreground">
+          <p className="mt-4 border-t pt-3 text-xs leading-relaxed text-muted-foreground">
             Balance : {r.availability.trial_balance.available ? "disponible" : r.availability.trial_balance.reason}{" · "}
             FEC : {r.availability.fec.available ? "disponible" : r.availability.fec.reason}{" · "}
             Les relevés bancaires ne sont jamais utilisés pour les SIG.
@@ -105,12 +106,12 @@ export default async function SigPage({ params, searchParams }: PageProps<"/daf/
         <Alert variant="warning" data-testid="sig-insufficient">Données insuffisantes — {r.reason}</Alert>
       ) : (
         <div className="grid gap-6">
-          <div className="flex flex-wrap items-center gap-2 text-sm" data-testid="sig-context">
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card px-4 py-3 text-sm shadow-card" data-testid="sig-context">
             <Badge variant={SNAPSHOT_STATUS.provisional.variant}>{SNAPSHOT_STATUS.provisional.label}</Badge>
             <Badge variant="outline">{r.ruleSet.code} v{r.ruleSet.version}</Badge>
             <Badge variant="outline">{SOURCE_KIND_LABELS[r.decision.kind]}{r.decision.choice === "explicit" ? " (choix du DAF)" : ""}</Badge>
             {r.approved ? null : <Badge variant="warning">Référentiel non encore validé par le cabinet</Badge>}
-            <span className="text-muted-foreground">Sources : {r.content.source.refs.map((x) => x.role + (x.fileName ? ` — ${x.fileName}` : "")).join(" ; ")}</span>
+            <span className="basis-full text-xs text-muted-foreground lg:basis-auto">Sources : {r.content.source.refs.map((x) => x.role + (x.fileName ? ` — ${x.fileName}` : "")).join(" ; ")}</span>
           </div>
 
           <Card>
@@ -118,13 +119,13 @@ export default async function SigPage({ params, searchParams }: PageProps<"/daf/
               <CardTitle>Tableau des SIG</CardTitle>
               <CardDescription>Calcul provisoire, non enregistré. Cliquez sur une rubrique pour voir les comptes qui la composent.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-0 sm:px-0">
               <SigTable
                 content={r.content}
                 detail
                 entriesHref={r.decision.kind === "fec" ? (acc) => `${base}/sig/entries?exercice=${fy.id}&compte=${encodeURIComponent(acc)}&du=${r.period.start}&au=${r.period.end}` : undefined}
               />
-              <p className="mt-3 text-xs text-muted-foreground" data-testid="sig-reconciliation">
+              <p className="mx-5 mt-4 rounded-lg tabular-nums bg-surface-2/70 px-4 py-2.5 text-xs text-muted-foreground sm:mx-6" data-testid="sig-reconciliation">
                 Rapprochement : résultat des SIG {r.content.reconciliation.sigResult} € — solde des classes 6 et 7 {r.content.reconciliation.accountingResult} € — écart {r.content.reconciliation.gap} €.
               </p>
             </CardContent>

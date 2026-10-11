@@ -1,7 +1,7 @@
 import { Pencil } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PageHeader } from "@/components/layout/app-shell";
+import { PageHeader, SectionTitle } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,11 +43,14 @@ export default async function CompanyPage({ params }: PageProps<"/daf/c/[company
   return (
     <>
       <PageHeader
+        eyebrow="Fiche entreprise"
         title={c.tradeName ?? c.legalName}
         description={
-          <span className="flex items-center gap-2">
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <Badge variant={COMPANY_STATUS_VARIANTS[c.status]}>{COMPANY_STATUS_LABELS[c.status]}</Badge>
-            Votre rôle : {ROLE_LABELS[ws.role]}
+            {c.tradeName ? <span>{c.legalName}</span> : null}
+            {c.siren ? <span className="num">SIREN {c.siren}</span> : null}
+            <span>Votre rôle : {ROLE_LABELS[ws.role]}</span>
           </span>
         }
         actions={
@@ -59,24 +62,23 @@ export default async function CompanyPage({ params }: PageProps<"/daf/c/[company
         }
       />
 
-      <section className="mb-8 space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Indicateurs clés
-        </h2>
+      <section className="mb-10">
+        <SectionTitle description="Calculés à partir des données importées et contrôlées ; aucun chiffre n'est estimé.">Indicateurs clés</SectionTitle>
         <IndicatorGrid available={sources} />
       </section>
 
+      <SectionTitle>Informations et équipe</SectionTitle>
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Identité</CardTitle>
           </CardHeader>
           <CardContent>
-            <dl className="grid grid-cols-[160px_1fr] gap-y-2 text-sm">
+            <dl className="divide-y text-sm">
               {identity.map(([k, v]) => (
-                <div key={k} className="contents">
+                <div key={k} className="grid gap-1 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[170px_1fr] sm:gap-4">
                   <dt className="text-muted-foreground">{k}</dt>
-                  <dd>{v ?? "—"}</dd>
+                  <dd className="font-medium">{v ?? <span className="font-normal text-subtle-foreground">—</span>}</dd>
                 </div>
               ))}
             </dl>
@@ -120,7 +122,11 @@ export default async function CompanyPage({ params }: PageProps<"/daf/c/[company
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2">
+      </div>
+
+      <div className="mt-10">
+        <SectionTitle>Administration</SectionTitle>
+        <Card>
           <CardHeader>
             <CardTitle>Accès client</CardTitle>
             <CardDescription>

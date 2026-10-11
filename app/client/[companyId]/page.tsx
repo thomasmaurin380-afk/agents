@@ -18,6 +18,7 @@ export default async function ClientHomePage({ params }: PageProps<"/client/[com
   return (
     <>
       <PageHeader
+        eyebrow="Tableau de bord"
         title={c.tradeName ?? c.legalName}
         description="Votre situation financière, expliquée simplement."
       />
@@ -27,9 +28,7 @@ export default async function ClientHomePage({ params }: PageProps<"/client/[com
         </Alert>
       ) : null}
       <section className="mb-8 space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Vos indicateurs
-        </h2>
+        <h2 className="text-base font-semibold tracking-tight">Vos indicateurs</h2>
         <IndicatorGrid available={sources} />
         <p className="text-xs text-muted-foreground">
           Les indicateurs s&apos;afficheront dès que vos données comptables et bancaires auront été

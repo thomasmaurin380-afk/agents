@@ -17,7 +17,7 @@ export default async function TeamPage() {
       <PageHeader title="Équipe du cabinet" description="Collaborateurs DAF et leurs rôles." />
       <div className="grid gap-6">
         <Card>
-          <CardContent className="pt-5">
+          <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>

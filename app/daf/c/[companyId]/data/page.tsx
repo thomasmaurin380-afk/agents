@@ -39,6 +39,7 @@ export default async function DataPage({ params, searchParams }: PageProps<"/daf
   return (
     <>
       <PageHeader
+        eyebrow="Données"
         title="Données comptables et bancaires"
         description={`${d.company.tradeName ?? d.company.legalName} — balances, FEC et relevés bancaires, quel que soit le logiciel d'origine.`}
         actions={
@@ -66,13 +67,13 @@ export default async function DataPage({ params, searchParams }: PageProps<"/daf
         <Card>
           <CardHeader>
             <CardTitle>Sources disponibles pour les SIG et KPI</CardTitle>
-            <CardDescription>Ce qui alimentera les calculs (phases 3 et 4). Une source manquante donnera « Données insuffisantes ».</CardDescription>
+            <CardDescription>Sources utilisées par les SIG (et, à venir, par les KPI). Une source manquante donne « Données insuffisantes ».</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="grid gap-2 text-sm sm:grid-cols-3" data-testid="data-sources">
               {sources.map((s) => (
                 <li key={s.label} className="flex items-start gap-2">
-                  {s.ok ? <CircleCheck className="mt-0.5 size-4 shrink-0 text-success" aria-label="Disponible" /> : <CircleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-label="Manquante" />}
+                  {s.ok ? <CircleCheck className="mt-0.5 size-4 shrink-0 text-success-text" aria-label="Disponible" /> : <CircleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-label="Manquante" />}
                   <span><span className="font-medium">{s.label}</span><br /><span className="text-muted-foreground">{s.detail}</span></span>
                 </li>
               ))}

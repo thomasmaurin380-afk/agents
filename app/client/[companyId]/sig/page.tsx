@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/layout/app-shell";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { euro, fmtDateTime, variationView } from "@/features/sig/format";
 import { SigTable } from "@/features/sig/sig-table";
 import { orNotFound, requireActor } from "@/lib/guards";
@@ -18,7 +18,7 @@ export default async function ClientSigPage({ params, searchParams }: PageProps<
   const { published, selected, content } = await orNotFound(getPublishedSig(actor, companyId, typeof version === "string" ? version : null));
   return (
     <>
-      <PageHeader title="Mes soldes intermédiaires de gestion" description="Les principaux niveaux de résultat de votre entreprise, validés et publiés par votre DAF." />
+      <PageHeader eyebrow="Résultats publiés" title="Mes soldes intermédiaires de gestion" description="Les principaux niveaux de résultat de votre entreprise, validés et publiés par votre DAF." />
       {!selected || !content ? (
         <Alert data-testid="client-sig-empty">Aucun SIG publié pour le moment. Ils apparaîtront ici dès que votre DAF les aura validés et publiés.</Alert>
       ) : (
@@ -35,19 +35,20 @@ export default async function ClientSigPage({ params, searchParams }: PageProps<
             {content.rows.filter((r) => ["CHIFFRE_AFFAIRES", "VALEUR_AJOUTEE", "EBE", "RESULTAT_NET"].includes(r.code)).map((r) => {
               const v = variationView(r.value, r.previous);
               return (
-                <Card key={r.code} data-testid={`client-kpi-${r.code}`}>
-                  <CardHeader className="pb-2"><CardDescription>{r.label}</CardDescription><CardTitle className="text-2xl tabular-nums">{euro(r.value)}</CardTitle></CardHeader>
-                  <CardContent className="text-xs text-muted-foreground">
-                    {v ? `${v.percent} par rapport à l'an dernier (${euro(r.previous!)})` : "Données N-1 indisponibles"}
-                    {r.clientExplanation ? <p className="mt-2">{r.clientExplanation}</p> : null}
-                  </CardContent>
+                <Card key={r.code} data-testid={`client-kpi-${r.code}`} className="flex flex-col gap-2 p-5">
+                  <p className="eyebrow">{r.label}</p>
+                  <p className="num text-[1.6rem] font-semibold leading-tight tracking-tight">{euro(r.value)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {v ? <>{v.percent} par rapport à l&apos;an dernier (<span className="num">{euro(r.previous!)}</span>)</> : "Données N-1 indisponibles"}
+                  </p>
+                  {r.clientExplanation ? <p className="mt-auto border-t pt-3 text-xs leading-relaxed text-muted-foreground">{r.clientExplanation}</p> : null}
                 </Card>
               );
             })}
           </div>
           <Card>
             <CardHeader><CardTitle>Détail des soldes</CardTitle></CardHeader>
-            <CardContent><SigTable content={content} detail={false} /></CardContent>
+            <CardContent className="px-0 sm:px-0"><SigTable content={content} detail={false} /></CardContent>
           </Card>
           <Card>
             <CardHeader><CardTitle>Comprendre ces soldes</CardTitle></CardHeader>

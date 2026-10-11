@@ -18,7 +18,7 @@ export function ClientSidebar({
       {previewForStaff && params.companyId ? (
         <Link
           href={`/daf/c/${params.companyId}`}
-          className="mb-2 block rounded-md bg-warning/15 px-3 py-2 text-xs font-medium"
+          className="mb-3 block rounded-md border border-warning/40 bg-warning/15 px-3 py-2 text-xs font-medium text-white hover:bg-warning/25"
         >
           ← Retour au cockpit DAF (aperçu client)
         </Link>
@@ -27,9 +27,10 @@ export function ClientSidebar({
         <SidebarNav
           title="Mes entreprises"
           items={companies.map((c) => ({ label: c.name, href: `/client/${c.companyId}`, icon: "company" }))}
+          exactHrefs={companies.map((c) => `/client/${c.companyId}`)}
         />
       ) : null}
-      {params.companyId ? <SidebarNav title="Mon espace" items={clientNav(params.companyId)} /> : null}
+      {params.companyId ? <SidebarNav title="Mon espace" items={clientNav(params.companyId)} exactHrefs={[`/client/${params.companyId}`]} /> : null}
     </>
   );
 }

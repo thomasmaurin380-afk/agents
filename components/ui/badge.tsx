@@ -2,17 +2,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
+/**
+ * Statuts. Le libellé porte toujours le sens (jamais la couleur seule) ; les statuts
+ * sémantiques ajoutent une pastille.
+ */
 const badgeVariants = cva(
-  "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium whitespace-nowrap",
+  "inline-flex h-6 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium whitespace-nowrap",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary/10 text-primary",
+        default: "border-transparent bg-accent text-accent-foreground",
         secondary: "border-transparent bg-secondary text-secondary-foreground",
-        outline: "text-muted-foreground",
-        success: "border-transparent bg-success/15 text-success",
-        warning: "border-transparent bg-warning/20 text-warning-foreground dark:text-warning",
-        destructive: "border-transparent bg-destructive/15 text-destructive",
+        outline: "border-border-strong bg-card text-muted-foreground",
+        success: "border-transparent bg-success-surface text-success-text before:size-1.5 before:shrink-0 before:rounded-full before:content-[''] before:bg-success",
+        warning: "border-transparent bg-warning-surface text-warning-text before:size-1.5 before:shrink-0 before:rounded-full before:content-[''] before:bg-warning",
+        destructive: "border-transparent bg-destructive-surface text-destructive-text before:size-1.5 before:shrink-0 before:rounded-full before:content-[''] before:bg-destructive",
+        info: "border-transparent bg-info-surface text-info-text before:size-1.5 before:shrink-0 before:rounded-full before:content-[''] before:bg-info",
       },
     },
     defaultVariants: { variant: "default" },

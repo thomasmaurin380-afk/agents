@@ -179,7 +179,7 @@ export function MapAccountForm({ companyId, accountNumber }: { companyId: string
         <Input name="rulePattern" className="h-8 w-28" defaultValue={accountNumber.replace(/\d+$/, "").slice(0, 3) || accountNumber.slice(0, 1)} aria-label="Préfixe" />
       ) : null}
       <Button type="submit" size="sm" variant="outline" disabled={pending}>Rattacher</Button>
-      {state.message ? <p className={`w-full text-xs ${state.ok ? "text-success" : "text-destructive"}`}>{state.message}</p> : null}
+      {state.message ? <p className={`w-full text-xs ${state.ok ? "text-success-text" : "text-destructive-text"}`}>{state.message}</p> : null}
     </form>
   );
 }

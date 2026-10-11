@@ -19,7 +19,7 @@ export default async function EditCompanyPage({ params }: PageProps<"/daf/c/[com
     <>
       <PageHeader title={`Modifier — ${c.legalName}`} />
       <Card className="max-w-3xl">
-        <CardContent className="pt-5">
+        <CardContent>
           <CompanyForm
             action={updateCompanyAction.bind(null, c.id)}
             staff={ws.staff.filter((s) => s.role === "firm_analyst" || s.role === "firm_admin")}

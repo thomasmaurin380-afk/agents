@@ -102,7 +102,7 @@ export function CommitForm({
       <Button type="submit" disabled={blocking || pending}>
         {pending ? "Enregistrement…" : "Valider et enregistrer l'import"}
       </Button>
-      {blocking ? <p className="text-xs text-destructive">Validation impossible tant que des erreurs bloquantes subsistent.</p> : null}
+      {blocking ? <p className="text-xs text-destructive-text">Validation impossible tant que des erreurs bloquantes subsistent.</p> : null}
     </form>
   );
 }
