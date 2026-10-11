@@ -18,7 +18,7 @@ export function ClientSidebar({
       {previewForStaff && params.companyId ? (
         <Link
           href={`/daf/c/${params.companyId}`}
-          className="mb-3 block rounded-md border border-warning/40 bg-warning/15 px-3 py-2 text-xs font-medium text-white hover:bg-warning/25"
+          className="mb-4 block rounded-lg border border-warning/30 bg-warning-surface px-3 py-2 text-[12.5px] font-medium text-warning-text hover:border-warning/50"
         >
           ← Retour au cockpit DAF (aperçu client)
         </Link>

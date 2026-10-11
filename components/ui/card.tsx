@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 /** Surface de travail : fond blanc, bordure légère, ombre quasi imperceptible. */
 export function Card({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("min-w-0 rounded-xl border bg-card text-card-foreground shadow-card", className)} {...props} />;
+  return <div className={cn("min-w-0 rounded-[var(--radius-card)] border bg-card text-card-foreground shadow-card", className)} {...props} />;
 }
 
 export function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
@@ -11,7 +11,7 @@ export function CardHeader({ className, ...props }: React.ComponentProps<"div">)
 }
 
 export function CardTitle({ className, ...props }: React.ComponentProps<"h3">) {
-  return <h3 className={cn("text-[15px] font-semibold leading-snug tracking-tight", className)} {...props} />;
+  return <h3 className={cn("text-[15px] font-semibold leading-snug tracking-[-0.01em]", className)} {...props} />;
 }
 
 export function CardDescription({ className, ...props }: React.ComponentProps<"p">) {

@@ -3,97 +3,93 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system V1 — « Fintech premium minimaliste » (docs/design-system.md).
- * Palette validée : bleu nuit #152238, bleu royal #3158D8, fond #F6F8FB, surfaces #FFFFFF,
- * texte #243247 / #738196, vert #16856B, rouge #C94C58. Les variantes « -text » et
- * --muted-foreground sont des dérivées assombries pour atteindre le contraste WCAG AA (4,5:1)
- * sur les petits textes. Toute couleur de l'interface passe par ces variables.
+ * Design system V2 — « Modern Financial Editorial » (docs/design-system.md, prototype).
+ * Fond #F5F7FA, surfaces blanches, texte #192536, bleu royal #3158D8 réservé aux interactions,
+ * pastels (#E9F0FF bleu, #E7F4EF vert, #EDF1F6 gris bleuté) sur quelques surfaces seulement.
+ * Les variantes « -text » et --muted-foreground sont assombries pour le contraste AA (4,5:1).
  */
 :root {
   --radius: 0.625rem;
+  --radius-card: 0.875rem;
 
-  /* Marque */
-  --navy: #152238;
+  --navy: #192536;
   --royal: #3158d8;
 
-  /* Surfaces */
-  --background: #f6f8fb;
-  --foreground: #243247;
+  --background: #f5f7fa;
+  --foreground: #192536;
   --card: #ffffff;
-  --card-foreground: #243247;
+  --card-foreground: #192536;
   --popover: #ffffff;
-  --popover-foreground: #243247;
-  --surface-2: #eef2f7;
+  --popover-foreground: #192536;
+  --surface-2: #edf1f6;
 
-  /* Actions */
   --primary: #3158d8;
-  --primary-hover: #2849ba;
+  --primary-hover: #2747b8;
   --primary-foreground: #ffffff;
-  --secondary: #eef2f7;
-  --secondary-foreground: #243247;
-  --accent: #edf2fe;
-  --accent-foreground: #1f3f9e;
+  --secondary: #edf1f6;
+  --secondary-foreground: #192536;
+  --accent: #e9f0ff;
+  --accent-foreground: #2747b8;
 
-  /* Textes */
-  --muted: #eef2f7;
-  --muted-foreground: #5f6d82; /* dérivé AA de #738196 (≥ 4,5:1 sur fond et cartes) */
-  --subtle-foreground: #738196; /* texte secondaire validé : grands textes, icônes, libellés non essentiels */
+  --muted: #edf1f6;
+  --muted-foreground: #5a6b80;
+  --subtle-foreground: #8593a6;
 
-  /* Sémantique */
   --success: #16856b;
   --success-text: #0e6b55;
-  --success-surface: #e8f5f1;
+  --success-surface: #e7f4ef;
   --destructive: #c94c58;
   --destructive-text: #ad3744;
-  --destructive-surface: #fbeeef;
+  --destructive-surface: #fbedef;
   --destructive-foreground: #ffffff;
-  --warning: #c98a12;
+  --warning: #b7791f;
   --warning-text: #8a5a00;
-  --warning-surface: #fdf5e4;
+  --warning-surface: #fdf4e3;
   --warning-foreground: #5c3d00;
   --info: #3158d8;
-  --info-text: #2849ba;
-  --info-surface: #edf2fe;
+  --info-text: #2747b8;
+  --info-surface: #e9f0ff;
 
-  /* Bordures, focus */
-  --border: #e3e8ef;
-  --border-strong: #cfd7e3;
-  --input: #d5dce7;
+  --border: #e5eaf1;
+  --border-strong: #d6dee8;
+  --input: #dce3ec;
   --ring: #3158d8;
 
-  /* Navigation (bleu nuit dans les deux thèmes) */
-  --sidebar: #152238;
-  --sidebar-foreground: #c9d1de;
-  --sidebar-muted: #8a96ab;
-  --sidebar-accent: rgb(255 255 255 / 0.08);
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgb(255 255 255 / 0.08);
-  --sidebar-primary: #6f8ff0;
+  /* Navigation claire */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #45546a;
+  --sidebar-muted: #66758a;
+  --sidebar-accent: #e9f0ff;
+  --sidebar-accent-foreground: #2747b8;
+  --sidebar-border: #e5eaf1;
+  --sidebar-primary: #3158d8;
+  --sidebar-hover: #f3f6fa;
 
-  --shadow-card: 0 1px 2px rgb(21 34 56 / 0.04), 0 1px 1px rgb(21 34 56 / 0.02);
-  --shadow-raised: 0 8px 24px -12px rgb(21 34 56 / 0.18);
+  --shadow-card: 0 1px 2px rgb(25 37 54 / 0.035);
+  --shadow-raised: 0 12px 32px -16px rgb(25 37 54 / 0.18);
 }
 
 .dark {
-  --background: #0d131e;
-  --foreground: #e6eaf0;
-  --card: #141c2a;
-  --card-foreground: #e6eaf0;
-  --popover: #141c2a;
-  --popover-foreground: #e6eaf0;
-  --surface-2: #1a2333;
+  --navy: #e7ebf1;
+  --background: #0f131a;
+  --foreground: #e7ebf1;
+  --card: #161b24;
+  --card-foreground: #e7ebf1;
+  --popover: #161b24;
+  --popover-foreground: #e7ebf1;
+  --surface-2: #1c2230;
 
-  --primary: #4a6fe3;
-  --primary-hover: #5b7df0;
+  --primary: #4a6be0;
+  --primary-hover: #5b7cf0;
   --primary-foreground: #ffffff;
-  --secondary: #1e2839;
-  --secondary-foreground: #e6eaf0;
-  --accent: #1c2945;
-  --accent-foreground: #b9c9fb;
+  --secondary: #1c2230;
+  --secondary-foreground: #e7ebf1;
+  --accent: #1d2740;
+  --accent-foreground: #a9bbf8;
 
-  --muted: #1a2333;
-  --muted-foreground: #9aa6b8;
-  --subtle-foreground: #7f8ba0;
+  --muted: #1c2230;
+  --muted-foreground: #9aa5b5;
+  --subtle-foreground: #758196;
 
   --success: #2fb08f;
   --success-text: #5fd0b0;
@@ -106,30 +102,32 @@
   --warning-text: #f0c46c;
   --warning-surface: rgb(224 168 58 / 0.12);
   --warning-foreground: #f6dca6;
-  --info: #6f8ff0;
-  --info-text: #9fb4f6;
-  --info-surface: rgb(111 143 240 / 0.12);
+  --info: #8fa6f5;
+  --info-text: #a9bbf8;
+  --info-surface: #1d2740;
 
-  --border: rgb(255 255 255 / 0.08);
-  --border-strong: rgb(255 255 255 / 0.14);
-  --input: rgb(255 255 255 / 0.14);
-  --ring: #6f8ff0;
+  --border: rgb(255 255 255 / 0.07);
+  --border-strong: rgb(255 255 255 / 0.12);
+  --input: rgb(255 255 255 / 0.12);
+  --ring: #8fa6f5;
 
-  --sidebar: #0a0f18;
-  --sidebar-foreground: #c3cbd8;
-  --sidebar-muted: #7f8ba0;
-  --sidebar-accent: rgb(255 255 255 / 0.06);
-  --sidebar-accent-foreground: #ffffff;
+  --sidebar: #12161e;
+  --sidebar-foreground: #b4bdca;
+  --sidebar-muted: #8592a5;
+  --sidebar-accent: #1d2740;
+  --sidebar-accent-foreground: #c3d0fb;
   --sidebar-border: rgb(255 255 255 / 0.06);
-  --sidebar-primary: #6f8ff0;
+  --sidebar-primary: #8fa6f5;
+  --sidebar-hover: rgb(255 255 255 / 0.04);
 
   --shadow-card: 0 0 0 0 transparent;
-  --shadow-raised: 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  --shadow-raised: 0 12px 32px -16px rgb(0 0 0 / 0.6);
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --font-sans: "DM Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: "Manrope Variable", "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -174,12 +172,14 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-hover: var(--sidebar-hover);
   --shadow-card: var(--shadow-card);
   --shadow-raised: var(--shadow-raised);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-card: var(--radius-card);
 }
 
 @layer base {
@@ -190,13 +190,15 @@
     -webkit-text-size-adjust: 100%;
   }
   body {
-    @apply bg-background font-sans text-foreground antialiased;
-    font-feature-settings: "tnum" 1, "cv11" 1;
+    @apply bg-background font-sans text-[14px] text-foreground antialiased;
+    font-optical-sizing: auto;
     text-rendering: optimizeLegibility;
   }
-  h1, h2, h3 {
+  h1, h2 {
+    @apply font-display text-foreground;
+  }
+  h3 {
     @apply text-foreground;
-    letter-spacing: -0.01em;
   }
   ::selection {
     background: color-mix(in oklab, var(--primary) 22%, transparent);
@@ -211,15 +213,29 @@
 }
 
 @layer utilities {
-  /* Montants : chiffres tabulaires, alignés, sans césure. */
+  /*
+   * Montants et chiffres : Manrope (DM Sans ne possède pas de chiffres tabulaires), chiffres
+   * tabulaires, sans césure. Utilisé pour toutes les colonnes financières.
+   */
   .num {
+    font-family: var(--font-display);
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
     white-space: nowrap;
+    letter-spacing: -0.005em;
   }
-  /* Petite capitale de section (titres de groupes, en-têtes de tableaux). */
+  /* Grand chiffre (KPI, synthèses). */
+  .figure {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  /* Libellé discret de section ou de métrique (sans capitales décoratives). */
   .eyebrow {
-    @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground;
+    @apply text-[12.5px] font-medium text-muted-foreground;
   }
 }
 

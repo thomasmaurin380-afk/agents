@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const field = [
-  "flex h-10 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground shadow-card sm:h-9",
+  "flex h-10 w-full rounded-lg border border-input bg-card px-3 text-[14px] text-foreground",
   "transition-[border-color,box-shadow] duration-150 placeholder:text-subtle-foreground",
   "hover:border-border-strong focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/20",
   "disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-60",

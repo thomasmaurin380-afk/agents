@@ -20,16 +20,16 @@ export function TableBody({ className, ...props }: React.ComponentProps<"tbody">
   return <tbody className={cn("[&_tr:last-child]:border-0", className)} {...props} />;
 }
 export function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
-  return <tr className={cn("border-b transition-colors hover:bg-surface-2/60", className)} {...props} />;
+  return <tr className={cn("border-b border-border/80 transition-colors hover:bg-surface-2/45", className)} {...props} />;
 }
 export function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
-      className={cn("eyebrow h-10 whitespace-nowrap bg-surface-2/50 px-3 text-left align-middle first:pl-4 last:pr-4", className)}
+      className={cn("h-10 whitespace-nowrap px-3 text-left align-middle text-[12px] font-medium text-muted-foreground first:pl-5 last:pr-5", className)}
       {...props}
     />
   );
 }
 export function TableCell({ className, num, ...props }: React.ComponentProps<"td"> & { num?: boolean }) {
-  return <td className={cn("px-3 py-3 align-middle first:pl-4 last:pr-4", num && "num text-right", className)} {...props} />;
+  return <td className={cn("px-3 py-3 align-middle first:pl-5 last:pr-5", num && "num text-right", className)} {...props} />;
 }

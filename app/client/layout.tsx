@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { ROLE_LABELS } from "@/domain/permissions/matrix";
 import { ClientSidebar } from "@/features/navigation/client-sidebar";
+import { HeaderContext } from "@/features/navigation/header-context";
 import { requireActor } from "@/lib/guards";
 import { isStaff } from "@/services/actor";
 
@@ -18,6 +19,7 @@ export default async function ClientLayout({ children }: LayoutProps<"/client">)
           companies={actor.clientCompanies.map((c) => ({ companyId: c.companyId, name: c.tradeName ?? c.companyName }))}
         />
       }
+      context={<HeaderContext root="Espace dirigeant" companyNames={Object.fromEntries(actor.clientCompanies.map((c) => [c.companyId, c.tradeName ?? c.companyName]))} />}
       userName={actor.fullName}
       userRoleLabel={staff ? "Aperçu DAF" : firstRole ? ROLE_LABELS[firstRole] : ""}
     >
