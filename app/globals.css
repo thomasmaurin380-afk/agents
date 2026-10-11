@@ -32,8 +32,8 @@
   --accent-foreground: #2747b8;
 
   --muted: #edf1f6;
-  --muted-foreground: #5a6b80;
-  --subtle-foreground: #8593a6;
+  --muted-foreground: #4f6076; /* ≈ 6:1 sur blanc, 5,6:1 sur le fond */
+  --subtle-foreground: #7d8ba0;
 
   --success: #16856b;
   --success-text: #0e6b55;

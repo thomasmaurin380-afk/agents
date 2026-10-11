@@ -58,14 +58,14 @@ export function SidebarNav({ title, items, exactHrefs = [] }: { title?: React.Re
             className="flex h-8 w-full items-center gap-2 rounded-lg px-3 text-left text-[12.5px] text-sidebar-muted hover:bg-sidebar-hover"
           >
             <ChevronRight className={cn("size-3.5 transition-transform", open && "rotate-90")} aria-hidden />
-            Modules à venir <span className="num ml-auto text-[11px]">{planned.length}</span>
+            Modules à venir
           </button>
           <ul id={plannedId} hidden={!open} className="mt-0.5 space-y-px">
             {planned.map((item) => (
-              <li key={item.label} title={`Disponible en phase ${item.plannedPhase}`} className="flex h-8 cursor-not-allowed items-center gap-2.5 px-3 text-[12.5px] text-sidebar-muted/80">
+              <li key={item.label} className="flex h-8 cursor-default items-center gap-2.5 px-3 text-[12.5px] text-sidebar-muted">
                 <NavIcon name={item.icon} />
-                <span className="flex-1 truncate">{item.label}<span className="sr-only"> (disponible en phase {item.plannedPhase})</span></span>
-                <span aria-hidden className="num text-[10.5px]">P{item.plannedPhase}</span>
+                <span className="flex-1 truncate">{item.label}</span>
+                <span className="shrink-0 text-[11px]">Phase {item.plannedPhase}</span>
               </li>
             ))}
           </ul>

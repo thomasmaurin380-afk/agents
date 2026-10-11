@@ -1,9 +1,10 @@
-import { LogOut, Menu } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import Link from "next/link";
 import type * as React from "react";
 import { signOutAction } from "@/app/(auth)/actions";
 import { BrandLockup } from "@/components/brand/brand-mark";
 import { Button } from "@/components/ui/button";
+import { NavDrawerController } from "./nav-drawer";
 import { ThemeToggle } from "./theme";
 
 const SPACE_LABELS = { daf: "Cockpit DAF", client: "Espace dirigeant" } as const;
@@ -37,21 +38,26 @@ export function AppShell({
   return (
     <div className="min-h-svh bg-background md:grid md:grid-cols-[224px_minmax(0,1fr)]">
       {/* Mobile : tiroir de navigation sans JavaScript (case à cocher + :checked). */}
-      <input id="nav-toggle" type="checkbox" className="peer sr-only" aria-label="Afficher le menu" />
+      <input id="nav-toggle" type="checkbox" className="peer sr-only md:hidden" aria-label="Menu de navigation" aria-controls="app-nav" />
+      <NavDrawerController />
       <aside
-        className="fixed inset-x-0 bottom-0 top-16 z-30 hidden overflow-y-auto border-t bg-sidebar text-sidebar-foreground peer-checked:block md:sticky md:top-0 md:flex md:h-svh md:flex-col md:border-r md:border-t-0 md:border-sidebar-border"
+        id="app-nav"
+        className="fixed inset-x-0 bottom-0 top-16 z-30 hidden flex-col overflow-y-auto border-t bg-sidebar text-sidebar-foreground shadow-raised peer-checked:flex md:sticky md:top-0 md:flex md:h-svh md:border-r md:border-t-0 md:border-sidebar-border md:shadow-none"
       >
         <div className="hidden h-16 shrink-0 items-center px-5 md:flex">
           <Link href={homeHref} className="rounded-md">
             <BrandLockup subtitle={SPACE_LABELS[space]} />
           </Link>
         </div>
-        <nav aria-label="Navigation principale" className="px-3 pb-6 pt-3 md:flex-1 md:overflow-y-auto md:pt-2">
+        <nav aria-label="Navigation principale" className="flex-1 px-3 pb-6 pt-4 md:overflow-y-auto md:pt-2">
           {sidebar}
         </nav>
         {/* Mobile : préférences et déconnexion regroupées dans le tiroir. */}
-        <div className="flex items-center justify-between gap-3 border-t px-5 py-4 md:hidden">
-          <div className="min-w-0 leading-tight">
+        <div className="mt-auto flex items-center gap-3 border-t bg-background/60 px-5 py-4 md:hidden">
+          <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-accent font-display text-[11px] font-bold text-accent-foreground">
+            {initials(userName)}
+          </span>
+          <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-[13px] font-medium text-foreground">{userName}</p>
             <p className="truncate text-[12px] text-muted-foreground">{userRoleLabel}</p>
           </div>
@@ -65,7 +71,7 @@ export function AppShell({
           </div>
         </div>
       </aside>
-      <div className="flex min-w-0 flex-col peer-focus-visible:[&_label[for=nav-toggle]]:ring-2 peer-focus-visible:[&_label[for=nav-toggle]]:ring-ring">
+      <div className="flex min-w-0 flex-col peer-focus-visible:[&_label[for=nav-toggle]]:ring-2 peer-focus-visible:[&_label[for=nav-toggle]]:ring-ring peer-checked:[&_[data-menu=closed]]:hidden peer-checked:[&_[data-menu=open]]:inline-flex">
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-background/85 px-4 backdrop-blur-md sm:px-6 lg:px-10">
           <Link href={homeHref} className="mr-auto rounded-md md:hidden">
             <BrandLockup subtitle={SPACE_LABELS[space]} />
@@ -89,9 +95,10 @@ export function AppShell({
           </form>
           <label
             htmlFor="nav-toggle"
-            className="flex h-9 cursor-pointer items-center gap-2 rounded-lg border bg-card px-3 text-[13px] font-medium md:hidden"
+            className="flex h-9 cursor-pointer items-center rounded-lg border bg-card px-3 text-[13px] font-medium md:hidden"
           >
-            <Menu className="size-4" aria-hidden /> Menu
+            <span data-menu="closed" className="inline-flex items-center gap-2"><Menu className="size-4" aria-hidden /> Menu</span>
+            <span data-menu="open" className="hidden items-center gap-2"><X className="size-4" aria-hidden /> Fermer</span>
           </label>
         </header>
         <main id="contenu" className="mx-auto w-full max-w-[1320px] flex-1 px-4 py-7 sm:px-6 md:py-9 lg:px-10">{children}</main>
