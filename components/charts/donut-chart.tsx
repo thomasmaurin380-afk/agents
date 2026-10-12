@@ -1,17 +1,28 @@
-export type DonutSlice = { label: string; value: number; color: string };
+export type DonutSlice = {
+  label: string;
+  value: number;
+  color: string;
+  /** Libellé exact de la valeur (montant) ; masqué si absent et `showValues` faux. */
+  valueLabel?: string;
+  /** Part déjà calculée par le modèle (« 38,0 % ») ; à défaut, calculée ici pour l'affichage. */
+  shareLabel?: string;
+};
 
 /**
  * Anneau de répartition : segments séparés par un liseré de la couleur de surface, valeur
  * centrale, légende alignée (libellé, effectif, pourcentage). Les catégories ordonnées
  * utilisent une rampe séquentielle d'une seule teinte.
  */
-export function DonutChart({ slices, centerValue, centerLabel, size = 156, thickness = 26, label }: {
+export function DonutChart({ slices, centerValue, centerLabel, size = 156, thickness = 26, label, showValues = true, layout = "row" }: {
   slices: DonutSlice[];
   centerValue: string;
   centerLabel: string;
   size?: number;
   thickness?: number;
   label: string;
+  showValues?: boolean;
+  /** `row` : légende à droite (à partir de sm) ; `stack` : légende sous l'anneau. */
+  layout?: "row" | "stack";
 }) {
   const total = slices.reduce((s, x) => s + x.value, 0);
   const r = (size - thickness) / 2;
@@ -27,7 +38,7 @@ export function DonutChart({ slices, centerValue, centerLabel, size = 156, thick
   });
   const pct = (v: number) => (total ? `${Math.round((v / total) * 100)} %` : "—");
   return (
-    <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center xl:gap-5">
+    <div className={layout === "row" ? "flex flex-col items-center gap-6 sm:flex-row sm:items-center xl:gap-5" : "flex flex-col items-center gap-6"}>
       <div className="relative shrink-0" style={{ width: size, height: size }}>
         <svg width={size} height={size} role="img" aria-label={label}>
           <circle cx={c} cy={c} r={r} fill="none" stroke="var(--surface-2)" strokeWidth={thickness} />
@@ -49,11 +60,11 @@ export function DonutChart({ slices, centerValue, centerLabel, size = 156, thick
       </div>
       <ul className="w-full min-w-0 space-y-3">
         {slices.map((s) => (
-          <li key={s.label} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-2.5 text-[13.5px]">
+          <li key={s.label} className={showValues ? "grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-2.5 text-[13.5px]" : "grid grid-cols-[auto_1fr_auto] items-center gap-x-2.5 text-[13.5px]"}>
             <span aria-hidden className="size-2.5 rounded-full" style={{ background: s.color }} />
             <span className="leading-tight text-foreground">{s.label}</span>
-            <span className="num w-5 text-right font-medium">{s.value}</span>
-            <span className="num w-9 text-right text-muted-foreground">{pct(s.value)}</span>
+            {showValues ? <span className="num min-w-5 text-right font-medium">{s.valueLabel ?? s.value}</span> : null}
+            <span className="num min-w-9 text-right text-muted-foreground">{s.shareLabel ?? pct(s.value)}</span>
           </li>
         ))}
       </ul>

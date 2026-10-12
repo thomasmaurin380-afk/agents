@@ -25,6 +25,8 @@ export function AppShell({
   userRoleLabel,
   context,
   sidebarFooter,
+  preferences,
+  mobilePreferences,
   children,
 }: {
   space: "daf" | "client";
@@ -36,6 +38,10 @@ export function AppShell({
   context?: React.ReactNode;
   /** Pied de la navigation (ordinateur) : informations existantes uniquement. */
   sidebarFooter?: React.ReactNode;
+  /** Préférences d'affichage (en-tête, ordinateur), proposées seulement quand elles existent. */
+  preferences?: React.ReactNode;
+  /** Mêmes préférences dans le tiroir de navigation (mobile). */
+  mobilePreferences?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -56,6 +62,7 @@ export function AppShell({
           {sidebar}
         </nav>
         {sidebarFooter ? <div className="hidden px-4 pb-5 md:block">{sidebarFooter}</div> : null}
+        {mobilePreferences ? <div className="border-t px-5 py-4 md:hidden">{mobilePreferences}</div> : null}
         {/* Mobile : préférences et déconnexion regroupées dans le tiroir. */}
         <div className="mt-auto flex items-center gap-3 border-t bg-background/60 px-5 py-4 md:hidden">
           <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-accent font-display text-[11px] font-bold text-accent-foreground">
@@ -81,6 +88,7 @@ export function AppShell({
             <BrandLockup subtitle={SPACE_LABELS[space]} />
           </Link>
           <div className="mr-auto hidden min-w-0 md:block">{context}</div>
+          {preferences ? <div className="hidden md:block">{preferences}</div> : null}
           <div className="hidden md:block"><ThemeToggle /></div>
           <div className="mx-1 hidden h-8 w-px bg-border md:block" aria-hidden />
           <div className="hidden items-center gap-2.5 md:flex">
