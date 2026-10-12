@@ -29,5 +29,5 @@ const ICONS: Record<NavIconName, LucideIcon> = {
 
 export function NavIcon({ name }: { name: NavIconName }) {
   const Icon = ICONS[name];
-  return <Icon className="size-[17px] shrink-0" strokeWidth={1.75} aria-hidden />;
+  return <Icon className="size-5 shrink-0" strokeWidth={1.6} aria-hidden />;
 }

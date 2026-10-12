@@ -24,6 +24,7 @@ export function AppShell({
   userName,
   userRoleLabel,
   context,
+  sidebarFooter,
   children,
 }: {
   space: "daf" | "client";
@@ -33,10 +34,12 @@ export function AppShell({
   userRoleLabel: string;
   /** Contexte affiché dans l'en-tête (cabinet, entreprise active). */
   context?: React.ReactNode;
+  /** Pied de la navigation (ordinateur) : informations existantes uniquement. */
+  sidebarFooter?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-svh bg-background md:grid md:grid-cols-[224px_minmax(0,1fr)]">
+    <div className="min-h-svh bg-background md:grid md:grid-cols-[244px_minmax(0,1fr)]">
       {/* Mobile : tiroir de navigation sans JavaScript (case à cocher + :checked). */}
       <input id="nav-toggle" type="checkbox" className="peer sr-only md:hidden" aria-label="Menu de navigation" aria-controls="app-nav" />
       <NavDrawerController />
@@ -44,14 +47,15 @@ export function AppShell({
         id="app-nav"
         className="fixed inset-x-0 bottom-0 top-16 z-30 hidden flex-col overflow-y-auto border-t bg-sidebar text-sidebar-foreground shadow-raised peer-checked:flex md:sticky md:top-0 md:flex md:h-svh md:border-r md:border-t-0 md:border-sidebar-border md:shadow-none"
       >
-        <div className="hidden h-16 shrink-0 items-center px-5 md:flex">
+        <div className="hidden h-[84px] shrink-0 items-center px-6 md:flex">
           <Link href={homeHref} className="rounded-md">
-            <BrandLockup subtitle={SPACE_LABELS[space]} />
+            <BrandLockup />
           </Link>
         </div>
-        <nav aria-label="Navigation principale" className="flex-1 px-3 pb-6 pt-4 md:overflow-y-auto md:pt-2">
+        <nav aria-label="Navigation principale" className="flex-1 px-4 pb-6 pt-4 md:overflow-y-auto md:pt-3">
           {sidebar}
         </nav>
+        {sidebarFooter ? <div className="hidden px-4 pb-5 md:block">{sidebarFooter}</div> : null}
         {/* Mobile : préférences et déconnexion regroupées dans le tiroir. */}
         <div className="mt-auto flex items-center gap-3 border-t bg-background/60 px-5 py-4 md:hidden">
           <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-accent font-display text-[11px] font-bold text-accent-foreground">
@@ -72,20 +76,20 @@ export function AppShell({
         </div>
       </aside>
       <div className="flex min-w-0 flex-col peer-focus-visible:[&_label[for=nav-toggle]]:ring-2 peer-focus-visible:[&_label[for=nav-toggle]]:ring-ring peer-checked:[&_[data-menu=closed]]:hidden peer-checked:[&_[data-menu=open]]:inline-flex">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-background/85 px-4 backdrop-blur-md sm:px-6 lg:px-10">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-card/90 px-4 backdrop-blur-md sm:px-6 md:h-[76px] lg:px-8">
           <Link href={homeHref} className="mr-auto rounded-md md:hidden">
             <BrandLockup subtitle={SPACE_LABELS[space]} />
           </Link>
           <div className="mr-auto hidden min-w-0 md:block">{context}</div>
           <div className="hidden md:block"><ThemeToggle /></div>
-          <div className="hidden h-6 w-px bg-border md:block" aria-hidden />
+          <div className="mx-1 hidden h-8 w-px bg-border md:block" aria-hidden />
           <div className="hidden items-center gap-2.5 md:flex">
-            <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-accent font-display text-[11px] font-bold text-accent-foreground">
+            <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-accent text-[13px] font-semibold text-accent-foreground">
               {initials(userName)}
             </span>
             <div className="leading-tight">
-              <p className="max-w-44 truncate text-[13px] font-medium" data-testid="current-user">{userName}</p>
-              <p className="max-w-44 truncate text-[12px] text-muted-foreground">{userRoleLabel}</p>
+              <p className="max-w-48 truncate text-[14px] font-semibold" data-testid="current-user">{userName}</p>
+              <p className="mt-0.5 max-w-48 truncate text-[12.5px] text-muted-foreground">{userRoleLabel}</p>
             </div>
           </div>
           <form action={signOutAction} className="hidden md:block">
@@ -101,13 +105,13 @@ export function AppShell({
             <span data-menu="open" className="hidden items-center gap-2"><X className="size-4" aria-hidden /> Fermer</span>
           </label>
         </header>
-        <main id="contenu" className="mx-auto w-full max-w-[1320px] flex-1 px-4 py-7 sm:px-6 md:py-9 lg:px-10">{children}</main>
+        <main id="contenu" className="mx-auto w-full max-w-[1320px] flex-1 px-4 py-7 sm:px-6 md:py-8 lg:px-8">{children}</main>
       </div>
     </div>
   );
 }
 
-/** En-tête de page : surtitre discret, titre éditorial (Manrope), description, actions. */
+/** En-tête de page : salutation ou surtitre, grand titre, description, actions. */
 export function PageHeader({
   title,
   description,
@@ -120,11 +124,11 @@ export function PageHeader({
   eyebrow?: React.ReactNode;
 }) {
   return (
-    <div className="mb-7 flex flex-col gap-4 sm:mb-9 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-6 flex flex-col gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        {eyebrow ? <p className="mb-2 text-[13px] text-muted-foreground">{eyebrow}</p> : null}
-        <h1 className="text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] sm:text-[32px]">{title}</h1>
-        {description ? <div className="mt-2 text-[14px] text-muted-foreground">{description}</div> : null}
+        {eyebrow ? <p className="mb-1.5 text-[15px] text-muted-foreground sm:text-[17px]">{eyebrow}</p> : null}
+        <h1 className="text-[28px] font-bold leading-[1.12] tracking-[-0.025em] sm:text-[34px]">{title}</h1>
+        {description ? <div className="mt-2 text-[14.5px] text-muted-foreground sm:text-[16px]">{description}</div> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </div>

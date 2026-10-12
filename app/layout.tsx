@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import "@fontsource-variable/dm-sans";
-import "@fontsource-variable/manrope";
+import "@fontsource-variable/instrument-sans";
 import { ThemeProvider } from "@/components/layout/theme";
 import "./globals.css";
 

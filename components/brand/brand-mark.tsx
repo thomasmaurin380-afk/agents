@@ -1,26 +1,25 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Identité provisoire du produit (aucun nom ni logo définitif validé) : monogramme « DAF ».
+ * Identité provisoire du produit (aucun nom ni logo définitif validé) : pastille bleu royal
+ * avec une flèche de progression stylisée.
  */
 export function BrandMark({ className }: { className?: string }) {
   return (
-    <span
-      aria-hidden
-      className={cn("grid size-8 shrink-0 place-items-center rounded-[9px] bg-royal font-display text-[10.5px] font-bold tracking-[0.04em] text-white", className)}
-    >
-      DAF
-    </span>
+    <svg viewBox="0 0 32 32" aria-hidden className={cn("size-8 shrink-0", className)}>
+      <circle cx="16" cy="16" r="16" fill="var(--royal)" />
+      <path d="M12 9.5 22.5 16 12 22.5Z" fill="#fff" fillOpacity="0.95" />
+    </svg>
   );
 }
 
-export function BrandLockup({ subtitle }: { subtitle: string }) {
+export function BrandLockup({ subtitle }: { subtitle?: string }) {
   return (
-    <span className="flex min-w-0 items-center gap-2.5">
+    <span className="flex min-w-0 items-center gap-3">
       <BrandMark />
       <span className="min-w-0 leading-tight">
-        <span className="block truncate font-display text-[14.5px] font-semibold tracking-[-0.01em] text-foreground">Plateforme DAF</span>
-        <span className="block truncate text-[12px] text-muted-foreground">{subtitle}</span>
+        <span className="block truncate text-[18px] font-semibold tracking-[-0.02em] text-foreground">Plateforme DAF</span>
+        {subtitle ? <span className="block truncate text-[12px] text-muted-foreground md:hidden">{subtitle}</span> : null}
       </span>
     </span>
   );

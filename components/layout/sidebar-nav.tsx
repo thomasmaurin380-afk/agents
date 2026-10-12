@@ -25,9 +25,9 @@ export function SidebarNav({ title, items, exactHrefs = [] }: { title?: React.Re
   const available = items.filter((i) => i.href);
   const planned = items.filter((i) => !i.href);
   return (
-    <div className="mb-5">
-      {title ? <div className="px-3 pb-1.5 text-[12px] font-medium text-sidebar-muted">{title}</div> : null}
-      <ul className="space-y-px">
+    <div className="mb-4 border-b border-sidebar-border pb-4 last:border-b-0">
+      {title ? <div className="px-3 pb-2 pt-1 text-[11.5px] font-semibold uppercase tracking-[0.08em] text-sidebar-muted">{title}</div> : null}
+      <ul className="space-y-1">
         {available.map((item) => {
           const active = isActive(pathname, item.href!, exactHrefs.includes(item.href!));
           return (
@@ -36,13 +36,14 @@ export function SidebarNav({ title, items, exactHrefs = [] }: { title?: React.Re
                 href={item.href!}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-9 items-center gap-2.5 rounded-lg px-3 text-[13.5px] text-sidebar-foreground transition-colors",
+                  "flex h-11 items-center gap-3 rounded-xl px-3.5 text-[15px] text-sidebar-foreground transition-colors",
                   "hover:bg-sidebar-hover hover:text-foreground [&_svg]:text-sidebar-muted",
                   active && "bg-sidebar-accent font-medium text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground [&_svg]:text-sidebar-primary",
                 )}
               >
                 <NavIcon name={item.icon} />
                 <span className="truncate">{item.label}</span>
+                {item.tag ? <span className="ml-auto shrink-0 rounded border border-warning/40 bg-warning-surface px-1 text-[10px] font-medium leading-4 text-warning-text">{item.tag}</span> : null}
               </Link>
             </li>
           );
@@ -55,14 +56,14 @@ export function SidebarNav({ title, items, exactHrefs = [] }: { title?: React.Re
             aria-expanded={open}
             aria-controls={plannedId}
             onClick={() => setOpen((o) => !o)}
-            className="flex h-8 w-full items-center gap-2 rounded-lg px-3 text-left text-[12.5px] text-sidebar-muted hover:bg-sidebar-hover"
+            className="flex h-9 w-full items-center gap-2 rounded-xl px-3.5 text-left text-[13px] text-sidebar-muted hover:bg-sidebar-hover"
           >
             <ChevronRight className={cn("size-3.5 transition-transform", open && "rotate-90")} aria-hidden />
             Modules à venir
           </button>
           <ul id={plannedId} hidden={!open} className="mt-0.5 space-y-px">
             {planned.map((item) => (
-              <li key={item.label} className="flex h-8 cursor-default items-center gap-2.5 px-3 text-[12.5px] text-sidebar-muted">
+              <li key={item.label} className="flex h-9 cursor-default items-center gap-3 px-3.5 text-[13px] text-sidebar-muted">
                 <NavIcon name={item.icon} />
                 <span className="flex-1 truncate">{item.label}</span>
                 <span className="shrink-0 text-[11px]">Phase {item.plannedPhase}</span>

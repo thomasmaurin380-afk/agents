@@ -8,6 +8,8 @@ export type NavItem = {
   href?: string;
   /** Phase de livraison prévue si le module n'est pas encore disponible. */
   plannedPhase?: string;
+  /** Mention discrète affichée après le libellé (ex. « Maquette »). */
+  tag?: string;
   icon: NavIcon;
 };
 
