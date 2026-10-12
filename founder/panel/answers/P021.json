@@ -1,0 +1,13 @@
+{
+  "id": "P021",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "30 € la séance, c'est beaucoup pour moi alors que je fais déjà mes vidéos de Pilates gratuitement à la maison. Et avec les enfants à récupérer à 16 h 30, caser une heure de cours plus le trajet dans le centre, ce n'est pas évident.",
+  "objection": "Le Lagree sur machine a l'air très dur, j'ai peur de ne pas suivre en débutante et de payer 30 € pour me sentir larguée.",
+  "would_change_my_mind": "Une première séance d'essai à prix réduit en Pilates classique, sur un créneau en matinée ou à midi, qui me montre que c'est accessible aux débutantes.",
+  "price_too_cheap": 8,
+  "price_cheap": 12,
+  "price_expensive": 20,
+  "price_too_expensive": 30
+}

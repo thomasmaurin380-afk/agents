@@ -1,0 +1,13 @@
+{
+  "id": "P005",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "30 € la séance, c'est à peu près ce que je paie par mois pour ma salle, où le Pilates tapis est déjà inclus. Avec mon budget, je ne peux pas mettre ça dans un seul cours.",
+  "objection": "Je paie déjà une salle de sport où le Pilates est inclus, alors payer 30 € pour une heure, même sur machine, ça ne vaut pas le coup pour moi.",
+  "would_change_my_mind": "Un premier cours d'essai Lagree gratuit ou à 10-15 €, ou un pack mensuel vraiment moins cher par séance, pour voir si la machine change vraiment quelque chose par rapport au Pilates de ma salle.",
+  "price_too_cheap": 8,
+  "price_cheap": 12,
+  "price_expensive": 20,
+  "price_too_expensive": 28
+}

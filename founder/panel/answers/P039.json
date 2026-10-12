@@ -1,0 +1,13 @@
+{
+  "id": "P039",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "J'ai déjà mon studio de reformer à Nice, mon coach et mes créneaux, j'y vais une à deux fois par semaine et ça me va. Je ne vais pas payer 30 € une séance ailleurs juste pour tester un truc qui ressemble à ce que je fais déjà.",
+  "objection": "Je ne vois pas la différence entre le Lagree et le reformer classique : si c'est pareil avec un autre nom, je n'ai aucune raison de quitter mon coach.",
+  "would_change_my_mind": "Une première séance d'essai gratuite ou à prix réduit qui me montre concrètement en quoi le Megaformer est différent de mon reformer.",
+  "price_too_cheap": 12,
+  "price_cheap": 20,
+  "price_expensive": 30,
+  "price_too_expensive": 38
+}

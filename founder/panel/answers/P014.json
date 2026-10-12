@@ -1,0 +1,13 @@
+{
+  "id": "P014",
+  "buys": true,
+  "purchases_first_month": 2,
+  "reason_code": "need",
+  "reason": "J'ai mal au dos et je cherche justement une activité douce et encadrée ; le Pilates classique en petit groupe avec un coach, accessible en tram depuis Nice Ouest, ça me tente pour un essai. Mais à 30 € la séance, je teste deux fois avant de m'engager, pas plus.",
+  "objection": "Rien n'est dit sur l'annulation : si j'ai un imprévu au boulot et que je perds 30 € à chaque fois, je laisse tomber. Et je ne sais pas si le coach saura adapter les exercices à mon dos.",
+  "would_change_my_mind": "Une annulation gratuite jusqu'à quelques heures avant et un carnet de 10 séances à prix réduit me feraient passer à une séance par semaine.",
+  "price_too_cheap": 10,
+  "price_cheap": 18,
+  "price_expensive": 30,
+  "price_too_expensive": 40
+}

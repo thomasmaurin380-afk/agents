@@ -1,0 +1,13 @@
+{
+  "id": "P037",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "30 € la séance, c'est presque le prix de mon abonnement mensuel à la salle où le Pilates est déjà inclus. Avec mon budget serré en fin de mois, je ne vais pas payer ça en plus.",
+  "objection": "Je paie déjà une salle de sport avec du Pilates compris, et 30 € pour une heure c'est trop cher pour moi, même si la machine Megaformer m'intrigue.",
+  "would_change_my_mind": "Une première séance découverte gratuite ou à moins de 15 €, ou le studio disponible sur ClassPass.",
+  "price_too_cheap": 8,
+  "price_cheap": 12,
+  "price_expensive": 20,
+  "price_too_expensive": 28
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P015",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Je paie déjà ma salle où le Pilates est inclus, et avec mon budget je ne peux pas ajouter 109 € par mois. Même l'essai à 45 € remboursable, c'est de l'argent avancé pour quelque chose que je ne pourrai pas me payer ensuite.",
+  "objection": "Ça ferait un deuxième abonnement en plus de ma salle, et le soir je suis prise avec les enfants, donc il ne me resterait que le créneau de 12 h 15.",
+  "would_change_my_mind": "Que mon kiné ou mon médecin me dise que le Pilates de ma salle ne suffit pas pour mon dos, et une formule à moins de 60 € par mois avec des cours en journée.",
+  "price_too_cheap": 8,
+  "price_cheap": 12,
+  "price_expensive": 20,
+  "price_too_expensive": 28
+}

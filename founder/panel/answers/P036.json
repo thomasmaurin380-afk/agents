@@ -1,0 +1,13 @@
+{
+  "id": "P036",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "30 € la séance, c'est presque ce que je paie pour un mois entier de salle, et j'ai déjà le Pilates tapis inclus. Avec mon salaire, je ne vais pas mettre ça dans une heure de cours, même si le Megaformer me rend curieuse.",
+  "objection": "Le prix, et je ne sais pas si les coachs sont vraiment formés : rien ne me dit qui ils sont ni quelle certification ils ont, donc payer 30 € pour tester à l'aveugle, non.",
+  "would_change_my_mind": "Une première séance d'essai à prix réduit (10-15 €) en soirée après 18 h, avec les certifications des coachs affichées clairement.",
+  "price_too_cheap": 8,
+  "price_cheap": 12,
+  "price_expensive": 20,
+  "price_too_expensive": 28
+}

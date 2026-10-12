@@ -1,0 +1,13 @@
+{
+  "id": "P005",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Je paie déjà une salle low-cost avec un cours de Pilates tapis inclus, alors 109 à 189 € par mois, c'est hors de mon budget avec les enfants. Même l'essai à 45 € remboursable, je sais que je ne pourrai pas suivre derrière, donc à quoi bon commencer.",
+  "objection": "Il y a déjà plein de studios de reformer à Nice, et je ne vois pas ce que celui-là a de plus qui justifierait de payer quatre ou cinq fois ma salle actuelle.",
+  "would_change_my_mind": "Une formule à environ 50-60 € par mois pour 4 séances, sans engagement, sur le créneau de midi.",
+  "price_too_cheap": 10,
+  "price_cheap": 15,
+  "price_expensive": 22,
+  "price_too_expensive": 30
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P023",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "J'ai déjà mon studio de reformer, mon coach et mes créneaux qui marchent avec mon boulot. Je ne vois pas pourquoi je paierais 30 € pour recommencer ailleurs, en plus il faut que je descende en tram depuis Nice Ouest.",
+  "objection": "Je ne sais pas si leurs horaires collent avec mon travail, et je n'ai aucune raison de quitter un coach que je connais pour un studio inconnu.",
+  "would_change_my_mind": "Une première séance d'essai Lagree gratuite ou à prix réduit sur un créneau tôt le matin ou après 19h, pour tester le Megaformer que mon studio n'a pas.",
+  "price_too_cheap": 12,
+  "price_cheap": 20,
+  "price_expensive": 30,
+  "price_too_expensive": 38
+}

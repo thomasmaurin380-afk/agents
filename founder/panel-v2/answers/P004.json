@@ -1,0 +1,13 @@
+{
+  "id": "P004",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "other",
+  "reason": "Ça fait des mois que je vois le Lagree sur Instagram et je veux tester. 45 € pour 3 séances avec une première séance où on m'explique la machine, et remboursé si je n'accroche pas, je ne prends pas de risque, donc je prends le programme Premiers pas.",
+  "objection": "Après les 3 séances, 109 € par mois pour 4 cours, c'est trop pour mon salaire, et 189 € avec 3 mois d'engagement c'est hors de question. J'ai peur d'adorer puis de ne pas pouvoir continuer, ou de finir à 32 € la séance une fois de temps en temps.",
+  "would_change_my_mind": "Une formule abordable pour continuer après l'essai, genre une carte de 5 séances sans engagement autour de 90-100 €, ou un abonnement 4 séances sous les 80 €.",
+  "price_too_cheap": 15,
+  "price_cheap": 30,
+  "price_expensive": 60,
+  "price_too_expensive": 90
+}

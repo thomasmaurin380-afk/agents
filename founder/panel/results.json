@@ -1,0 +1,192 @@
+{
+ "business": "Studio Pilates Nice (nom provisoire) : Pilates Lagree sur Megaformer + Pilates classique",
+ "seed": 782417,
+ "dealt": 40,
+ "answered": 40,
+ "skipped": [],
+ "buys": 7,
+ "passes": 33,
+ "buy_rate": 0.175,
+ "by_segment": [
+  [
+   "Cadre ou indépendante aisée",
+   10,
+   0.4
+  ],
+  [
+   "Étudiante ou jeune active",
+   12,
+   0.16666666666666666
+  ],
+  [
+   "Active en milieu de carrière",
+   18,
+   0.05555555555555555
+  ]
+ ],
+ "by_behaviour": [
+  [
+   "Curieuse des tendances",
+   6,
+   0.8333333333333334
+  ],
+  [
+   "Remise en forme / post-partum ou mal de dos",
+   5,
+   0.4
+  ],
+  [
+   "Lit tous les avis",
+   4,
+   0.0
+  ],
+  [
+   "Abonnée salle low-cost",
+   8,
+   0.0
+  ],
+  [
+   "Chasseuse de bons plans",
+   5,
+   0.0
+  ],
+  [
+   "Sport à la maison",
+   5,
+   0.0
+  ],
+  [
+   "Déjà cliente d'un studio reformer",
+   7,
+   0.0
+  ]
+ ],
+ "by_income": [
+  [
+   "$45,000 and up",
+   16,
+   0.25
+  ],
+  [
+   "under $28,000",
+   13,
+   0.15384615384615385
+  ],
+  [
+   "$28,000 to $45,000",
+   11,
+   0.09090909090909091
+  ]
+ ],
+ "why_not": [
+  [
+   "price",
+   21,
+   [
+    "Le Lagree sur Megaformer me tente, mais j'ai déjà du Pilates tapis inclus dans mon abonnement de salle et à la fin du mois je compte. 30 € la séance, pour y aller chaque semaine c'est 120 € par mois, je ne peux pas.",
+    "Le Lagree sur Megaformer me fait vraiment envie depuis que je le vois sur Instagram, mais 30 € la séance, avec mon budget serré en fin de mois, c'est trop alors que j'ai déjà du Pilates inclus dans mon abonnement de salle."
+   ],
+   [
+    "P003",
+    "P004"
+   ]
+  ],
+  [
+   "habit",
+   9,
+   [
+    "Je paie déjà une salle où le Pilates tapis est inclus, et entre le boulot et les enfants à 16 h 30, je n'ai pas de créneau en plus. À 30 € la séance, ça ferait plus que mon abonnement mensuel pour une seule heure.",
+    "J'ai déjà mon studio de reformer, mon coach et mes créneaux qui marchent avec le boulot et les enfants. Avec mon salaire, je ne vais pas payer 30 € en plus pour tester un autre endroit qui fait à peu près la même chose."
+   ],
+   [
+    "P007",
+    "P013"
+   ]
+  ],
+  [
+   "trust",
+   3,
+   [
+    "Un studio qui vient d'ouvrir, ça veut dire zéro avis Google et pas de vraies photos des cours, donc je ne réserve pas tout de suite. Et à 30 € la séance, je ne vais pas tester à l'aveugle alors que je cours gratuitement sur la Promenade.",
+    "C'est un studio qui vient d'ouvrir, donc zéro avis Google et pas de vraies photos des cours : je ne réserve jamais à l'aveugle, surtout à 30 € la séance avec mon salaire. Il y a déjà plein de studios de reformer à Nice qui ont des centaines d'avis, je n'ai aucune raison de tester celui-là en premier."
+   ],
+   [
+    "P002",
+    "P019"
+   ]
+  ]
+ ],
+ "why_yes": [
+  [
+   "other",
+   3,
+   [
+    "Le Lagree sur Megaformer, je le vois partout sur Insta et j'ai trop envie de tester, donc je réserverais une séance par curiosité. Mais à 30 € la séance avec mon budget, ce sera une fois pour voir, pas un abonnement.",
+    "Je vois le Lagree partout sur Instagram et j'ai envie de tester au moins une fois, surtout si c'est le premier à Nice. Mais une seule séance pour voir, pas plus, mon budget est serré en fin de mois."
+   ],
+   [
+    "P009",
+    "P017"
+   ]
+  ],
+  [
+   "need",
+   3,
+   [
+    "J'ai mal au dos et je cherche justement une activité douce et encadrée ; le Pilates classique en petit groupe avec un coach, accessible en tram depuis Nice Ouest, ça me tente pour un essai. Mais à 30 € la séance, je teste deux fois avant de m'engager, pas plus.",
+    "J'ai mal au dos et je cherche justement quelque chose de doux et encadré, donc je testerais une séance de Pilates classique, pas le Lagree qui a l'air trop intense pour moi. Mais à 30 € la séance je ne m'engage pas à y aller chaque semaine avant d'avoir vu si ça me soulage."
+   ],
+   [
+    "P014",
+    "P026"
+   ]
+  ],
+  [
+   "price",
+   1,
+   [
+    "Le Lagree sur Megaformer, je le vois partout sur Instagram et j'ai envie de tester au moins une fois. Mais à 30 € la séance avec mon budget, ce sera une seule séance par curiosité, pas une habitude."
+   ],
+   [
+    "P001"
+   ]
+  ]
+ ],
+ "flip": [
+  "Une première séance d'essai à prix réduit, avec déjà une bonne note et des photos du studio et des machines sur Google.",
+  "Une première séance d'essai à prix réduit (autour de 15 €) ou un abonnement mensuel illimité qui ramène la séance vers 15-20 €.",
+  "Une première séance d'essai Lagree à 15 € ou moins, juste pour tester la machine.",
+  "Un premier cours d'essai Lagree gratuit ou à 10-15 €, ou un pack mensuel vraiment moins cher par séance, pour voir si la machine change vraiment quelque chose par rapport au Pilates de ma salle.",
+  "Une première séance d'essai à prix réduit (genre 15 €) avec annulation gratuite jusqu'à quelques heures avant.",
+  "Une première séance d'essai de Lagree gratuite ou à moitié prix sur un créneau compatible avec les enfants (matin ou midi), pour voir si la machine change vraiment quelque chose.",
+  "Une première séance d'essai à prix réduit dans un cours doux adapté au mal de dos ou au post-partum, à un horaire compatible avec la sortie d'école de 16 h 30, et un carnet de séances autour de 15-18 € la séance.",
+  "Une vraie offre découverte, genre première séance à 10-15 € ou un pack d'essai, ou bien que le studio soit disponible sur ClassPass.",
+  "Une première séance d'essai gratuite ou à 10 € après 18 h, pour voir concrètement ce que la machine apporte de plus.",
+  "Une première séance d'essai pas chère et une carte de 10 cours ou un abonnement qui ramène la séance vers 15 €, avec des créneaux après 19 h ou le samedi matin.",
+  "Une première séance d'essai à prix réduit sur un créneau tôt le matin ou tard le soir qui colle à mon emploi du temps, avec un abonnement mensuel moins cher que mon studio actuel.",
+  "Une première séance d'essai à 10-15 € qui me montre vraiment ce que la machine apporte de plus que mon Pilates tapis.",
+  "Un premier cours d'essai pas cher ou gratuit, clairement pensé pour les débutantes, après 18 h près de mon travail.",
+  "Une première séance d'essai à prix réduit (genre 10-15 €) ou la présence sur ClassPass, avec des créneaux en matinée ou en soirée après 18 h.",
+  "Une première séance d'essai à prix réduit (genre 15 €) avec de bons avis Google et des photos réelles du studio et des machines, et un accès simple en tram depuis Nice Ouest.",
+  "Une première séance d'essai à prix réduit (autour de 15 €) dans un cours vraiment pour débutantes, pour voir si je suis capable de suivre.",
+  "Une première séance d'essai à prix réduit en Pilates classique, sur un créneau en matinée ou à midi, qui me montre que c'est accessible aux débutantes.",
+  "Une première séance d'essai gratuite ou à moitié prix où on m'explique concrètement ce que le Megaformer apporte de plus que mon reformer.",
+  "Une première séance d'essai Lagree gratuite ou à prix réduit sur un créneau tôt le matin ou après 19h, pour tester le Megaformer que mon studio n'a pas.",
+  "Une première séance découverte à prix réduit spéciale débutantes, avec une vingtaine d'avis Google et des photos du studio et des cours.",
+  "Une première séance d'essai gratuite ou à 10 € pour tester la machine Megaformer, que ma salle n'a pas.",
+  "Un premier cours d'essai pas cher (genre 10-15 €) en Pilates classique ou un cours spécial débutantes, pour voir si j'arrive à suivre avant de payer plein tarif.",
+  "Une première séance d'essai gratuite ou à moins de 10 €, plus un carnet de séances qui ramène le prix autour de 15 € pour un cours doux spécial dos ou post-partum à un horaire du soir ou du week-end.",
+  "Une première séance d'essai à prix réduit (genre 15 €) avec annulation gratuite jusqu'à quelques heures avant.",
+  "Une première séance d'essai offerte ou à prix réduit pour tester le Lagree sur Megaformer, avec un créneau compatible avec mes horaires de travail.",
+  "Une première séance d'essai à prix réduit (genre 15 €) ou le studio disponible sur ClassPass, pour tester avant de m'engager.",
+  "Un premier cours d'essai Lagree pour débutantes à prix réduit, genre 15 €, pour voir si j'arrive à suivre sans me griller 30 €.",
+  "Une première séance d'essai à prix réduit (autour de 15 €) ou le studio sur ClassPass, avec une annulation gratuite jusqu'à quelques heures avant.",
+  "Une première séance d'essai offerte ou à prix réduit sur le Megaformer, plus un pack ou abonnement mensuel qui fait descendre la séance autour de 20-22 €.",
+  "Une première séance d'essai à prix réduit (10-15 €) en soirée après 18 h, avec les certifications des coachs affichées clairement.",
+  "Une première séance découverte gratuite ou à moins de 15 €, ou le studio disponible sur ClassPass.",
+  "Un premier cours d'essai à prix réduit (genre 15 €) avec annulation gratuite jusqu'à quelques heures avant, et quelques avis Google positifs.",
+  "Une première séance d'essai gratuite ou à prix réduit qui me montre concrètement en quoi le Megaformer est différent de mon reformer."
+ ],
+ "purchases_first_month_per_buyer": 1.4285714285714286,
+ "price_answers": 40
+}

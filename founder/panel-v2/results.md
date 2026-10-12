@@ -1,0 +1,68 @@
+# Buyer panel: Studio Pilates Nice (nom provisoire) : Pilates Lagree sur Megaformer + Pilates classique
+
+**7 buy · 13 pass** (35% buy) out of 20 simulated buyers. Seed 782417, so the same cards can be dealt again.
+
+These are simulated buyers, not customers. Use this to find objections and weak spots, then confirm the big ones with real people before you spend.
+
+## By segment
+
+| group | buyers | buy rate |
+| --- | ---: | ---: |
+| Cadre ou indépendante aisée | 5 | 60%  (thin) |
+| Active en milieu de carrière | 9 | 33% |
+| Étudiante ou jeune active | 6 | 17%  (thin) |
+
+## By buying behaviour
+
+| group | buyers | buy rate |
+| --- | ---: | ---: |
+| Curieuse des tendances | 3 | 100%  (thin) |
+| Remise en forme / post-partum ou mal de dos | 3 | 67%  (thin) |
+| Chasseuse de bons plans | 2 | 50%  (thin) |
+| Abonnée salle low-cost | 4 | 25%  (thin) |
+| Déjà cliente d'un studio reformer | 4 | 0%  (thin) |
+| Lit tous les avis | 2 | 0%  (thin) |
+| Sport à la maison | 2 | 0%  (thin) |
+
+## By income
+
+| group | buyers | buy rate |
+| --- | ---: | ---: |
+| $28,000 to $46,000 | 7 | 43%  (thin) |
+| $46,000 and up | 7 | 43%  (thin) |
+| under $28,000 | 6 | 17%  (thin) |
+
+## Why they pass
+
+| reason | buyers | in their words |
+| --- | ---: | --- |
+| price | 6 | "Le Pilates tapis est déjà inclus dans ma salle low-cost, et même si les 45 € d'essai sont remboursables, ça ne sert à rien d'y goûter si après je ne peux pas payer 109 € ou 189 € par mois avec mon salaire." (P002) · "Je paie déjà une salle low-cost avec un cours de Pilates tapis inclus, alors 109 à 189 € par mois, c'est hors de mon budget avec les enfants. Même l'essai à 45 € remboursable, je sais que je ne pourrai pas suivre derrière, donc à quoi bon commencer." (P005) |
+| habit | 5 | "J'ai déjà mon studio de reformer à Nice, mon coach et mes créneaux, et avec mon budget serré je ne vais pas payer un deuxième endroit en plus. Les 45 € remboursables c'est sympa, mais je ne suis pas débutante et l'abonnement derrière reste trop cher pour moi." (P001) · "J'ai déjà mon studio de reformer à Nice, mon coach et mes habitudes, et en plus je paie une salle où le Pilates est inclus. Avec 37 000 € par an et les enfants à récupérer à 16 h 30, je ne vais pas ajouter un troisième abonnement à 169 ou 189 € par mois." (P006) |
+| trust | 2 | "C'est un studio qui vient d'ouvrir, donc pas d'avis Google ni de vraies photos du lieu, et je ne réserve jamais rien sans ça. Et même après l'essai, 109 € pour 4 séances ou 189 € avec engagement 3 mois, c'est trop pour mon budget alors que je cours gratuitement sur la Promenade." (P010) · "C'est un studio qui vient d'ouvrir, donc il n'y a pas encore d'avis Google ni de vraies photos des cours, et je ne réserve jamais sans ça. L'annulation gratuite jusqu'à 4 h et le remboursement des 45 € me rassurent, mais j'attendrai de voir ce qu'en disent les premières clientes." (P017) |
+
+## Why they buy
+
+| reason | buyers | in their words |
+| --- | ---: | --- |
+| need | 3 | "Le Pilates tapis de ma salle, je connais déjà, mais la machine Megaformer en petit groupe c'est autre chose, et 45 € remboursables pour 3 séances, je ne risque pas grand-chose. Je prends le « Premiers pas » sur le créneau de 12 h 15, mais je ne m'engage à rien de plus pour l'instant." (P003) · "J'ai besoin de quelque chose de doux et encadré pour mon dos, et 45 € remboursables avec une annulation gratuite jusqu'à 4 h avant, c'est un risque que je peux prendre ; le cours de 18 h 30 tombe juste après le travail." (P007) |
+| price | 3 | "Le Lagree sur Megaformer je le vois partout sur Insta et j'ai envie de tester, et 45 € pour 3 séances remboursées si ça me plaît pas, c'est un risque que je peux prendre. Mais je prends juste le « Premiers pas », pas l'abonnement." (P009) · "Je vois le Lagree partout sur Instagram et 45 € pour 3 séances, remboursées si je n'accroche pas, c'est le seul format que je peux me permettre pour tester. Par contre je prends juste les Premiers pas, pas l'abonnement." (P011) |
+| other | 1 | "Ça fait des mois que je vois le Lagree sur Instagram et je veux tester. 45 € pour 3 séances avec une première séance où on m'explique la machine, et remboursé si je n'accroche pas, je ne prends pas de risque, donc je prends le programme Premiers pas." (P004) |
+
+## What would flip a no
+
+- Un carnet de séances sans engagement autour de 20 € la séance, ou un tarif étudiante/jeune active, pour tester le Megaformer en complément de mon studio.
+- Un abonnement 4 séances autour de 60 € par mois sans engagement, ou des cours au sol à environ 12 € la séance.
+- Une formule à environ 50-60 € par mois pour 4 séances, sans engagement, sur le créneau de midi.
+- Si mon studio actuel fermait ou augmentait fortement ses prix, j'essaierais le programme Premiers pas à 45 € remboursé.
+- Une bonne note Google avec une trentaine d'avis et des photos réelles des machines et des cours ; là je tenterais les 3 séances à 45 € puisqu'elles sont remboursées.
+- Pouvoir réserver le Lagree à l'unité via ClassPass, ou une séance découverte à 10-15 € sans engagement, pour tester la machine de temps en temps sans prendre d'abonnement.
+- Un forfait à environ 50 € par mois pour 4 séances sans engagement, ou des séances ponctuelles autour de 15 €, et je pourrais tester le Megaformer de temps en temps.
+- Une séance d'essai Lagree à l'unité pour pratiquantes confirmées, sans engagement, et un abonnement nettement moins cher que ce que je paie aujourd'hui.
+- Que mon kiné ou mon médecin me dise que le Pilates de ma salle ne suffit pas pour mon dos, et une formule à moins de 60 € par mois avec des cours en journée.
+- Une formule à environ 50-60 € par mois pour 4 séances, avec un créneau en milieu de matinée ou en début d'après-midi avant la sortie d'école.
+- Une vingtaine d'avis Google positifs avec des photos de la salle et des cours, ou une amie qui l'a testé et me le recommande.
+- Une formule à 2 séances par mois autour de 40-50 € sans engagement, avec un créneau en milieu de matinée ou en début d'après-midi avant 16 h.
+
+Buyers say they would buy **1.0 times** in the first month on average.
+
+20 buyers gave all four price answers. Run founder-pricing's van_westendorp.py on the answers folder.

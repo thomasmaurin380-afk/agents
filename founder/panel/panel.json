@@ -1,0 +1,96 @@
+{
+ "n": 40,
+ "seed": 782417,
+ "customer": {
+  "business": "Studio Pilates Nice (nom provisoire) : Pilates Lagree sur Megaformer + Pilates classique",
+  "target": "Femmes de 20 à 50 ans qui vivent ou travaillent à Nice et font (ou veulent faire) du sport encadré au moins une fois par semaine",
+  "where": "Nice, centre-ville",
+  "age": [
+   20,
+   50
+  ],
+  "segments": [
+   {
+    "name": "Étudiante ou jeune active",
+    "share": 0.3,
+    "income": [
+     12000,
+     28000
+    ]
+   },
+   {
+    "name": "Active en milieu de carrière",
+    "share": 0.45,
+    "income": [
+     25000,
+     50000
+    ]
+   },
+   {
+    "name": "Cadre ou indépendante aisée",
+    "share": 0.25,
+    "income": [
+     50000,
+     100000
+    ]
+   }
+  ],
+  "behaviours": [
+   {
+    "name": "Déjà cliente d'un studio reformer",
+    "share": 0.18,
+    "how": "Va 1 à 2 fois par semaine dans un studio de reformer à Nice et y a ses habitudes et son coach."
+   },
+   {
+    "name": "Abonnée salle low-cost",
+    "share": 0.2,
+    "how": "Paie une salle de sport bon marché et fait parfois le cours de Pilates tapis inclus."
+   },
+   {
+    "name": "Curieuse des tendances",
+    "share": 0.15,
+    "how": "Voit le Lagree et le reformer sur Instagram et veut essayer ce qui est nouveau."
+   },
+   {
+    "name": "Chasseuse de bons plans",
+    "share": 0.12,
+    "how": "Attend les offres découverte, utilise ClassPass, compare les prix."
+   },
+   {
+    "name": "Sport à la maison",
+    "share": 0.12,
+    "how": "Fait des vidéos de Pilates ou de renforcement chez elle pour ne pas payer."
+   },
+   {
+    "name": "Remise en forme / post-partum ou mal de dos",
+    "share": 0.13,
+    "how": "Cherche une activité douce et encadrée pour une raison de santé ou après une grossesse."
+   },
+   {
+    "name": "Lit tous les avis",
+    "share": 0.1,
+    "how": "Ne réserve nulle part sans avoir lu les avis Google et vu des photos du lieu."
+   }
+  ],
+  "objections": [
+   "30 € la séance, c'est cher si je veux y aller toutes les semaines",
+   "Il y a déjà plein de studios de reformer à Nice, pourquoi celui-là ?",
+   "Le Lagree a l'air très dur, je ne suis pas sûre de suivre en débutante",
+   "Je ne sais pas si les coachs sont vraiment formés",
+   "Les horaires ne collent pas forcément avec mon travail ou mes enfants",
+   "Je paie déjà une salle de sport où le Pilates est inclus",
+   "Les annulations payantes me font peur si j'ai un imprévu",
+   "Je ne vois pas la différence entre Lagree et reformer classique"
+  ],
+  "habits": [
+   "tu travailles dans le centre de Nice et finis vers 18 h",
+   "tu as des enfants à récupérer à l'école à 16 h 30",
+   "tu cours ou marches sur la Promenade des Anglais le week-end",
+   "tu suis des comptes fitness sur Instagram",
+   "tu télétravailles deux jours par semaine",
+   "tu habites Nice Ouest et prends le tram",
+   "tu as un budget serré à la fin du mois"
+  ]
+ },
+ "pitch": "Nouveau studio de Pilates qui ouvre dans le centre de Nice.\nDeux types de cours en petits groupes : du Pilates Lagree (sur machine Megaformer, intense, travail lent et profond des muscles) et du Pilates classique (plus doux).\nChaque cours dure 1 heure, avec un coach.\nPrix : 30 € la séance, réservation en ligne."
+}

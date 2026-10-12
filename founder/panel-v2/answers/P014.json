@@ -1,0 +1,13 @@
+{
+  "id": "P014",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "J'ai déjà mon studio de reformer à Nice, mon coach et mes créneaux, et ça me convient. Le programme « Premiers pas » vise les débutantes, je ne vais pas tout recommencer ailleurs juste parce que c'est nouveau.",
+  "objection": "Je ne veux pas lâcher mon coach et mes habitudes, et l'engagement de 3 mois sur l'abonnement 8 séances me bloque si je ne suis pas sûre de rester.",
+  "would_change_my_mind": "Une séance d'essai Lagree à l'unité pour pratiquantes confirmées, sans engagement, et un abonnement nettement moins cher que ce que je paie aujourd'hui.",
+  "price_too_cheap": 12,
+  "price_cheap": 20,
+  "price_expensive": 30,
+  "price_too_expensive": 40
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P006",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "30 € la séance, c'est le prix de tout mon mois de salle, où j'ai déjà un cours de Pilates tapis inclus. Le Megaformer me rend curieuse, mais pas au point de payer ça sans avoir testé.",
+  "objection": "Payer 30 € pour une heure alors que mon abonnement couvre déjà du Pilates, et ne pas savoir si je perds la séance en cas d'annulation de dernière minute.",
+  "would_change_my_mind": "Une première séance d'essai à prix réduit (genre 15 €) avec annulation gratuite jusqu'à quelques heures avant.",
+  "price_too_cheap": 8,
+  "price_cheap": 15,
+  "price_expensive": 22,
+  "price_too_expensive": 30
+}

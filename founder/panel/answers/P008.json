@@ -1,0 +1,13 @@
+{
+  "id": "P008",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "30 € la séance avec mon budget, c'est trop : pour faire une fois par semaine ça fait 120 € par mois, je ne peux pas. En plus pour mon dos je cherche du doux, et je ne sais même pas lequel des deux cours me conviendrait.",
+  "objection": "Je ne vois pas la différence entre Lagree et reformer classique, et je n'ai pas envie de payer 30 € pour découvrir que le Lagree est trop intense pour mon dos.",
+  "would_change_my_mind": "Une première séance d'essai à prix réduit dans un cours doux adapté au mal de dos ou au post-partum, à un horaire compatible avec la sortie d'école de 16 h 30, et un carnet de séances autour de 15-18 € la séance.",
+  "price_too_cheap": 8,
+  "price_cheap": 12,
+  "price_expensive": 20,
+  "price_too_expensive": 28
+}

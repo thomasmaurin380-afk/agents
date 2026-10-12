@@ -1,0 +1,13 @@
+{
+  "id": "P003",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Le Pilates tapis de ma salle, je connais déjà, mais la machine Megaformer en petit groupe c'est autre chose, et 45 € remboursables pour 3 séances, je ne risque pas grand-chose. Je prends le « Premiers pas » sur le créneau de 12 h 15, mais je ne m'engage à rien de plus pour l'instant.",
+  "objection": "Je paie déjà une salle où le Pilates est inclus : passer à 109 € ou 189 € par mois en plus, avec 3 mois d'engagement, alors qu'avec les enfants à 16 h 30 je ne peux venir qu'à midi ou le samedi, ça me paraît beaucoup pour ce que j'arriverais vraiment à faire.",
+  "would_change_my_mind": "Une formule plus souple sans engagement, par exemple un carnet de 10 séances valable plusieurs mois, plus de créneaux à midi et le samedi.",
+  "price_too_cheap": 12,
+  "price_cheap": 20,
+  "price_expensive": 28,
+  "price_too_expensive": 38
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P034",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "30 € la séance, c'est trop pour mon budget, une fois par semaine ça fait 120 € par mois. Je fais du sport avec ClassPass et des offres découverte, et là je ne vois ni cours d'essai ni carnet moins cher.",
+  "objection": "Le prix à la séance sans aucune offre découverte, et je ne sais pas si j'aurai des frais en cas d'annulation si j'ai un imprévu.",
+  "would_change_my_mind": "Une première séance d'essai à prix réduit (autour de 15 €) ou le studio sur ClassPass, avec une annulation gratuite jusqu'à quelques heures avant.",
+  "price_too_cheap": 8,
+  "price_cheap": 15,
+  "price_expensive": 22,
+  "price_too_expensive": 30
+}

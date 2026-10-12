@@ -1,0 +1,13 @@
+{
+  "id": "P018",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Avec 24 000 € par an et des enfants à récupérer à 16 h 30, 109 € ou 189 € par mois pour du Pilates, c'est hors de question : je fais mes vidéos à la maison gratuitement et ça me suffit. Les 45 € remboursables, c'est tentant, mais je sais que derrière je ne pourrai pas suivre.",
+  "objection": "Il y a déjà plein de studios de reformer à Nice, et même le moins cher ici fait 23,60 € la séance avec engagement de 3 mois, c'est trop pour mon budget. Et les horaires du soir tombent pile quand je gère les enfants.",
+  "would_change_my_mind": "Une formule à 2 séances par mois autour de 40-50 € sans engagement, avec un créneau en milieu de matinée ou en début d'après-midi avant 16 h.",
+  "price_too_cheap": 8,
+  "price_cheap": 12,
+  "price_expensive": 20,
+  "price_too_expensive": 28
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P017",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "C'est un studio qui vient d'ouvrir, donc il n'y a pas encore d'avis Google ni de vraies photos des cours, et je ne réserve jamais sans ça. L'annulation gratuite jusqu'à 4 h et le remboursement des 45 € me rassurent, mais j'attendrai de voir ce qu'en disent les premières clientes.",
+  "objection": "Aucun avis sur un lieu tout neuf : je ne sais pas si les coachs sont bonnes ni si le Megaformer est trop violent pour une débutante. Et après l'essai, 109 € par mois, c'est lourd avec mon salaire.",
+  "would_change_my_mind": "Une vingtaine d'avis Google positifs avec des photos de la salle et des cours, ou une amie qui l'a testé et me le recommande.",
+  "price_too_cheap": 15,
+  "price_cheap": 30,
+  "price_expensive": 55,
+  "price_too_expensive": 75
+}

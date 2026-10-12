@@ -1,0 +1,13 @@
+{
+  "id": "P025",
+  "buys": true,
+  "purchases_first_month": 2,
+  "reason_code": "other",
+  "reason": "Le Lagree sur Megaformer, je le vois partout sur Instagram et ma salle ne le propose pas, donc j'irais tester une ou deux fois après le boulot par curiosité. Le Pilates classique, par contre, je l'ai déjà inclus dans mon abonnement, je ne paierais pas 30 € pour ça.",
+  "objection": "Je paie déjà une salle de sport avec du Pilates inclus, alors 30 € la séance en plus, ça ne peut pas devenir une habitude ; une fois la nouveauté passée, j'ai peur de ne pas revenir.",
+  "would_change_my_mind": "Un pack ou un abonnement Lagree autour de 20 € la séance, avec des créneaux vers 18 h 30-19 h, me ferait passer de l'essai à une vraie routine hebdomadaire.",
+  "price_too_cheap": 12,
+  "price_cheap": 20,
+  "price_expensive": 30,
+  "price_too_expensive": 40
+}

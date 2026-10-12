@@ -1,0 +1,222 @@
+[
+ {
+  "id": "P001",
+  "name": "Ruby",
+  "age": 29,
+  "segment": "Étudiante ou jeune active",
+  "income": 16000,
+  "behaviour": "Déjà cliente d'un studio reformer",
+  "behaviour_how": "Va 1 à 2 fois par semaine dans un studio de reformer à Nice et y a ses habitudes et son coach.",
+  "objection": "30 € la séance, c'est cher si je veux y aller toutes les semaines",
+  "habit": "tu as un budget serré à la fin du mois"
+ },
+ {
+  "id": "P002",
+  "name": "Jonah",
+  "age": 39,
+  "segment": "Active en milieu de carrière",
+  "income": 28000,
+  "behaviour": "Abonnée salle low-cost",
+  "behaviour_how": "Paie une salle de sport bon marché et fait parfois le cours de Pilates tapis inclus.",
+  "objection": "30 € la séance, c'est cher si je veux y aller toutes les semaines",
+  "habit": "tu cours ou marches sur la Promenade des Anglais le week-end"
+ },
+ {
+  "id": "P003",
+  "name": "Zoe",
+  "age": 30,
+  "segment": "Cadre ou indépendante aisée",
+  "income": 71000,
+  "behaviour": "Abonnée salle low-cost",
+  "behaviour_how": "Paie une salle de sport bon marché et fait parfois le cours de Pilates tapis inclus.",
+  "objection": "Je paie déjà une salle de sport où le Pilates est inclus",
+  "habit": "tu as des enfants à récupérer à l'école à 16 h 30"
+ },
+ {
+  "id": "P004",
+  "name": "Anya",
+  "age": 32,
+  "segment": "Active en milieu de carrière",
+  "income": 35000,
+  "behaviour": "Curieuse des tendances",
+  "behaviour_how": "Voit le Lagree et le reformer sur Instagram et veut essayer ce qui est nouveau.",
+  "objection": "Le Lagree a l'air très dur, je ne suis pas sûre de suivre en débutante",
+  "habit": "tu habites Nice Ouest et prends le tram"
+ },
+ {
+  "id": "P005",
+  "name": "Felix",
+  "age": 49,
+  "segment": "Active en milieu de carrière",
+  "income": 46000,
+  "behaviour": "Abonnée salle low-cost",
+  "behaviour_how": "Paie une salle de sport bon marché et fait parfois le cours de Pilates tapis inclus.",
+  "objection": "Il y a déjà plein de studios de reformer à Nice, pourquoi celui-là ?",
+  "habit": "tu as des enfants à récupérer à l'école à 16 h 30"
+ },
+ {
+  "id": "P006",
+  "name": "Hana",
+  "age": 20,
+  "segment": "Active en milieu de carrière",
+  "income": 37000,
+  "behaviour": "Déjà cliente d'un studio reformer",
+  "behaviour_how": "Va 1 à 2 fois par semaine dans un studio de reformer à Nice et y a ses habitudes et son coach.",
+  "objection": "Je paie déjà une salle de sport où le Pilates est inclus",
+  "habit": "tu as des enfants à récupérer à l'école à 16 h 30"
+ },
+ {
+  "id": "P007",
+  "name": "Levi",
+  "age": 37,
+  "segment": "Cadre ou indépendante aisée",
+  "income": 92000,
+  "behaviour": "Remise en forme / post-partum ou mal de dos",
+  "behaviour_how": "Cherche une activité douce et encadrée pour une raison de santé ou après une grossesse.",
+  "objection": "Les annulations payantes me font peur si j'ai un imprévu",
+  "habit": "tu travailles dans le centre de Nice et finis vers 18 h"
+ },
+ {
+  "id": "P008",
+  "name": "Rhys",
+  "age": 29,
+  "segment": "Active en milieu de carrière",
+  "income": 33000,
+  "behaviour": "Remise en forme / post-partum ou mal de dos",
+  "behaviour_how": "Cherche une activité douce et encadrée pour une raison de santé ou après une grossesse.",
+  "objection": "Les horaires ne collent pas forcément avec mon travail ou mes enfants",
+  "habit": "tu suis des comptes fitness sur Instagram"
+ },
+ {
+  "id": "P009",
+  "name": "Ben",
+  "age": 21,
+  "segment": "Étudiante ou jeune active",
+  "income": 25000,
+  "behaviour": "Curieuse des tendances",
+  "behaviour_how": "Voit le Lagree et le reformer sur Instagram et veut essayer ce qui est nouveau.",
+  "objection": "Il y a déjà plein de studios de reformer à Nice, pourquoi celui-là ?",
+  "habit": "tu cours ou marches sur la Promenade des Anglais le week-end"
+ },
+ {
+  "id": "P010",
+  "name": "Kofi",
+  "age": 26,
+  "segment": "Active en milieu de carrière",
+  "income": 46000,
+  "behaviour": "Lit tous les avis",
+  "behaviour_how": "Ne réserve nulle part sans avoir lu les avis Google et vu des photos du lieu.",
+  "objection": "30 € la séance, c'est cher si je veux y aller toutes les semaines",
+  "habit": "tu cours ou marches sur la Promenade des Anglais le week-end"
+ },
+ {
+  "id": "P011",
+  "name": "Adrian",
+  "age": 23,
+  "segment": "Active en milieu de carrière",
+  "income": 34000,
+  "behaviour": "Curieuse des tendances",
+  "behaviour_how": "Voit le Lagree et le reformer sur Instagram et veut essayer ce qui est nouveau.",
+  "objection": "30 € la séance, c'est cher si je veux y aller toutes les semaines",
+  "habit": "tu as un budget serré à la fin du mois"
+ },
+ {
+  "id": "P012",
+  "name": "Raj",
+  "age": 44,
+  "segment": "Étudiante ou jeune active",
+  "income": 22000,
+  "behaviour": "Chasseuse de bons plans",
+  "behaviour_how": "Attend les offres découverte, utilise ClassPass, compare les prix.",
+  "objection": "Je paie déjà une salle de sport où le Pilates est inclus",
+  "habit": "tu as un budget serré à la fin du mois"
+ },
+ {
+  "id": "P013",
+  "name": "Celine",
+  "age": 36,
+  "segment": "Étudiante ou jeune active",
+  "income": 26000,
+  "behaviour": "Sport à la maison",
+  "behaviour_how": "Fait des vidéos de Pilates ou de renforcement chez elle pour ne pas payer.",
+  "objection": "Je paie déjà une salle de sport où le Pilates est inclus",
+  "habit": "tu habites Nice Ouest et prends le tram"
+ },
+ {
+  "id": "P014",
+  "name": "Nia",
+  "age": 34,
+  "segment": "Cadre ou indépendante aisée",
+  "income": 58000,
+  "behaviour": "Déjà cliente d'un studio reformer",
+  "behaviour_how": "Va 1 à 2 fois par semaine dans un studio de reformer à Nice et y a ses habitudes et son coach.",
+  "objection": "Les annulations payantes me font peur si j'ai un imprévu",
+  "habit": "tu télétravailles deux jours par semaine"
+ },
+ {
+  "id": "P015",
+  "name": "Olivia",
+  "age": 39,
+  "segment": "Étudiante ou jeune active",
+  "income": 24000,
+  "behaviour": "Remise en forme / post-partum ou mal de dos",
+  "behaviour_how": "Cherche une activité douce et encadrée pour une raison de santé ou après une grossesse.",
+  "objection": "Je paie déjà une salle de sport où le Pilates est inclus",
+  "habit": "tu as des enfants à récupérer à l'école à 16 h 30"
+ },
+ {
+  "id": "P016",
+  "name": "Zara",
+  "age": 44,
+  "segment": "Active en milieu de carrière",
+  "income": 39000,
+  "behaviour": "Abonnée salle low-cost",
+  "behaviour_how": "Paie une salle de sport bon marché et fait parfois le cours de Pilates tapis inclus.",
+  "objection": "Je ne vois pas la différence entre Lagree et reformer classique",
+  "habit": "tu as des enfants à récupérer à l'école à 16 h 30"
+ },
+ {
+  "id": "P017",
+  "name": "Iris",
+  "age": 26,
+  "segment": "Active en milieu de carrière",
+  "income": 33000,
+  "behaviour": "Lit tous les avis",
+  "behaviour_how": "Ne réserve nulle part sans avoir lu les avis Google et vu des photos du lieu.",
+  "objection": "Les annulations payantes me font peur si j'ai un imprévu",
+  "habit": "tu télétravailles deux jours par semaine"
+ },
+ {
+  "id": "P018",
+  "name": "Alma",
+  "age": 49,
+  "segment": "Étudiante ou jeune active",
+  "income": 24000,
+  "behaviour": "Sport à la maison",
+  "behaviour_how": "Fait des vidéos de Pilates ou de renforcement chez elle pour ne pas payer.",
+  "objection": "Il y a déjà plein de studios de reformer à Nice, pourquoi celui-là ?",
+  "habit": "tu as des enfants à récupérer à l'école à 16 h 30"
+ },
+ {
+  "id": "P019",
+  "name": "Gabriel",
+  "age": 41,
+  "segment": "Cadre ou indépendante aisée",
+  "income": 61000,
+  "behaviour": "Déjà cliente d'un studio reformer",
+  "behaviour_how": "Va 1 à 2 fois par semaine dans un studio de reformer à Nice et y a ses habitudes et son coach.",
+  "objection": "Je ne vois pas la différence entre Lagree et reformer classique",
+  "habit": "tu travailles dans le centre de Nice et finis vers 18 h"
+ },
+ {
+  "id": "P020",
+  "name": "Malik",
+  "age": 38,
+  "segment": "Cadre ou indépendante aisée",
+  "income": 61000,
+  "behaviour": "Chasseuse de bons plans",
+  "behaviour_how": "Attend les offres découverte, utilise ClassPass, compare les prix.",
+  "objection": "Les horaires ne collent pas forcément avec mon travail ou mes enfants",
+  "habit": "tu as des enfants à récupérer à l'école à 16 h 30"
+ }
+]

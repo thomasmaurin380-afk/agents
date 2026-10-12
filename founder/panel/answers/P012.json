@@ -1,0 +1,13 @@
+{
+  "id": "P012",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "J'ai mal au dos et un cours doux encadré m'intéresse, mais 30 € la séance avec mon salaire, c'est trop pour en faire chaque semaine. Et entre le boulot et les enfants à récupérer à 16 h 30, je ne sais même pas si les créneaux me conviennent.",
+  "objection": "30 € l'heure c'est cher pour moi, surtout que pour le dos il faut y aller régulièrement, donc ça fait vite 120 € par mois. Et rien ne dit qu'il y a des horaires le soir tard ou le week-end.",
+  "would_change_my_mind": "Une première séance d'essai pas chère et une carte de 10 cours ou un abonnement qui ramène la séance vers 15 €, avec des créneaux après 19 h ou le samedi matin.",
+  "price_too_cheap": 7,
+  "price_cheap": 12,
+  "price_expensive": 20,
+  "price_too_expensive": 28
+}

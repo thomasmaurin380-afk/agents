@@ -1,0 +1,13 @@
+{
+  "id": "P012",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Je paie déjà une salle où le Pilates est inclus, et avec mon budget je ne vais pas sortir 45 € de plus en fin de mois. Même remboursable, je n'ai aucune intention de payer 109 € ou 189 € par mois ensuite, donc ça ne sert à rien de commencer.",
+  "objection": "C'est un deuxième abonnement par-dessus ma salle. 23 à 32 € la séance, c'est un luxe pour moi alors que j'ai déjà des cours de Pilates compris dans ce que je paie.",
+  "would_change_my_mind": "Pouvoir réserver le Lagree à l'unité via ClassPass, ou une séance découverte à 10-15 € sans engagement, pour tester la machine de temps en temps sans prendre d'abonnement.",
+  "price_too_cheap": 8,
+  "price_cheap": 12,
+  "price_expensive": 20,
+  "price_too_expensive": 30
+}

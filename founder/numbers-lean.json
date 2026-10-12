@@ -1,0 +1,36 @@
+{
+  "business": "Variante recentrée — studio 100 % Lagree, 8 Megaformers, fondateur·rice coach certifié·e",
+  "unit": "place réservée dans un cours (1 cliente x 1 séance)",
+  "price": 21.00,
+  "variable": [
+    {"label": "Frais bancaires + logiciel de réservation (≈3 % du prix TTC moyen 25 €)", "cost": 0.75},
+    {"label": "Serviettes, lingettes désinfectantes, consommables", "cost": 0.40}
+  ],
+  "fixed_monthly": [
+    {"label": "Coachs freelances (96 cours/mois x 40 € ; 60 cours/mois donnés par le/la fondateur·rice)", "cost": 3840},
+    {"label": "Rémunération gérance fondateur·rice (coût total, estimation)", "cost": 2500},
+    {"label": "Loyer + charges (≈120 m² x 300 €/m²/an + 20 % charges)", "cost": 3600},
+    {"label": "Licence Lagree Megaformer (3 990 $/an)", "cost": 300},
+    {"label": "Énergie, eau, internet", "cost": 350},
+    {"label": "Ménage", "cost": 450},
+    {"label": "Logiciel réservation + site", "cost": 200},
+    {"label": "Assurances", "cost": 150},
+    {"label": "Expert-comptable", "cost": 250},
+    {"label": "Musique (SACEM/SPRE)", "cost": 80},
+    {"label": "Entretien des machines", "cost": 150},
+    {"label": "Marketing continu", "cost": 1000}
+  ],
+  "startup": [
+    {"label": "Dépôt de garantie (3 mois)", "cost": 10800},
+    {"label": "Travaux (sol, vestiaires/douches, clim, éclairage, sono)", "cost": 45000},
+    {"label": "8 Megaformers livrés en France", "cost": 88000},
+    {"label": "Formation Lagree (fondateur·rice + 2 coachs)", "cost": 4500},
+    {"label": "Marque, site, photos", "cost": 5000},
+    {"label": "Campagne de lancement + préventes", "cost": 6000},
+    {"label": "Création société, juridique, divers", "cost": 3000}
+  ],
+  "days_per_month": 30,
+  "capacity_per_day": 42,
+  "plan_per_day": 25,
+  "ramp_per_day": [7, 9, 11, 13, 15, 17, 18, 19, 21, 22, 23, 24]
+}

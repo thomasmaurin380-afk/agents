@@ -1,0 +1,13 @@
+{
+  "id": "P015",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "30 € la séance, c'est presque ce que je paie par mois pour ma salle low-cost où le Pilates tapis est déjà inclus. Avec mon budget, je ne peux pas mettre ça dans une heure de sport, même une fois pour voir.",
+  "objection": "Je ne vois pas la différence entre Lagree et un reformer classique, alors je ne sais pas ce que je paierais en plus par rapport à mon cours de tapis gratuit.",
+  "would_change_my_mind": "Une première séance d'essai à 10-15 € qui me montre vraiment ce que la machine apporte de plus que mon Pilates tapis.",
+  "price_too_cheap": 8,
+  "price_cheap": 12,
+  "price_expensive": 18,
+  "price_too_expensive": 25
+}

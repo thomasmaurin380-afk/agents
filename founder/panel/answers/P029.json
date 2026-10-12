@@ -1,0 +1,13 @@
+{
+  "id": "P029",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Avec environ 1 000 € par mois, 30 € la séance c'est hors de question pour quelque chose de régulier, même si mon dos en aurait besoin. Je continue à marcher et courir sur la Promenade, c'est gratuit.",
+  "objection": "30 € pour une heure, c'est trop pour mon budget, et en plus je ne sais pas si les horaires collent avec mon travail et les enfants. Le Lagree « intense » me fait peur pour mon dos, et rien ne dit que le cours doux est adapté au post-partum ou au mal de dos.",
+  "would_change_my_mind": "Une première séance d'essai gratuite ou à moins de 10 €, plus un carnet de séances qui ramène le prix autour de 15 € pour un cours doux spécial dos ou post-partum à un horaire du soir ou du week-end.",
+  "price_too_cheap": 6,
+  "price_cheap": 12,
+  "price_expensive": 20,
+  "price_too_expensive": 28
+}

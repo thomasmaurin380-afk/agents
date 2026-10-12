@@ -1,0 +1,13 @@
+{
+  "id": "P011",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "price",
+  "reason": "Je vois le Lagree partout sur Instagram et 45 € pour 3 séances, remboursées si je n'accroche pas, c'est le seul format que je peux me permettre pour tester. Par contre je prends juste les Premiers pas, pas l'abonnement.",
+  "objection": "Après l'essai, 109 € ou 189 € par mois avec engagement de 3 mois, c'est beaucoup trop pour mon budget, surtout en fin de mois ; à 32 € la séance à l'unité je n'irais pas toutes les semaines.",
+  "would_change_my_mind": "",
+  "price_too_cheap": 8,
+  "price_cheap": 15,
+  "price_expensive": 22,
+  "price_too_expensive": 30
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P016",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Je paie déjà ma salle low-cost une trentaine d'euros par mois avec le Pilates tapis inclus. Même si l'essai à 45 € est remboursé, je sais que derrière je ne mettrai jamais 109 ou 189 € par mois, donc ce n'est pas la peine de commencer.",
+  "objection": "Je ne vois pas ce que le Lagree m'apporte de plus qu'un reformer classique ou que mon cours de Pilates à la salle, pour trois à six fois le prix. En plus avec les enfants à 16 h 30, les créneaux du soir sont compliqués.",
+  "would_change_my_mind": "Une formule à environ 50-60 € par mois pour 4 séances, avec un créneau en milieu de matinée ou en début d'après-midi avant la sortie d'école.",
+  "price_too_cheap": 8,
+  "price_cheap": 12,
+  "price_expensive": 20,
+  "price_too_expensive": 28
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P024",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "C'est un studio qui vient d'ouvrir, donc pas encore d'avis Google ni de vraies photos des cours. Je ne réserve jamais à l'aveugle, surtout à 30 € la séance pour du Lagree qui a l'air fait pour des sportives confirmées.",
+  "objection": "J'ai peur d'être larguée en débutante sur le Megaformer et de payer 30 € pour une heure où je ne suis pas à ma place, sans aucun avis pour me rassurer.",
+  "would_change_my_mind": "Une première séance découverte à prix réduit spéciale débutantes, avec une vingtaine d'avis Google et des photos du studio et des cours.",
+  "price_too_cheap": 8,
+  "price_cheap": 15,
+  "price_expensive": 25,
+  "price_too_expensive": 35
+}

@@ -1,0 +1,37 @@
+{
+  "business": "Studio Pilates Nice (nom provisoire) — 8 Megaformers + salle Pilates tapis",
+  "unit": "place réservée dans un cours (1 cliente x 1 séance)",
+  "price": 21.00,
+  "variable": [
+    {"label": "Frais bancaires + logiciel de réservation (≈3 % du prix TTC moyen 25 €)", "cost": 0.75},
+    {"label": "Serviettes, lingettes désinfectantes, consommables", "cost": 0.40}
+  ],
+  "fixed_monthly": [
+    {"label": "Coachs (≈208 cours/mois x 40 € facturés par cours, freelances)", "cost": 8320},
+    {"label": "Rémunération gérance fondateur·rice (coût total, estimation)", "cost": 2500},
+    {"label": "Loyer + charges (≈170 m² x 300 €/m²/an + 20 % charges)", "cost": 5100},
+    {"label": "Licence Lagree Megaformer (3 990 $/an)", "cost": 300},
+    {"label": "Énergie, eau, internet", "cost": 450},
+    {"label": "Ménage", "cost": 600},
+    {"label": "Logiciel réservation + site (abonnement)", "cost": 200},
+    {"label": "Assurances (RC pro, local)", "cost": 150},
+    {"label": "Expert-comptable", "cost": 250},
+    {"label": "Musique (SACEM/SPRE)", "cost": 80},
+    {"label": "Entretien des machines", "cost": 150},
+    {"label": "Marketing continu (pub Instagram/Google, contenus)", "cost": 1000}
+  ],
+  "startup": [
+    {"label": "Dépôt de garantie (3 mois de loyer)", "cost": 15300},
+    {"label": "Travaux : sol, vestiaires/douches, clim, éclairage, sono", "cost": 60000},
+    {"label": "8 Megaformers livrés en France (≈11 000 € pièce, transport et caisse inclus)", "cost": 88000},
+    {"label": "Équipement salle tapis (tapis, petit matériel)", "cost": 4000},
+    {"label": "Formation/certification Lagree de 3 coachs", "cost": 4500},
+    {"label": "Marque, site, photos", "cost": 5000},
+    {"label": "Campagne de lancement + préventes", "cost": 6000},
+    {"label": "Création société, juridique, divers", "cost": 3000}
+  ],
+  "days_per_month": 30,
+  "capacity_per_day": 62,
+  "plan_per_day": 34,
+  "ramp_per_day": [8, 11, 14, 17, 20, 23, 25, 27, 29, 31, 32, 33]
+}

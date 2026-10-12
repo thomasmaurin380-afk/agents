@@ -1,0 +1,13 @@
+{
+  "id": "P004",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Le Lagree sur Megaformer me fait vraiment envie depuis que je le vois sur Instagram, mais 30 € la séance, avec mon budget serré en fin de mois, c'est trop alors que j'ai déjà du Pilates inclus dans mon abonnement de salle.",
+  "objection": "Je paie déjà une salle de sport où le Pilates est inclus, donc mettre 30 € pour une heure, c'est payer deux fois pour presque la même chose.",
+  "would_change_my_mind": "Une première séance d'essai Lagree à 15 € ou moins, juste pour tester la machine.",
+  "price_too_cheap": 8,
+  "price_cheap": 15,
+  "price_expensive": 22,
+  "price_too_expensive": 30
+}

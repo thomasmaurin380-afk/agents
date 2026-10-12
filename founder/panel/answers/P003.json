@@ -1,0 +1,13 @@
+{
+  "id": "P003",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Le Lagree sur Megaformer me tente, mais j'ai déjà du Pilates tapis inclus dans mon abonnement de salle et à la fin du mois je compte. 30 € la séance, pour y aller chaque semaine c'est 120 € par mois, je ne peux pas.",
+  "objection": "30 € la séance c'est cher si je veux y aller toutes les semaines, alors que ma salle low-cost me coûte presque rien et propose déjà du Pilates.",
+  "would_change_my_mind": "Une première séance d'essai à prix réduit (autour de 15 €) ou un abonnement mensuel illimité qui ramène la séance vers 15-20 €.",
+  "price_too_cheap": 8,
+  "price_cheap": 15,
+  "price_expensive": 22,
+  "price_too_expensive": 30
+}
