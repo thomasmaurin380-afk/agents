@@ -31,5 +31,5 @@ export function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   );
 }
 export function TableCell({ className, num, ...props }: React.ComponentProps<"td"> & { num?: boolean }) {
-  return <td className={cn("px-3 py-3 align-middle first:pl-5 last:pr-5", num && "num text-right", className)} {...props} />;
+  return <td className={cn("px-3 py-[var(--cell-py)] align-middle first:pl-5 last:pr-5", num && "num text-right", className)} {...props} />;
 }

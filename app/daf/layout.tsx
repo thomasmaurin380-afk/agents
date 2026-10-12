@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/layout/app-shell";
+import { getInterfaceMode } from "@/lib/interface-mode-server";
 import { DafSidebar } from "@/features/navigation/daf-sidebar";
 import { HeaderContext } from "@/features/navigation/header-context";
 import { ROLE_LABELS } from "@/domain/permissions/matrix";
@@ -18,6 +19,8 @@ export default async function DafLayout({ children }: LayoutProps<"/daf">) {
       sidebar={<DafSidebar isAdmin={role === "firm_admin"} designPreview={process.env.DESIGN_PREVIEW === "1"} />}
       sidebarFooter={<SidebarFirmCard firmName={actor.firms[0]?.firmName ?? "Cabinet"} roleLabel={ROLE_LABELS[role]} />}
       context={<HeaderContext root={actor.firms[0]?.firmName ?? "Cabinet"} companyNames={companyNames} />}
+      userId={actor.userId}
+      interfaceMode={await getInterfaceMode(actor.userId)}
       userName={actor.fullName}
       userRoleLabel={ROLE_LABELS[role]}
     >

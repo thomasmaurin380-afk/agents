@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import "@fontsource-variable/instrument-sans";
+import "@fontsource-variable/inter/opsz.css";
+import "@fontsource-variable/newsreader/opsz.css";
 import { ThemeProvider } from "@/components/layout/theme";
 import "./globals.css";
 

@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/layout/app-shell";
+import { getInterfaceMode } from "@/lib/interface-mode-server";
 import { ROLE_LABELS } from "@/domain/permissions/matrix";
 import { ClientSidebar } from "@/features/navigation/client-sidebar";
 import { HeaderContext } from "@/features/navigation/header-context";
@@ -20,6 +21,8 @@ export default async function ClientLayout({ children }: LayoutProps<"/client">)
         />
       }
       context={<HeaderContext root="Espace dirigeant" companyNames={Object.fromEntries(actor.clientCompanies.map((c) => [c.companyId, c.tradeName ?? c.companyName]))} />}
+      userId={actor.userId}
+      interfaceMode={await getInterfaceMode(actor.userId)}
       userName={actor.fullName}
       userRoleLabel={staff ? "Aperçu DAF" : firstRole ? ROLE_LABELS[firstRole] : ""}
     >

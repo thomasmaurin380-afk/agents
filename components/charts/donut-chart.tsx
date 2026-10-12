@@ -5,14 +5,18 @@ export type DonutSlice = { label: string; value: number; color: string };
  * centrale, légende alignée (libellé, effectif, pourcentage). Les catégories ordonnées
  * utilisent une rampe séquentielle d'une seule teinte.
  */
-export function DonutChart({ slices, centerValue, centerLabel, size = 156, thickness = 26, label }: {
+export function DonutChart({ slices, centerValue, centerLabel, size = 156, thickness = 26, label, legend = "compact", formatAmount }: {
   slices: DonutSlice[];
   centerValue: string;
   centerLabel: string;
   size?: number;
   thickness?: number;
   label: string;
+  /** « detailed » : pourcentage en gras et montant sous le libellé. */
+  legend?: "compact" | "detailed";
+  formatAmount?: "eur";
 }) {
+  const eur = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
   const total = slices.reduce((s, x) => s + x.value, 0);
   const r = (size - thickness) / 2;
   const c = size / 2;
@@ -43,10 +47,24 @@ export function DonutChart({ slices, centerValue, centerLabel, size = 156, thick
             : null}
         </svg>
         <div className="absolute inset-0 grid place-content-center text-center">
-          <p className="figure text-[26px] font-bold">{centerValue}</p>
+          <p className="figure text-[26px] font-semibold">{centerValue}</p>
           <p className="mt-1 text-[12.5px] text-muted-foreground">{centerLabel}</p>
         </div>
       </div>
+      {legend === "detailed" ? (
+        <ul className="w-full min-w-0 space-y-3.5">
+          {slices.map((s) => (
+            <li key={s.label} className="grid grid-cols-[auto_1fr_auto] items-start gap-x-3">
+              <span aria-hidden className="mt-1 size-2.5 rounded-full" style={{ background: s.color }} />
+              <span className="min-w-0 text-[13.5px] leading-snug text-foreground">{s.label}</span>
+              <span className="text-right leading-tight">
+                <span className="num block text-[13.5px] font-semibold">{pct(s.value)}</span>
+                {formatAmount ? <span className="num block text-[12px] text-muted-foreground">{eur.format(s.value)}</span> : null}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
       <ul className="w-full min-w-0 space-y-3">
         {slices.map((s) => (
           <li key={s.label} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-2.5 text-[13.5px]">
@@ -57,6 +75,7 @@ export function DonutChart({ slices, centerValue, centerLabel, size = 156, thick
           </li>
         ))}
       </ul>
+      )}
     </div>
   );
 }

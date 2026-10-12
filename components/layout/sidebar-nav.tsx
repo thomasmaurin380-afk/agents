@@ -36,7 +36,7 @@ export function SidebarNav({ title, items, exactHrefs = [] }: { title?: React.Re
                 href={item.href!}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-11 items-center gap-3 rounded-xl px-3.5 text-[15px] text-sidebar-foreground transition-colors",
+                  "flex h-[var(--nav-item-h)] items-center gap-3 rounded-xl px-3.5 text-[length:var(--nav-font)] text-sidebar-foreground transition-colors",
                   "hover:bg-sidebar-hover hover:text-foreground [&_svg]:text-sidebar-muted",
                   active && "bg-sidebar-accent font-medium text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground [&_svg]:text-sidebar-primary",
                 )}
