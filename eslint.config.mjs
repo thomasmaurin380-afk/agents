@@ -67,7 +67,7 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "playwright-report/**", "test-results/**"]),
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "playwright-report/**", "test-results/**", "netlify-demo/dist/**", "netlify-demo/node_modules/**", "netlify-demo/test-results/**"]),
 ]);
 
 export default eslintConfig;

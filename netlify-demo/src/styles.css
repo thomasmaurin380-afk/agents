@@ -1,0 +1,22 @@
+/* Design system V4 de l'application (tokens communs + tokens par mode), importé tel quel. */
+@import "../../app/globals.css";
+
+/* Fichiers analysés par Tailwind : composants V4 réutilisés et coque de démonstration. */
+@source "../../components";
+@source "../../features/dashboards";
+@source "../../features/navigation";
+@source "./";
+/* Builds et sorties de test exclus : le CSS ne dépend que du code source (build reproductible). */
+@source not "../dist";
+@source not "../test-results";
+@source not "../shots";
+
+/* Filtres de la maquette : affichés pour la composition, inactifs. */
+[title="Maquette : filtre inactif"] {
+  cursor: not-allowed;
+}
+
+/* Boutons de la maquette (« Voir la trésorerie », « Prévisions 90 jours ») : visiblement inactifs. */
+button[title="Maquette : action non disponible"]:disabled {
+  opacity: 0.55;
+}

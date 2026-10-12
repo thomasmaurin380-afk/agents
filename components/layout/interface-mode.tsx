@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type Ctx = { mode: InterfaceMode; setMode: (m: InterfaceMode) => void; pending: boolean };
-const InterfaceModeContext = createContext<Ctx | null>(null);
+export const InterfaceModeContext = createContext<Ctx | null>(null);
 
 function readCookie(name: string) {
   return document.cookie.split("; ").find((c) => c.startsWith(`${name}=`))?.slice(name.length + 1);
